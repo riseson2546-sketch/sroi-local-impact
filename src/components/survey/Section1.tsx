@@ -113,16 +113,16 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
   ];
 
   const problemsBefore = [
-    { text: 'มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่', hasDetail: true },
-    { text: 'วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น', hasDetail: true },
-    { text: 'การบริหารจัดการองค์กร', hasDetail: true },
-    { text: 'ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน', hasDetail: true },
-    { text: 'ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น', hasDetail: true },
-    { text: 'ไม่ใช้ข้อมูลเป็นฐานในการวางแผน', hasDetail: true },
-    { text: 'บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด', hasDetail: true },
-    { text: 'ขาดเครือข่ายในการพัฒนาเมือง', hasDetail: true },
-    { text: 'ขาดความรู้ทักษะในการพัฒนาเมือง', hasDetail: true },
-    { text: 'ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง', hasDetail: true }
+    'มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่',
+    'วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น',
+    'การบริหารจัดการองค์กร',
+    'ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน',
+    'ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น',
+    'ไม่ใช้ข้อมูลเป็นฐานในการวางแผน',
+    'บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด',
+    'ขาดเครือข่ายในการพัฒนาเมือง',
+    'ขาดความรู้ทักษะในการพัฒนาเมือง',
+    'ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง'
   ];
 
   const knowledgeSolutions = [
@@ -253,28 +253,16 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
     <div className="space-y-3">
       <div className="space-y-2 max-h-80 overflow-y-auto">
         {problems.map((problem, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex items-start space-x-2">
-              <Checkbox
-                id={`problems-${index}`}
-                checked={(formData.section1_problems_before || []).includes(problem.text)}
-                onCheckedChange={(checked) => handleCheckboxChange('section1_problems_before', problem.text, checked as boolean)}
-                className="mt-1 flex-shrink-0"
-              />
-              <Label htmlFor={`problems-${index}`} className="text-sm leading-5 cursor-pointer">
-                {problem.text}
-              </Label>
-            </div>
-            {problem.hasDetail && (formData.section1_problems_before || []).includes(problem.text) && (
-              <div className="ml-6">
-                <Input
-                  placeholder="ระบุ"
-                  value={formData[`section1_problems_detail_${index}`] || ''}
-                  onChange={(e) => handleInputChange(`section1_problems_detail_${index}`, e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            )}
+          <div key={index} className="flex items-start space-x-2">
+            <Checkbox
+              id={`problems-${index}`}
+              checked={(formData.section1_problems_before || []).includes(problem.text)}
+              onCheckedChange={(checked) => handleCheckboxChange('section1_problems_before', problem.text, checked as boolean)}
+              className="mt-1 flex-shrink-0"
+            />
+            <Label htmlFor={`problems-${index}`} className="text-sm leading-5 cursor-pointer">
+              {problem.text}
+            </Label>
           </div>
         ))}
       </div>
@@ -352,7 +340,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">3. ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร</CardTitle>
         </CardHeader>
         <CardContent>
-          {renderProblemsBeforeGroup(problemsBefore)}
+          {renderCheckboxGroup("", problemsBefore, "section1_problems_before", "section1_problems_other")}
         </CardContent>
       </Card>
 
