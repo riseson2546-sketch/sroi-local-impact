@@ -17,13 +17,13 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
     // 1.1 ผลลัพธ์ภายหลัง
     section1_knowledge_outcomes: [],
     section1_application_outcomes: [],
-    section1_application_other: '',
     
     // 1.2 อธิบายการเปลี่ยนแปลง
     section1_changes_description: '',
     
     // 1.3 ปัญหาก่อนอบรม
     section1_problems_before: [],
+    section1_problems_other: '',
     
     // 1.4 การใช้องค์ความรู้
     section1_knowledge_solutions: [],
@@ -327,7 +327,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           
           <div>
             <h4 className="font-medium text-base mb-3 underline">ด้านการประยุกต์ใช้องค์ความรู้</h4>
-            {renderCheckboxGroup("", applicationOutcomes, "section1_application_outcomes", "section1_application_other")}
+            {renderCheckboxGroup("", applicationOutcomes, "section1_application_outcomes", undefined, false)}
           </div>
         </CardContent>
       </Card>
