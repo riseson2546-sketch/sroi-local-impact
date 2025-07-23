@@ -32,13 +32,10 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
     section2_continued_development: '',
     
     // 2.5 แอปพลิเคชัน
-    section2_app1_name: '',
-    section2_app1_methods: [],
-    section2_app2_name: '',
-    section2_app2_methods: [],
+    section2_applications: {},
     
     // 2.6 การขยายเครือข่าย
-    section2_network_details: '',
+    section2_network_expansion: {},
     
     ...data
   });
@@ -60,15 +57,8 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleMethodChange = (appNumber: number, method: string, checked: boolean) => {
-    const methodsField = `section2_app${appNumber}_methods`;
-    const currentMethods = formData[methodsField] || [];
-    
-    if (checked) {
-      handleInputChange(methodsField, [...currentMethods, method]);
-    } else {
-      handleInputChange(methodsField, currentMethods.filter(m => m !== method));
-    }
+  const handleCheckboxSingleChange = (field: string, checked: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: checked }));
   };
 
   const handleSave = () => {
@@ -178,8 +168,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
         <Label className="text-base font-medium">{appNumber}) ชื่อแอปพลิเคชัน (Application)</Label>
         <Input
           placeholder="ระบุชื่อแอปพลิเคชัน"
-          value={formData[`section2_app${appNumber}_name`] || ''}
-          onChange={(e) => handleInputChange(`section2_app${appNumber}_name`, e.target.value)}
+          value={formData.section2_applications?.[`app${appNumber}_name`] || ''}
+          onChange={(e) => handleInputChange('section2_applications', {
+            ...formData.section2_applications,
+            [`app${appNumber}_name`]: e.target.value
+          })}
           className="w-full"
         />
       </div>
@@ -190,8 +183,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`app${appNumber}-buy`}
-              checked={(formData[`section2_app${appNumber}_methods`] || []).includes('ซื้อ')}
-              onCheckedChange={(checked) => handleMethodChange(appNumber, 'ซื้อ', checked as boolean)}
+              checked={formData.section2_applications?.[`app${appNumber}_method_buy`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_buy`]: checked as boolean
+              })}
             />
             <Label htmlFor={`app${appNumber}-buy`} className="text-sm cursor-pointer">ซื้อ</Label>
           </div>
@@ -199,8 +195,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`app${appNumber}-develop`}
-              checked={(formData[`section2_app${appNumber}_methods`] || []).includes('องค์กรพัฒนาขึ้นเอง')}
-              onCheckedChange={(checked) => handleMethodChange(appNumber, 'องค์กรพัฒนาขึ้นเอง', checked as boolean)}
+              checked={formData.section2_applications?.[`app${appNumber}_method_develop`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_develop`]: checked as boolean
+              })}
             />
             <Label htmlFor={`app${appNumber}-develop`} className="text-sm cursor-pointer">องค์กรพัฒนาขึ้นเอง</Label>
           </div>
@@ -208,8 +207,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`app${appNumber}-transfer`}
-              checked={(formData[`section2_app${appNumber}_methods`] || []).includes('องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้')}
-              onCheckedChange={(checked) => handleMethodChange(appNumber, 'องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้', checked as boolean)}
+              checked={formData.section2_applications?.[`app${appNumber}_method_transfer`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_transfer`]: checked as boolean
+              })}
             />
             <Label htmlFor={`app${appNumber}-transfer`} className="text-sm cursor-pointer">องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้</Label>
           </div>
@@ -225,16 +227,31 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
         <div className="p-2 bg-blue-50 rounded">ด้านความร่วมมือ</div>
       </div>
       
-      <div className="space-y-2">
-        <Label className="text-base">กรุณาระบุหน่วยงานและด้านความร่วมมือ (สามารถใส่หลายรายการ คั่นด้วยเครื่องหมาย ,)</Label>
-        <Textarea
-          placeholder="ตัวอย่าง: มหาวิทยาลัยธรรมศาสตร์ - การวิจัยและพัฒนา, สำนักงานพัฒนาท้องถิ่น - การแลกเปลี่ยนข้อมูล"
-          value={formData.section2_network_details || ''}
-          onChange={(e) => handleInputChange('section2_network_details', e.target.value)}
-          rows={5}
-          className="w-full"
-        />
-      </div>
+      {[1, 2, 3, 4, 5].map((num) => (
+        <div key={num} className="grid grid-cols-2 gap-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium">{num}.</span>
+            <Input
+              placeholder="ระบุหน่วยงาน"
+              value={formData.section2_network_expansion?.[`org${num}`] || ''}
+              onChange={(e) => handleInputChange('section2_network_expansion', {
+                ...formData.section2_network_expansion,
+                [`org${num}`]: e.target.value
+              })}
+              className="flex-1"
+            />
+          </div>
+          <Input
+            placeholder="ระบุด้านความร่วมมือ"
+            value={formData.section2_network_expansion?.[`cooperation${num}`] || ''}
+            onChange={(e) => handleInputChange('section2_network_expansion', {
+              ...formData.section2_network_expansion,
+              [`cooperation${num}`]: e.target.value
+            })}
+            className="w-full"
+          />
+        </div>
+      ))}
     </div>
   );
 
