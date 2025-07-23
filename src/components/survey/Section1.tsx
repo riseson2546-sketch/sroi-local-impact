@@ -177,40 +177,46 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
     'การมีระบบในการติดตามและรายงานผลการใช้ประโยชน์จากนวัตกรรม'
   ];
 
-  const renderCheckboxGroup = (title: string, options: string[], field: string, otherField?: string) => (
+  const renderCheckboxGroup = (title: string, options: string[], field: string, otherField?: string, showOther = true) => (
     <div className="space-y-3">
-      <Label className="text-base font-medium">{title}</Label>
-      <div className="space-y-2">
+      {title && <Label className="text-base font-medium">{title}</Label>}
+      <div className="space-y-2 max-h-96 overflow-y-auto">
         {options.map((option, index) => (
           <div key={index} className="flex items-start space-x-2">
             <Checkbox
               id={`${field}-${index}`}
               checked={(formData[field] || []).includes(option)}
               onCheckedChange={(checked) => handleCheckboxChange(field, option, checked as boolean)}
+              className="mt-1 flex-shrink-0"
             />
-            <Label htmlFor={`${field}-${index}`} className="text-sm leading-5">
+            <Label htmlFor={`${field}-${index}`} className="text-sm leading-5 cursor-pointer">
               {option}
             </Label>
           </div>
         ))}
-        <div className="flex items-start space-x-2">
-          <Checkbox
-            id={`${field}-other`}
-            checked={(formData[field] || []).includes('อื่น ๆ')}
-            onCheckedChange={(checked) => handleCheckboxChange(field, 'อื่น ๆ', checked as boolean)}
-          />
-          <Label htmlFor={`${field}-other`} className="text-sm">
-            อื่น ๆ
-          </Label>
-          {otherField && (
-            <Input
-              placeholder="ระบุ"
-              value={formData[otherField] || ''}
-              onChange={(e) => handleInputChange(otherField, e.target.value)}
-              className="ml-2 flex-1"
+        {showOther && (
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              id={`${field}-other`}
+              checked={(formData[field] || []).includes('อื่น ๆ')}
+              onCheckedChange={(checked) => handleCheckboxChange(field, 'อื่น ๆ', checked as boolean)}
+              className="mt-1 flex-shrink-0"
             />
-          )}
-        </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor={`${field}-other`} className="text-sm cursor-pointer">
+                อื่น ๆ
+              </Label>
+              {otherField && (
+                <Input
+                  placeholder="ระบุ"
+                  value={formData[otherField] || ''}
+                  onChange={(e) => handleInputChange(otherField, e.target.value)}
+                  className="w-full"
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -219,9 +225,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
     <div className="space-y-3">
       <Label className="text-base font-medium">{title}</Label>
       {description && <p className="text-sm text-muted-foreground">{description}</p>}
-      <div className="flex items-center space-x-4">
-        <span className="text-sm">น้อยที่สุด</span>
-        <div className="flex space-x-2">
+      <div className="flex flex-col space-y-3">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>น้อยที่สุด</span>
+          <span>มากที่สุด</span>
+        </div>
+        <div className="grid grid-cols-10 gap-1">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
             <Button
               key={value}
@@ -229,47 +238,54 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
               variant={formData[field] === value ? "default" : "outline"}
               size="sm"
               onClick={() => handleInputChange(field, value)}
-              className="w-8 h-8 p-0"
+              className="h-8 text-xs"
             >
               {value}
             </Button>
           ))}
         </div>
-        <span className="text-sm">มากที่สุด</span>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="text-center">
-        <h2 className="text-xl font-semibold mb-2">
+        <h2 className="text-xl font-semibold mb-2 text-blue-800">
           ส่วนที่ 1 ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน
         </h2>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.1 ผลลัพธ์ภายหลังจากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.)</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">1. ผลลัพธ์ภายหลังจากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup(
-            "ด้านองค์ความรู้",
-            knowledgeOutcomes,
-            "section1_knowledge_outcomes"
-          )}
+          <div>
+            <h4 className="font-medium text-base mb-3 underline">ด้านองค์ความรู้</h4>
+            {renderCheckboxGroup(
+              "",
+              knowledgeOutcomes,
+              "section1_knowledge_outcomes",
+              undefined,
+              false
+            )}
+          </div>
           
-          {renderCheckboxGroup(
-            "ด้านการประยุกต์ใช้องค์ความรู้",
-            applicationOutcomes,
-            "section1_application_outcomes"
-          )}
+          <div>
+            <h4 className="font-medium text-base mb-3 underline">ด้านการประยุกต์ใช้องค์ความรู้</h4>
+            {renderCheckboxGroup(
+              "",
+              applicationOutcomes,
+              "section1_application_outcomes"
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">2. โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -277,13 +293,14 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
             value={formData.section1_changes_description || ''}
             onChange={(e) => handleInputChange('section1_changes_description', e.target.value)}
             rows={5}
+            className="w-full"
           />
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">3. ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร</CardTitle>
         </CardHeader>
         <CardContent>
           {renderCheckboxGroup(
@@ -296,8 +313,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -307,7 +324,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
             "section1_knowledge_solutions_other"
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {renderRatingScale(
               "ก่อนเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด",
               "section1_knowledge_before"
@@ -319,9 +336,9 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
             )}
           </div>
           
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-medium mb-2">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
-            <div className="text-sm space-y-1">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-3 text-blue-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
+            <div className="text-sm space-y-2">
               <p><strong>ระดับ 1:</strong> ไม่ได้ใช้ในการแก้ปัญหา ไม่ตระหนักถึงการมีอยู่</p>
               <p><strong>ระดับ 2:</strong> ตระหนัก แต่ไม่ได้นำไปใช้ในการแก้ปัญหา</p>
               <p><strong>ระดับ 3:</strong> นำไปใช้ในการวิเคราะห์ปัญหา หรือคำนึงถึงในงานของตน</p>
@@ -338,8 +355,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.5 องค์กรของท่านได้นำ กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">5. องค์กรของท่านได้นำ กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -357,8 +374,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.6 องค์กรของท่านได้นำ กลไกประสานความร่วมมือ มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">6. องค์กรของท่านได้นำ กลไกประสานความร่วมมือ มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -376,8 +393,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.7 องค์กรของท่านได้นำ กลไกการระดมทุน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">7. องค์กรของท่านได้นำ กลไกการระดมทุน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -395,8 +412,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.8 องค์กรของท่านได้นำ กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">8. องค์กรของท่านได้นำ กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -414,8 +431,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.9 องค์กรของท่านได้นำ กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">9. องค์กรของท่านได้นำ กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -433,8 +450,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.10 องค์กรของท่านได้นำ กลไกการพัฒนาใหม่ (บริษัทพัฒนาเมือง วิสาหกิจเพื่อสังคม สหการ) มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">10. องค์กรของท่านได้นำ กลไกการพัฒนาใหม่ (บริษัทพัฒนาเมือง วิสาหกิจเพื่อสังคม สหการ) มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup(
@@ -451,9 +468,25 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
         </CardContent>
       </Card>
 
+      <div className="bg-yellow-50 p-4 rounded-lg">
+        <h4 className="font-medium mb-3 text-yellow-800">หมายเหตุ : คำอธิบายระดับ 1-10 (สำหรับข้อ 5-10)</h4>
+        <div className="text-sm space-y-2">
+          <p><strong>ระดับ 1:</strong> ไม่ได้ใช้ประโยชน์ในการยกระดับการพัฒนาท้องถิ่น ไม่ตระหนักถึงการมีอยู่</p>
+          <p><strong>ระดับ 2:</strong> ตระหนัก แต่ไม่ได้นำไปใช้ประโยชน์ในการยกระดับการพัฒนาท้องถิ่น</p>
+          <p><strong>ระดับ 3:</strong> นำไปใช้ในการวิเคราะห์การยกระดับการพัฒนาท้องถิ่น หรือคำนึงถึงในงานของตน</p>
+          <p><strong>ระดับ 4:</strong> นำไปใช้ในการออกแบบการยกระดับการพัฒนาท้องถิ่น (วางแผน/สร้างแนวทาง/อยู่ในขั้นตอนการทำงาน)</p>
+          <p><strong>ระดับ 5:</strong> นำไปใช้ในการบรรจุเป็นแผนการยกระดับการพัฒนาท้องถิ่นในระดับสำนัก ภายใต้หน่วยงานของตน</p>
+          <p><strong>ระดับ 6:</strong> นำไปใช้บรรจุลงในแผนการยกระดับการพัฒนาท้องถิ่น ขับเคลื่อนระดับหน่วยงาน/องค์กรของตนเอง</p>
+          <p><strong>ระดับ 7:</strong> นำแผนการยกระดับการพัฒนาท้องถิ่นไปใช้ในการขับเคลื่อนเชิงปฏิบัติการในพื้นที่ ที่อธิบายผลได้อย่างชัดเจน</p>
+          <p><strong>ระดับ 8:</strong> สามารถเผยแพร่ และมีส่วนในการผลักดันแผน/นโยบายของหน่วยงานหรือพื้นที่อื่น ๆ ได้อย่างชัดเจน อธิบายผลได้</p>
+          <p><strong>ระดับ 9:</strong> สามารถขยายผล/ต่อยอด การแก้ปัญหาระดับพื้นที่ได้อย่างชัดเจน อธิบายผลได้</p>
+          <p><strong>ระดับ 10:</strong> สามารถนำไปกำหนดระดับนโยบายระดับอำเภอ/จังหวัด/ประเทศ</p>
+        </div>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>1.12 ท่านคิดว่า องค์ความรู้และการประยุกต์ใช้องค์ความรู้จากการอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ในประเด็นใดบ้าง</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">12. ท่านคิดว่า องค์ความรู้และการประยุกต์ใช้องค์ความรู้จากการอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ในประเด็นใดบ้าง</CardTitle>
         </CardHeader>
         <CardContent>
           {renderCheckboxGroup(
@@ -466,8 +499,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.13 โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 1.12</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">13. โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 12</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -475,13 +508,14 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
             value={formData.section1_success_description || ''}
             onChange={(e) => handleInputChange('section1_success_description', e.target.value)}
             rows={5}
+            className="w-full"
           />
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>1.14 บทบาทของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ก่อให้เกิดการเปลี่ยนแปลงในพื้นที่ของท่านในระดับใด</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">14. บทบาทของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ก่อให้เกิดการเปลี่ยนแปลงในพื้นที่ของท่านในระดับใด</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderRatingScale(
@@ -489,9 +523,9 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
             "section1_overall_change_level"
           )}
           
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-medium mb-2">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
-            <div className="text-sm space-y-1">
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-3 text-green-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
+            <div className="text-sm space-y-2">
               <p><strong>ระดับ 1:</strong> เมืองยังคงเป็นรูปแบบดั้งเดิม ไม่มีการเปลี่ยนแปลง</p>
               <p><strong>ระดับ 2:</strong> เริ่มมีการวางแผนพัฒนาเมืองเบื้องต้น / เริ่มมีการวางแผนเรื่องระบบข้อมูล</p>
               <p><strong>ระดับ 3:</strong> มีโครงการพัฒนาเล็ก ๆ แต่ยังไม่มีผลต่อโครงสร้างเมืองโดยรวม</p>
@@ -507,9 +541,11 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={isLoading} className="w-full">
-        {isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 1"}
-      </Button>
+      <div className="pt-6">
+        <Button onClick={handleSave} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700">
+          {isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 1"}
+        </Button>
+      </div>
     </div>
   );
 };
