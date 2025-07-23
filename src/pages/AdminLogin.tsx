@@ -11,7 +11,9 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    fullName: '',
+    isLogin: true
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,6 +37,47 @@ const AdminLogin = () => {
     checkAuth();
   }, [navigate]);
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/admin`
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('admin_users')
+          .insert({
+            auth_user_id: data.user.id,
+            email: formData.email,
+            full_name: formData.fullName
+          });
+
+        if (profileError) throw profileError;
+
+        toast({
+          title: "ลงทะเบียนสำเร็จ",
+          description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีของท่าน",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +129,37 @@ const AdminLogin = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
+          <div className="flex justify-center mb-4">
+            <div className="flex rounded-lg border p-1">
+              <Button
+                variant={formData.isLogin ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFormData(prev => ({ ...prev, isLogin: true }))}
+              >
+                เข้าสู่ระบบ
+              </Button>
+              <Button
+                variant={!formData.isLogin ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFormData(prev => ({ ...prev, isLogin: false }))}
+              >
+                ลงทะเบียน
+              </Button>
+            </div>
+          </div>
+
+          <form onSubmit={formData.isLogin ? handleSignIn : handleSignUp} className="space-y-4">
+            {!formData.isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName">ชื่อ-สกุล</Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                  required={!formData.isLogin}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">อีเมล</Label>
               <Input
@@ -108,7 +181,10 @@ const AdminLogin = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+              {isLoading 
+                ? (formData.isLogin ? "กำลังเข้าสู่ระบบ..." : "กำลังลงทะเบียน...")
+                : (formData.isLogin ? "เข้าสู่ระบบ" : "ลงทะเบียน")
+              }
             </Button>
           </form>
         </CardContent>
