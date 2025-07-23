@@ -5,8 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Section1Props {
   data: any;
@@ -15,23 +13,6 @@ interface Section1Props {
 }
 
 const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
-  
-  // Define which fields exist in the database
-  // คุณสามารถแก้ไขรายการนี้ให้ตรงกับ columns ที่มีจริงในฐานข้อมูลของคุณ
-  const existingDatabaseFields = [
-    'id',
-    'user_id',
-    'created_at',
-    'updated_at',
-    // เพิ่ม fields ที่มีอยู่จริงในฐานข้อมูลที่นี่
-    // เช่น:
-    // 'section1_knowledge_outcomes',
-    // 'section1_application_outcomes',
-    // ... etc
-  ];
-
   const [formData, setFormData] = useState({
     // 1.1 ผลลัพธ์ภายหลัง
     section1_knowledge_outcomes: [],
@@ -112,70 +93,8 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Function to filter only existing database fields
-  const filterExistingFields = (data: any) => {
-    const filteredData: any = {};
-    
-    // If existingDatabaseFields is empty, assume all fields exist
-    if (existingDatabaseFields.length === 0) {
-      return data;
-    }
-    
-    // Only include fields that exist in the database
-    Object.keys(data).forEach(key => {
-      if (existingDatabaseFields.includes(key) || key.startsWith('section1_')) {
-        filteredData[key] = data[key];
-      }
-    });
-    
-    return filteredData;
-  };
-
-  // Wrapper function for saving data
-  const handleSaveWithValidation = async (dataToSave: any) => {
-    try {
-      // Filter out fields that don't exist in database
-      const filteredData = filterExistingFields(dataToSave);
-      
-      // Call the original onSave with filtered data
-      await onSave(filteredData);
-      
-      setShowAlert(true);
-      setAlertMessage('บันทึกข้อมูลสำเร็จ');
-      setTimeout(() => setShowAlert(false), 3000);
-    } catch (error: any) {
-      console.error('Save error:', error);
-      
-      // Check if error is due to missing column
-      if (error.message && error.message.includes('column')) {
-        const missingColumn = error.message.match(/column "([^"]+)"/)?.[1];
-        setAlertMessage(`ไม่สามารถบันทึกได้: ไม่พบคอลัมน์ "${missingColumn}" ในฐานข้อมูล`);
-        setShowAlert(true);
-        
-        // Remove the problematic field and try again
-        if (missingColumn && formData[missingColumn] !== undefined) {
-          const newData = { ...dataToSave };
-          delete newData[missingColumn];
-          handleSaveWithValidation(newData);
-        }
-      } else {
-        setAlertMessage(`เกิดข้อผิดพลาด: ${error.message || 'ไม่สามารถบันทึกข้อมูลได้'}`);
-        setShowAlert(true);
-      }
-    }
-  };
-
   const handleSave = () => {
-    handleSaveWithValidation(formData);
-  };
-
-  // Alternative: Save data as JSON in a single column
-  const handleSaveAsJson = () => {
-    const jsonData = {
-      section1_data: JSON.stringify(formData),
-      updated_at: new Date().toISOString()
-    };
-    onSave(jsonData);
+    onSave(formData);
   };
 
   const knowledgeOutcomes = [
@@ -390,13 +309,6 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      {showAlert && (
-        <Alert className={alertMessage.includes('สำเร็จ') ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{alertMessage}</AlertDescription>
-        </Alert>
-      )}
-      
       <div className="text-center bg-blue-50 p-4 rounded-lg">
         <h2 className="text-xl font-bold mb-2 text-blue-800">
           ส่วนที่ 1 ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน
@@ -645,25 +557,10 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
         </CardContent>
       </Card>
 
-      <div className="pt-6 flex gap-4">
-        <Button onClick={handleSave} disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+      <div className="pt-6">
+        <Button onClick={handleSave} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
           {isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 1"}
         </Button>
-        
-        {/* Optional: Add a button to save as JSON if database structure is limited */}
-        <Button 
-          onClick={handleSaveAsJson} 
-          disabled={isLoading} 
-          variant="outline"
-          className="px-6"
-          title="บันทึกข้อมูลในรูปแบบ JSON (สำหรับกรณีที่ฐานข้อมูลยังไม่รองรับทุกฟิลด์)"
-        >
-          บันทึกแบบ JSON
-        </Button>
-      </div>
-      
-      <div className="text-xs text-muted-foreground text-center">
-        * หากพบข้อผิดพลาดเกี่ยวกับฐานข้อมูล ระบบจะพยายามบันทึกเฉพาะข้อมูลที่สามารถบันทึกได้
       </div>
     </div>
   );
