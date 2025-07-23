@@ -32,26 +32,10 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
     section2_continued_development: '',
     
     // 2.5 แอปพลิเคชัน
-    section2_app1_name: '',
-    section2_app1_method_buy: false,
-    section2_app1_method_develop: false,
-    section2_app1_method_transfer: false,
-    section2_app2_name: '',
-    section2_app2_method_buy: false,
-    section2_app2_method_develop: false,
-    section2_app2_method_transfer: false,
+    section2_applications: {},
     
     // 2.6 การขยายเครือข่าย
-    section2_network_org1: '',
-    section2_network_cooperation1: '',
-    section2_network_org2: '',
-    section2_network_cooperation2: '',
-    section2_network_org3: '',
-    section2_network_cooperation3: '',
-    section2_network_org4: '',
-    section2_network_cooperation4: '',
-    section2_network_org5: '',
-    section2_network_cooperation5: '',
+    section2_network_expansion: {},
     
     ...data
   });
@@ -184,8 +168,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
         <Label className="text-base font-medium">{appNumber}) ชื่อแอปพลิเคชัน (Application)</Label>
         <Input
           placeholder="ระบุชื่อแอปพลิเคชัน"
-          value={formData[`section2_app${appNumber}_name`] || ''}
-          onChange={(e) => handleInputChange(`section2_app${appNumber}_name`, e.target.value)}
+          value={formData.section2_applications?.[`app${appNumber}_name`] || ''}
+          onChange={(e) => handleInputChange('section2_applications', {
+            ...formData.section2_applications,
+            [`app${appNumber}_name`]: e.target.value
+          })}
           className="w-full"
         />
       </div>
@@ -196,8 +183,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`app${appNumber}-buy`}
-              checked={formData[`section2_app${appNumber}_method_buy`] || false}
-              onCheckedChange={(checked) => handleCheckboxSingleChange(`section2_app${appNumber}_method_buy`, checked as boolean)}
+              checked={formData.section2_applications?.[`app${appNumber}_method_buy`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_buy`]: checked as boolean
+              })}
             />
             <Label htmlFor={`app${appNumber}-buy`} className="text-sm cursor-pointer">ซื้อ</Label>
           </div>
@@ -205,8 +195,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`app${appNumber}-develop`}
-              checked={formData[`section2_app${appNumber}_method_develop`] || false}
-              onCheckedChange={(checked) => handleCheckboxSingleChange(`section2_app${appNumber}_method_develop`, checked as boolean)}
+              checked={formData.section2_applications?.[`app${appNumber}_method_develop`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_develop`]: checked as boolean
+              })}
             />
             <Label htmlFor={`app${appNumber}-develop`} className="text-sm cursor-pointer">องค์กรพัฒนาขึ้นเอง</Label>
           </div>
@@ -214,8 +207,11 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id={`app${appNumber}-transfer`}
-              checked={formData[`section2_app${appNumber}_method_transfer`] || false}
-              onCheckedChange={(checked) => handleCheckboxSingleChange(`section2_app${appNumber}_method_transfer`, checked as boolean)}
+              checked={formData.section2_applications?.[`app${appNumber}_method_transfer`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_transfer`]: checked as boolean
+              })}
             />
             <Label htmlFor={`app${appNumber}-transfer`} className="text-sm cursor-pointer">องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้</Label>
           </div>
@@ -237,15 +233,21 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading }) => {
             <span className="text-sm font-medium">{num}.</span>
             <Input
               placeholder="ระบุหน่วยงาน"
-              value={formData[`section2_network_org${num}`] || ''}
-              onChange={(e) => handleInputChange(`section2_network_org${num}`, e.target.value)}
+              value={formData.section2_network_expansion?.[`org${num}`] || ''}
+              onChange={(e) => handleInputChange('section2_network_expansion', {
+                ...formData.section2_network_expansion,
+                [`org${num}`]: e.target.value
+              })}
               className="flex-1"
             />
           </div>
           <Input
             placeholder="ระบุด้านความร่วมมือ"
-            value={formData[`section2_network_cooperation${num}`] || ''}
-            onChange={(e) => handleInputChange(`section2_network_cooperation${num}`, e.target.value)}
+            value={formData.section2_network_expansion?.[`cooperation${num}`] || ''}
+            onChange={(e) => handleInputChange('section2_network_expansion', {
+              ...formData.section2_network_expansion,
+              [`cooperation${num}`]: e.target.value
+            })}
             className="w-full"
           />
         </div>
