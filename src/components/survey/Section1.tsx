@@ -14,37 +14,65 @@ interface Section1Props {
 
 const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
   const [formData, setFormData] = useState({
-    knowledge_outcomes: [],
-    application_outcomes: [],
-    changes_description: '',
-    problems_before: [],
-    problems_other: '',
-    knowledge_solutions: [],
-    knowledge_solutions_other: '',
-    knowledge_before: null,
-    knowledge_after: null,
-    it_usage: [],
-    it_usage_other: '',
-    it_level: null,
-    cooperation_usage: [],
-    cooperation_usage_other: '',
-    cooperation_level: null,
-    funding_usage: [],
-    funding_usage_other: '',
-    funding_level: null,
-    culture_usage: [],
-    culture_usage_other: '',
-    culture_level: null,
-    green_usage: [],
-    green_usage_other: '',
-    green_level: null,
-    new_dev_usage: [],
-    new_dev_usage_other: '',
-    new_dev_level: null,
-    success_factors: [],
-    success_factors_other: '',
-    success_description: '',
-    overall_change_level: null,
+    // 1.1 ผลลัพธ์ภายหลัง
+    section1_knowledge_outcomes: [],
+    section1_application_outcomes: [],
+    section1_application_other: '',
+    
+    // 1.2 อธิบายการเปลี่ยนแปลง
+    section1_changes_description: '',
+    
+    // 1.3 ปัญหาก่อนอบรม
+    section1_problems_before: [],
+    
+    // 1.4 การใช้องค์ความรู้
+    section1_knowledge_solutions: [],
+    section1_knowledge_solutions_other: '',
+    section1_knowledge_before: null,
+    section1_knowledge_after: null,
+    
+    // 1.5 กลไกข้อมูลสารสนเทศ
+    section1_it_usage: [],
+    section1_it_usage_other: '',
+    section1_it_level: null,
+    
+    // 1.6 กลไกประสานความร่วมมือ
+    section1_cooperation_usage: [],
+    section1_cooperation_usage_other: '',
+    section1_cooperation_level: null,
+    
+    // 1.7 กลไกการระดมทุน
+    section1_funding_usage: [],
+    section1_funding_usage_other: '',
+    section1_funding_level: null,
+    
+    // 1.8 กลไกวัฒนธรรม
+    section1_culture_usage: [],
+    section1_culture_usage_other: '',
+    section1_culture_level: null,
+    
+    // 1.9 กลไกเศรษฐกิจสีเขียว
+    section1_green_usage: [],
+    section1_green_usage_other: '',
+    section1_green_level: null,
+    
+    // 1.10 กลไกการพัฒนาใหม่
+    section1_new_dev_usage: [],
+    section1_new_dev_usage_other: '',
+    
+    // 1.11 ระดับกลไกการพัฒนาใหม่
+    section1_new_dev_level: null,
+    
+    // 1.12 ปัจจัยความสำเร็จ
+    section1_success_factors: [],
+    section1_success_factors_other: '',
+    
+    // 1.13 อธิบายปัจจัยความสำเร็จ
+    section1_success_description: '',
+    
+    // 1.14 ระดับการเปลี่ยนแปลง
+    section1_overall_change_level: null,
+    
     ...data
   });
 
@@ -85,16 +113,16 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
   ];
 
   const problemsBefore = [
-    'มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่',
-    'วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น',
-    'การบริหารจัดการองค์กร',
-    'ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน',
-    'ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น',
-    'ไม่ใช้ข้อมูลเป็นฐานในการวางแผน',
-    'บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด',
-    'ขาดเครือข่ายในการพัฒนาเมือง',
-    'ขาดความรู้ทักษะในการพัฒนาเมือง',
-    'ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง'
+    { text: 'มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่', hasDetail: true },
+    { text: 'วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น', hasDetail: true },
+    { text: 'การบริหารจัดการองค์กร', hasDetail: true },
+    { text: 'ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน', hasDetail: true },
+    { text: 'ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น', hasDetail: true },
+    { text: 'ไม่ใช้ข้อมูลเป็นฐานในการวางแผน', hasDetail: true },
+    { text: 'บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด', hasDetail: true },
+    { text: 'ขาดเครือข่ายในการพัฒนาเมือง', hasDetail: true },
+    { text: 'ขาดความรู้ทักษะในการพัฒนาเมือง', hasDetail: true },
+    { text: 'ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง', hasDetail: true }
   ];
 
   const knowledgeSolutions = [
@@ -221,6 +249,38 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
     </div>
   );
 
+  const renderProblemsBeforeGroup = (problems: any[]) => (
+    <div className="space-y-3">
+      <div className="space-y-2 max-h-80 overflow-y-auto">
+        {problems.map((problem, index) => (
+          <div key={index} className="space-y-2">
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id={`problems-${index}`}
+                checked={(formData.section1_problems_before || []).includes(problem.text)}
+                onCheckedChange={(checked) => handleCheckboxChange('section1_problems_before', problem.text, checked as boolean)}
+                className="mt-1 flex-shrink-0"
+              />
+              <Label htmlFor={`problems-${index}`} className="text-sm leading-5 cursor-pointer">
+                {problem.text}
+              </Label>
+            </div>
+            {problem.hasDetail && (formData.section1_problems_before || []).includes(problem.text) && (
+              <div className="ml-6">
+                <Input
+                  placeholder="ระบุ"
+                  value={formData[`section1_problems_detail_${index}`] || ''}
+                  onChange={(e) => handleInputChange(`section1_problems_detail_${index}`, e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const renderRatingScale = (title: string, field: string) => (
     <div className="space-y-3">
       {title && <Label className="text-base font-medium">{title}</Label>}
@@ -262,25 +322,25 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
         <CardContent className="space-y-6">
           <div>
             <h4 className="font-medium text-base mb-3 underline">ด้านองค์ความรู้</h4>
-            {renderCheckboxGroup("", knowledgeOutcomes, "knowledge_outcomes", undefined, false)}
+            {renderCheckboxGroup("", knowledgeOutcomes, "section1_knowledge_outcomes", undefined, false)}
           </div>
           
           <div>
             <h4 className="font-medium text-base mb-3 underline">ด้านการประยุกต์ใช้องค์ความรู้</h4>
-            {renderCheckboxGroup("", applicationOutcomes, "application_outcomes", undefined, false)}
+            {renderCheckboxGroup("", applicationOutcomes, "section1_application_outcomes", "section1_application_other")}
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">2. โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1</CardTitle>
+          <CardTitle className="text-lg">2. โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             placeholder="กรุณาอธิบาย..."
-            value={formData.changes_description || ''}
-            onChange={(e) => handleInputChange('changes_description', e.target.value)}
+            value={formData.section1_changes_description || ''}
+            onChange={(e) => handleInputChange('section1_changes_description', e.target.value)}
             rows={5}
             className="w-full"
           />
@@ -292,29 +352,29 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">3. ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร</CardTitle>
         </CardHeader>
         <CardContent>
-          {renderCheckboxGroup("", problemsBefore, "problems_before", "problems_other")}
+          {renderProblemsBeforeGroup(problemsBefore)}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
+          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup("", knowledgeSolutions, "knowledge_solutions", "knowledge_solutions_other")}
+          {renderCheckboxGroup("", knowledgeSolutions, "section1_knowledge_solutions", "section1_knowledge_solutions_other")}
           
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <Label className="text-base font-medium">ก่อนเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด</Label>
                 <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-                {renderRatingScale("", "knowledge_before")}
+                {renderRatingScale("", "section1_knowledge_before")}
               </div>
               
               <div>
                 <Label className="text-base font-medium">หลังเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด</Label>
                 <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-                {renderRatingScale("", "knowledge_after")}
+                {renderRatingScale("", "section1_knowledge_after")}
               </div>
             </div>
           </div>
@@ -342,12 +402,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">5. องค์กรของท่านได้นำ กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup("", itUsage, "it_usage", "it_usage_other")}
+          {renderCheckboxGroup("", itUsage, "section1_it_usage", "section1_it_usage_other")}
           
           <div>
             <Label className="text-base font-medium">ท่านคิดว่า ในภาพรวม กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
             <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "it_level")}
+            {renderRatingScale("", "section1_it_level")}
           </div>
         </CardContent>
       </Card>
@@ -357,12 +417,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">6. องค์กรของท่านได้นำ กลไกประสานความร่วมมือ มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup("", cooperationUsage, "cooperation_usage", "cooperation_usage_other")}
+          {renderCheckboxGroup("", cooperationUsage, "section1_cooperation_usage", "section1_cooperation_usage_other")}
           
           <div>
             <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกประสานความร่วมมือ ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
             <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "cooperation_level")}
+            {renderRatingScale("", "section1_cooperation_level")}
           </div>
         </CardContent>
       </Card>
@@ -372,12 +432,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">7. องค์กรของท่านได้นำ กลไกการระดมทุน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup("", fundingUsage, "funding_usage", "funding_usage_other")}
+          {renderCheckboxGroup("", fundingUsage, "section1_funding_usage", "section1_funding_usage_other")}
           
           <div>
             <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกการระดมทุน ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
             <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "funding_level")}
+            {renderRatingScale("", "section1_funding_level")}
           </div>
         </CardContent>
       </Card>
@@ -387,12 +447,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">8. องค์กรของท่านได้นำ กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup("", cultureUsage, "culture_usage", "culture_usage_other")}
+          {renderCheckboxGroup("", cultureUsage, "section1_culture_usage", "section1_culture_usage_other")}
           
           <div>
             <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
             <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "culture_level")}
+            {renderRatingScale("", "section1_culture_level")}
           </div>
         </CardContent>
       </Card>
@@ -402,12 +462,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">9. องค์กรของท่านได้นำ กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderCheckboxGroup("", greenUsage, "green_usage", "green_usage_other")}
+          {renderCheckboxGroup("", greenUsage, "section1_green_usage", "section1_green_usage_other")}
           
           <div>
             <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
             <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "green_level")}
+            {renderRatingScale("", "section1_green_level")}
           </div>
         </CardContent>
       </Card>
@@ -417,7 +477,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">10. องค์กรของท่านได้นำ กลไกการพัฒนาใหม่ (บริษัทพัฒนาเมือง วิสาหกิจเพื่อสังคม สหการ) มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
         </CardHeader>
         <CardContent>
-          {renderCheckboxGroup("", newDevUsage, "new_dev_usage", "new_dev_usage_other")}
+          {renderCheckboxGroup("", newDevUsage, "section1_new_dev_usage", "section1_new_dev_usage_other")}
         </CardContent>
       </Card>
 
@@ -427,12 +487,12 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-          {renderRatingScale("", "new_dev_level")}
+          {renderRatingScale("", "section1_new_dev_level")}
         </CardContent>
       </Card>
 
       <div className="bg-yellow-50 p-4 rounded-lg">
-        <h4 className="font-medium mb-3 text-yellow-800">หมายเหตุ : คำอธิบายระดับ 1-10 (สำหรับข้อ 5-11)</h4>
+        <h4 className="font-medium mb-3 text-yellow-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
         <div className="text-sm space-y-1">
           <p><strong>ระดับ 1 :</strong> ไม่ได้ใช้ประโยชน์ในการยกระดับการพัฒนาท้องถิ่น ไม่ตระหนักถึงการมีอยู่</p>
           <p><strong>ระดับ 2 :</strong> ตระหนัก แต่ไม่ได้นำไปใช้ประโยชน์ในการยกระดับการพัฒนาท้องถิ่น</p>
@@ -452,19 +512,19 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
           <CardTitle className="text-lg">12. ท่านคิดว่า องค์ความรู้และการประยุกต์ใช้องค์ความรู้จากการอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ในประเด็นใดบ้าง</CardTitle>
         </CardHeader>
         <CardContent>
-          {renderCheckboxGroup("", successFactors, "success_factors", "success_factors_other")}
+          {renderCheckboxGroup("", successFactors, "section1_success_factors", "section1_success_factors_other")}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">13. โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 12</CardTitle>
+          <CardTitle className="text-lg">13. โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 1.12</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             placeholder="กรุณาอธิบาย..."
-            value={formData.success_description || ''}
-            onChange={(e) => handleInputChange('success_description', e.target.value)}
+            value={formData.section1_success_description || ''}
+            onChange={(e) => handleInputChange('section1_success_description', e.target.value)}
             rows={5}
             className="w-full"
           />
@@ -477,7 +537,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading }) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-          {renderRatingScale("", "overall_change_level")}
+          {renderRatingScale("", "section1_overall_change_level")}
           
           <div className="bg-green-50 p-4 rounded-lg">
             <h4 className="font-medium mb-3 text-green-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
