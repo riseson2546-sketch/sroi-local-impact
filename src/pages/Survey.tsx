@@ -158,15 +158,16 @@ const Survey = () => {
         }
       }
 
-      toast({
-        title: "บันทึกข้อมูลสำเร็จ",
-        description: `ส่วนที่ ${section} ได้รับการบันทึกแล้ว`,
-      });
-
+      // อัปเดต formData ทันทีหลังบันทึกสำเร็จ
       setFormData(prev => ({
         ...prev,
         [`section${section}`]: sectionData
       }));
+
+      toast({
+        title: "บันทึกข้อมูลสำเร็จ",
+        description: `ส่วนที่ ${section} ได้รับการบันทึกแล้ว`,
+      });
 
     } catch (error: any) {
       toast({
@@ -232,7 +233,7 @@ const Survey = () => {
           <CardContent className="p-6">
             {currentSection === 1 && (
               <Section1
-                data={formData}
+                data={formData.section1 || formData}
                 onSave={(data) => handleSaveSection(data, 1)}
                 isLoading={isLoading}
               />
