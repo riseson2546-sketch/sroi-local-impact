@@ -154,14 +154,28 @@ const Section2Viewer: React.FC<Section2ViewerProps> = ({ data }) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(data.section2_network_expansion).map(([key, value]: [string, any]) => (
-                    <div key={key}>
-                      <h4 className="font-medium mb-2">พาร์ทเนอร์: {value.partner || key}</h4>
-                      <div className="p-3 bg-secondary/20 rounded">
-                        <p><strong>พื้นที่ความร่วมมือ:</strong> {value.area || 'ไม่ระบุ'}</p>
+                  {[1, 2, 3, 4, 5].map((num) => {
+                    const orgKey = `org${num}`;
+                    const cooperationKey = `cooperation${num}`;
+                    const orgName = data.section2_network_expansion[orgKey];
+                    const cooperation = data.section2_network_expansion[cooperationKey];
+                    
+                    // แสดงเฉพาะรายการที่มีข้อมูล
+                    if (!orgName && !cooperation) return null;
+                    
+                    return (
+                      <div key={num} className="p-3 bg-secondary/20 rounded">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p><strong>หน่วยงาน:</strong> {orgName || 'ไม่ระบุ'}</p>
+                          </div>
+                          <div>
+                            <p><strong>ด้านความร่วมมือ:</strong> {cooperation || 'ไม่ระบุ'}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
