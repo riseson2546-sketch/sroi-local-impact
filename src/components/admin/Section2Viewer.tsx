@@ -175,40 +175,113 @@ const Section2Viewer: React.FC<Section2ViewerProps> = ({ data }) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(data.section2_applications).map(([key, value]: [string, any]) => (
-                    <div key={key}>
-                      <h4 className="font-medium mb-2">แอพพลิเคชั่น: {value.name || key}</h4>
+                  {/* แสดงแอพพลิเคชั่น 1 */}
+                  {data.section2_applications.app1_name && (
+                    <div>
+                      <h4 className="font-medium mb-2">แอพพลิเคชั่น: {data.section2_applications.app1_name}</h4>
                       <div className="p-3 bg-secondary/20 rounded space-y-2">
                         <p><strong>วิธีการได้มา:</strong></p>
                         <div className="flex gap-4 ml-4">
                           <label className="flex items-center space-x-2">
                             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                              value.acquisition === 'buy' ? 'bg-primary border-primary' : 'border-gray-300'
+                              data.section2_applications.app1_method_buy ? 'bg-primary border-primary' : 'border-gray-300'
                             }`}>
-                              {value.acquisition === 'buy' && <span className="text-white text-xs">✓</span>}
+                              {data.section2_applications.app1_method_buy && <span className="text-white text-xs">✓</span>}
                             </div>
                             <span>ซื้อ</span>
                           </label>
                           <label className="flex items-center space-x-2">
                             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                              value.acquisition === 'develop' ? 'bg-primary border-primary' : 'border-gray-300'
+                              data.section2_applications.app1_method_develop ? 'bg-primary border-primary' : 'border-gray-300'
                             }`}>
-                              {value.acquisition === 'develop' && <span className="text-white text-xs">✓</span>}
+                              {data.section2_applications.app1_method_develop && <span className="text-white text-xs">✓</span>}
                             </div>
                             <span>พัฒนาเอง</span>
                           </label>
                           <label className="flex items-center space-x-2">
                             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                              value.acquisition === 'transfer' ? 'bg-primary border-primary' : 'border-gray-300'
+                              data.section2_applications.app1_method_transfer ? 'bg-primary border-primary' : 'border-gray-300'
                             }`}>
-                              {value.acquisition === 'transfer' && <span className="text-white text-xs">✓</span>}
+                              {data.section2_applications.app1_method_transfer && <span className="text-white text-xs">✓</span>}
                             </div>
                             <span>ถ่ายทอดเทคโนโลยี</span>
                           </label>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* แสดงแอพพลิเคชั่น 2 */}
+                  {data.section2_applications.app2_name && (
+                    <div>
+                      <h4 className="font-medium mb-2">แอพพลิเคชั่น: {data.section2_applications.app2_name}</h4>
+                      <div className="p-3 bg-secondary/20 rounded space-y-2">
+                        <p><strong>วิธีการได้มา:</strong></p>
+                        <div className="flex gap-4 ml-4">
+                          <label className="flex items-center space-x-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              data.section2_applications.app2_method_buy ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {data.section2_applications.app2_method_buy && <span className="text-white text-xs">✓</span>}
+                            </div>
+                            <span>ซื้อ</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              data.section2_applications.app2_method_develop ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {data.section2_applications.app2_method_develop && <span className="text-white text-xs">✓</span>}
+                            </div>
+                            <span>พัฒนาเอง</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              data.section2_applications.app2_method_transfer ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {data.section2_applications.app2_method_transfer && <span className="text-white text-xs">✓</span>}
+                            </div>
+                            <span>ถ่ายทอดเทคโนโลยี</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* แสดงแอพพลิเคชั่น 3 */}
+                  {data.section2_applications.app3_name && (
+                    <div>
+                      <h4 className="font-medium mb-2">แอพพลิเคชั่น: {data.section2_applications.app3_name}</h4>
+                      <div className="p-3 bg-secondary/20 rounded space-y-2">
+                        <p><strong>วิธีการได้มา:</strong></p>
+                        <div className="flex gap-4 ml-4">
+                          <label className="flex items-center space-x-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              data.section2_applications.app3_method_buy ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {data.section2_applications.app3_method_buy && <span className="text-white text-xs">✓</span>}
+                            </div>
+                            <span>ซื้อ</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              data.section2_applications.app3_method_develop ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {data.section2_applications.app3_method_develop && <span className="text-white text-xs">✓</span>}
+                            </div>
+                            <span>พัฒนาเอง</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              data.section2_applications.app3_method_transfer ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {data.section2_applications.app3_method_transfer && <span className="text-white text-xs">✓</span>}
+                            </div>
+                            <span>ถ่ายทอดเทคโนโลยี</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
