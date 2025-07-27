@@ -232,32 +232,13 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
               </div>
             </div>
           )}
-          
-          {/* แสดงรายละเอียดของปัญหาที่เลือก */}
-          {problemsBefore.map((problem, index) => {
-            const isSelected = data.section1_problems_before?.includes(problem.text);
-            const detailField = `section1_problems_detail_${index + 1}`;
-            const detailValue = data[detailField];
-            
-            if (isSelected && detailValue) {
-              return (
-                <div key={index} className="mt-4">
-                  <h4 className="font-medium mb-2">รายละเอียด: {problem.text}</h4>
-                  <div className="p-3 bg-secondary/20 rounded">
-                    {detailValue}
-                  </div>
-                </div>
-              );
-            }
-            return null;
-          })}
         </CardContent>
       </Card>
 
       {/* 1.4 การใช้องค์ความรู้ */}
       <Card>
         <CardHeader>
-          <CardTitle>1.4 การใช้องค์ความรู้ในการแก้ปัญหาตามที่ระบุในข้อ 3 อย่างไร</CardTitle>
+          <CardTitle>1.4 การใช้องค์ความรู้ในการแก้ปัญหาการพัฒนาเมือง</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
