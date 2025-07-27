@@ -78,22 +78,11 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
   /** สถานะกำลังบันทึกภายใน component */
   const [saving, setSaving] = useState(false);
-  /** ตัวจับเวลาสำหรับ auto-save */
-  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null);
 
   /* เมื่อ prop `data` เปลี่ยน (กรณีโหลดคำตอบเดิม) รวมเข้ากับ state */
   useEffect(() => {
     setFormData(prev => ({ ...prev, ...data }));
   }, [data]);
-
-  /* Cleanup timer เมื่อ component unmount */
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
-      }
-    };
-  }, [autoSaveTimer]);
 
   /** เพิ่มหรือเอา checkbox ออก (array field) */
   const handleCheckboxChange = (field: string, value: string, checked: boolean) => {
@@ -103,93 +92,11 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
         ? [...(prev[field] || []), value]
         : (prev[field] || []).filter((item: string) => item !== value),
     }));
-    triggerAutoSave();
   };
 
   /** อัปเดตช่อง input ทั่วไป */
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    triggerAutoSave();
-  };
-
-  /** เพิ่มหรือเอา checkbox ออก (array field) พร้อม validation */
-  const handleCheckboxChangeWithValidation = (field: string, value: string, checked: boolean) => {
-    // ตรวจสอบ progressive validation
-    const validationError = checkProgressiveValidation(field);
-    if (validationError) {
-      alert(validationError);
-      return;
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      [field]: checked
-        ? [...(prev[field] || []), value]
-        : (prev[field] || []).filter((item: string) => item !== value),
-    }));
-    triggerAutoSave();
-  };
-
-  /** ตรวจสอบ progressive validation */
-  const checkProgressiveValidation = (currentField: string) => {
-    // กำหนดลำดับของคำถาม
-    const questionOrder = [
-      { fields: ['section1_knowledge_outcomes', 'section1_application_outcomes'], question: '1' },
-      { fields: ['section1_changes_description'], question: '2' },
-      { fields: ['section1_problems_before'], question: '3' },
-      { fields: ['section1_knowledge_solutions', 'section1_knowledge_before', 'section1_knowledge_after'], question: '4' },
-      { fields: ['section1_it_usage', 'section1_it_level'], question: '5' },
-      { fields: ['section1_cooperation_usage', 'section1_cooperation_level'], question: '6' },
-      { fields: ['section1_funding_usage', 'section1_funding_level'], question: '7' },
-      { fields: ['section1_culture_usage', 'section1_culture_level'], question: '8' },
-      { fields: ['section1_green_usage', 'section1_green_level'], question: '9' },
-      { fields: ['section1_new_dev_usage', 'section1_new_dev_level'], question: '11' },
-      { fields: ['section1_success_factors'], question: '12' },
-      { fields: ['section1_success_description'], question: '13' },
-      { fields: ['section1_overall_change_level'], question: '14' }
-    ];
-
-    // หาตำแหน่งของคำถามปัจจุบัน
-    const currentQuestionIndex = questionOrder.findIndex(q => q.fields.includes(currentField));
-    if (currentQuestionIndex === -1) return null;
-
-    // ตรวจสอบคำถามก่อนหน้า
-    for (let i = 0; i < currentQuestionIndex; i++) {
-      const question = questionOrder[i];
-      const isQuestionComplete = question.fields.some(field => {
-        const value = formData[field];
-        if (Array.isArray(value)) {
-          return value.length > 0;
-        }
-        return value && value.toString().trim() !== '';
-      });
-
-      if (!isQuestionComplete) {
-        return `กรุณาตอบข้อ ${question.question} ให้เสร็จสิ้นก่อน จึงจะสามารถตอบข้อถัดไปได้`;
-      }
-    }
-
-    return null;
-  };
-
-  /** ฟังก์ชัน auto-save */
-  const triggerAutoSave = () => {
-    // ยกเลิก timer เดิม
-    if (autoSaveTimer) {
-      clearTimeout(autoSaveTimer);
-    }
-
-    // ตั้ง timer ใหม่
-    const timer = setTimeout(async () => {
-      try {
-        console.log("[Section1] Auto-saving...");
-        await onSave(formData);
-      } catch (err) {
-        console.error("[Section1] Auto-save failed", err);
-      }
-    }, 2000); // บันทึกหลังจากหยุดพิมพ์ 2 วินาที
-
-    setAutoSaveTimer(timer);
   };
 
   /**
@@ -411,7 +318,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
             <Checkbox
               id={`${field}-${index}`}
               checked={(formData[field] || []).includes(option)}
-              onCheckedChange={(checked) => handleCheckboxChangeWithValidation(field, option, checked as boolean)}
+              onCheckedChange={(checked) => handleCheckboxChange(field, option, checked as boolean)}
               className="mt-1 flex-shrink-0"
             />
             <Label htmlFor={`${field}-${index}`} className="text-sm leading-5 cursor-pointer">
@@ -424,7 +331,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
             <Checkbox
               id={`${field}-other`}
               checked={(formData[field] || []).includes('อื่น ๆ')}
-              onCheckedChange={(checked) => handleCheckboxChangeWithValidation(field, 'อื่น ๆ', checked as boolean)}
+              onCheckedChange={(checked) => handleCheckboxChange(field, 'อื่น ๆ', checked as boolean)}
               className="mt-1 flex-shrink-0"
             />
             <div className="flex-1 space-y-2">
@@ -455,7 +362,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
               <Checkbox
                 id={`problems-${index}`}
                 checked={(formData.section1_problems_before || []).includes(problem.text)}
-                onCheckedChange={(checked) => handleCheckboxChangeWithValidation('section1_problems_before', problem.text, checked as boolean)}
+                onCheckedChange={(checked) => handleCheckboxChange('section1_problems_before', problem.text, checked as boolean)}
                 className="mt-1 flex-shrink-0"
               />
               <Label htmlFor={`problems-${index}`} className="text-sm leading-5 cursor-pointer">
@@ -493,14 +400,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
               type="button"
               variant={formData[field] === value ? "default" : "outline"}
               size="sm"
-              onClick={() => {
-                const validationError = checkProgressiveValidation(field);
-                if (validationError) {
-                  alert(validationError);
-                  return;
-                }
-                handleInputChange(field, value);
-              }}
+              onClick={() => handleInputChange(field, value)}
               className="h-8 text-xs"
             >
               {value}

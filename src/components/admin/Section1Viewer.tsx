@@ -234,16 +234,17 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
           )}
           
           {/* แสดงรายละเอียดของปัญหาที่เลือก */}
-          {data.section1_problems_before && data.section1_problems_before.map((selectedProblem, selectedIndex) => {
-            const problemIndex = problemsBefore.findIndex(p => p.text === selectedProblem);
-            if (problemIndex === -1) return null;
-            const detailKey = `section1_problems_detail_${problemIndex}`;
-            if (data[detailKey]) {
+          {problemsBefore.map((problem, index) => {
+            const isSelected = data.section1_problems_before?.includes(problem.text);
+            const detailField = `section1_problems_detail_${index + 1}`;
+            const detailValue = data[detailField];
+            
+            if (isSelected && detailValue) {
               return (
-                <div key={selectedIndex} className="mt-4">
-                  <h4 className="font-medium mb-2">รายละเอียด: {selectedProblem}</h4>
+                <div key={index} className="mt-4">
+                  <h4 className="font-medium mb-2">รายละเอียด: {problem.text}</h4>
                   <div className="p-3 bg-secondary/20 rounded">
-                    {data[detailKey]}
+                    {detailValue}
                   </div>
                 </div>
               );
