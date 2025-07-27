@@ -5,86 +5,173 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ChevronRight, ChevronLeft, AlertCircle } from "lucide-react";
 
 interface Section1Props {
-  /**
-   * ข้อมูลเริ่มต้น (กรณีแก้ไขคำตอบเดิม)
-   */
   data: any;
-  /**
-   * ฟังก์ชันที่ parent ส่งมาให้บันทึกข้อมูล
-   * *ต้อง* คืน Promise เพื่อให้ component รอการบันทึกเสร็จ
-   */
   onSave: (data: any) => Promise<void> | void;
-  /**
-   * ใช้จากภายนอกกรณี parent มี loading ของตัวเอง
-   */
   isLoading?: boolean;
 }
 
-/**
- * ค่าตั้งต้นของฟอร์ม (รวมทุกช่องที่ใช้ในฟอร์ม)
- */
 const defaultFormState: Record<string, any> = {
-  // 1.1 ผลลัพธ์ภายหลัง
   section1_knowledge_outcomes: [],
   section1_application_outcomes: [],
   section1_application_other: "",
-  // 1.2 อธิบายการเปลี่ยนแปลง
   section1_changes_description: "",
-  // 1.3 ปัญหาก่อนอบรม
   section1_problems_before: [],
-  // 1.4 การใช้องค์ความรู้
   section1_knowledge_solutions: [],
   section1_knowledge_solutions_other: "",
   section1_knowledge_before: null,
   section1_knowledge_after: null,
-  // 1.5 กลไกข้อมูลสารสนเทศ
   section1_it_usage: [],
   section1_it_usage_other: "",
   section1_it_level: null,
-  // 1.6 กลไกประสานความร่วมมือ
   section1_cooperation_usage: [],
   section1_cooperation_usage_other: "",
   section1_cooperation_level: null,
-  // 1.7 กลไกการระดมทุน
   section1_funding_usage: [],
   section1_funding_usage_other: "",
   section1_funding_level: null,
-  // 1.8 กลไกวัฒนธรรม
   section1_culture_usage: [],
   section1_culture_usage_other: "",
   section1_culture_level: null,
-  // 1.9 กลไกเศรษฐกิจสีเขียว
   section1_green_usage: [],
   section1_green_usage_other: "",
   section1_green_level: null,
-  // 1.10 กลไกการพัฒนาใหม่
   section1_new_dev_usage: [],
   section1_new_dev_usage_other: "",
-  // 1.11 ระดับกลไกการพัฒนาใหม่
   section1_new_dev_level: null,
-  // 1.12 ปัจจัยความสำเร็จ
   section1_success_factors: [],
   section1_success_factors_other: "",
-  // 1.13 อธิบายปัจจัยความสำเร็จ
   section1_success_description: "",
-  // 1.14 ระดับการเปลี่ยนแปลง
   section1_overall_change_level: null,
 };
 
 const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) => {
-  /** local state */
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
-  /** สถานะกำลังบันทึกภายใน component */
   const [saving, setSaving] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  /* เมื่อ prop `data` เปลี่ยน (กรณีโหลดคำตอบเดิม) รวมเข้ากับ state */
   useEffect(() => {
     setFormData(prev => ({ ...prev, ...data }));
   }, [data]);
 
-  /** เพิ่มหรือเอา checkbox ออก (array field) */
+  // กำหนดขั้นตอนของฟอร์ม
+  const formSteps = [
+    {
+      id: 'knowledge_application',
+      title: '1. ผลลัพธ์ภายหลังจากการเข้าร่วมอบรม',
+      required: ['section1_knowledge_outcomes', 'section1_application_outcomes']
+    },
+    {
+      id: 'changes_description',
+      title: '2. อธิบายการเปลี่ยนแปลงที่เกิดขึ้น',
+      required: ['section1_changes_description']
+    },
+    {
+      id: 'problems_before',
+      title: '3. ปัญหาก่อนเข้าร่วมอบรม',
+      required: ['section1_problems_before']
+    },
+    {
+      id: 'knowledge_usage',
+      title: '4. การใช้องค์ความรู้',
+      required: ['section1_knowledge_solutions', 'section1_knowledge_before', 'section1_knowledge_after']
+    },
+    {
+      id: 'it_mechanism',
+      title: '5. กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล',
+      required: ['section1_it_usage', 'section1_it_level']
+    },
+    {
+      id: 'cooperation_mechanism',
+      title: '6. กลไกประสานความร่วมมือ',
+      required: ['section1_cooperation_usage', 'section1_cooperation_level']
+    },
+    {
+      id: 'funding_mechanism',
+      title: '7. กลไกการระดมทุน',
+      required: ['section1_funding_usage', 'section1_funding_level']
+    },
+    {
+      id: 'culture_mechanism',
+      title: '8. กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น',
+      required: ['section1_culture_usage', 'section1_culture_level']
+    },
+    {
+      id: 'green_mechanism',
+      title: '9. กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน',
+      required: ['section1_green_usage', 'section1_green_level']
+    },
+    {
+      id: 'new_dev_mechanism',
+      title: '10-11. กลไกการพัฒนาใหม่',
+      required: ['section1_new_dev_usage', 'section1_new_dev_level']
+    },
+    {
+      id: 'success_factors',
+      title: '12. ปัจจัยความสำเร็จ',
+      required: ['section1_success_factors']
+    },
+    {
+      id: 'success_description',
+      title: '13. อธิบายปัจจัยความสำเร็จ',
+      required: ['section1_success_description']
+    },
+    {
+      id: 'overall_change',
+      title: '14. ระดับการเปลี่ยนแปลง',
+      required: ['section1_overall_change_level']
+    }
+  ];
+
+  // ตรวจสอบว่าข้อปัจจุบันตอบครบหรือยัง
+  const validateCurrentStep = () => {
+    const currentStepData = formSteps[currentStep];
+    const errors: string[] = [];
+
+    currentStepData.required.forEach(field => {
+      const value = formData[field];
+      
+      if (Array.isArray(value)) {
+        if (value.length === 0) {
+          errors.push(`กรุณาเลือกอย่างน้อย 1 ตัวเลือกใน ${field}`);
+        }
+      } else if (typeof value === 'string') {
+        if (!value || value.trim() === '') {
+          errors.push(`กรุณากรอกข้อมูลใน ${field}`);
+        }
+      } else if (value === null || value === undefined) {
+        errors.push(`กรุณาเลือกคำตอบใน ${field}`);
+      }
+    });
+
+    // ตรวจสอบเพิ่มเติมสำหรับ "อื่น ๆ"
+    if (currentStepData.id === 'knowledge_application') {
+      if (formData.section1_application_outcomes?.includes('อื่น ๆ') && 
+          (!formData.section1_application_other || formData.section1_application_other.trim() === '')) {
+        errors.push('กรุณาระบุรายละเอียดใน "อื่น ๆ"');
+      }
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep(prev => Math.min(prev + 1, formSteps.length - 1));
+      setValidationErrors([]);
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 0));
+    setValidationErrors([]);
+  };
+
   const handleCheckboxChange = (field: string, value: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -94,21 +181,15 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
     }));
   };
 
-  /** อัปเดตช่อง input ทั่วไป */
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  /**
-   * กดปุ่มบันทึก
-   * - แสดงสถานะกำลังบันทึก
-   * - รอ onSave() เสร็จ (ต้องรับ Promise)
-   */
   const handleSave = async () => {
     try {
       setSaving(true);
       console.log("[Section1] saving", formData);
-      await onSave(formData); // ต้องคืน Promise เพื่อให้ await ทำงาน
+      await onSave(formData);
     } catch (err) {
       console.error("[Section1] save failed", err);
       alert("บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ");
@@ -117,7 +198,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
     }
   };
 
-  /* ----------------------------- data lists ----------------------------- */
+  // ข้อมูลตัวเลือก
   const knowledgeOutcomes = [
     "มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก",
     "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง",
@@ -226,6 +307,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
     'การมีระบบในการติดตามและรายงานผลการใช้ประโยชน์จากนวัตกรรม'
   ];
 
+  // ฟังก์ชั่นช่วยในการ render
   const renderCheckboxGroup = (title: string, options: string[], field: string, otherField?: string, showOther = true) => (
     <div className="space-y-3">
       {title && <Label className="text-base font-medium">{title}</Label>}
@@ -328,260 +410,355 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
     </div>
   );
 
+  // เนื้อหาของแต่ละขั้นตอน
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0: // ข้อ 1
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">1. ผลลัพธ์ภายหลังจากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h4 className="font-medium text-base mb-3 underline text-red-600">ด้านองค์ความรู้ *</h4>
+                {renderCheckboxGroup("", knowledgeOutcomes, "section1_knowledge_outcomes", undefined, false)}
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-base mb-3 underline text-red-600">ด้านการประยุกต์ใช้องค์ความรู้ *</h4>
+                {renderCheckboxGroup("", applicationOutcomes, "section1_application_outcomes", "section1_application_other")}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 1: // ข้อ 2
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">2. โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="กรุณาอธิบาย..."
+                value={formData.section1_changes_description || ''}
+                onChange={(e) => handleInputChange('section1_changes_description', e.target.value)}
+                rows={5}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        );
+
+      case 2: // ข้อ 3
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">3. ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderProblemsBeforeGroup(problemsBefore)}
+            </CardContent>
+          </Card>
+        );
+
+      case 3: // ข้อ 4
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 3 อย่างไร <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderCheckboxGroup("", knowledgeSolutions, "section1_knowledge_solutions", "section1_knowledge_solutions_other")}
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-base font-medium">ก่อนเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด <span className="text-red-600">*</span></Label>
+                    <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                    {renderRatingScale("", "section1_knowledge_before")}
+                  </div>
+                  
+                  <div>
+                    <Label className="text-base font-medium">หลังเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด <span className="text-red-600">*</span></Label>
+                    <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                    {renderRatingScale("", "section1_knowledge_after")}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 4: // ข้อ 5
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">5. องค์กรของท่านได้นำ กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderCheckboxGroup("", itUsage, "section1_it_usage", "section1_it_usage_other")}
+              
+              <div>
+                <Label className="text-base font-medium">ท่านคิดว่า ในภาพรวม กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด <span className="text-red-600">*</span></Label>
+                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                {renderRatingScale("", "section1_it_level")}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 5: // ข้อ 6
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">6. องค์กรของท่านได้นำ กลไกประสานความร่วมมือ มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderCheckboxGroup("", cooperationUsage, "section1_cooperation_usage", "section1_cooperation_usage_other")}
+              
+              <div>
+                <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกประสานความร่วมมือ ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด <span className="text-red-600">*</span></Label>
+                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                {renderRatingScale("", "section1_cooperation_level")}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 6: // ข้อ 7
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">7. องค์กรของท่านได้นำ กลไกการระดมทุน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderCheckboxGroup("", fundingUsage, "section1_funding_usage", "section1_funding_usage_other")}
+              
+              <div>
+                <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกการระดมทุน ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด <span className="text-red-600">*</span></Label>
+                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                {renderRatingScale("", "section1_funding_level")}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 7: // ข้อ 8
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">8. องค์กรของท่านได้นำ กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderCheckboxGroup("", cultureUsage, "section1_culture_usage", "section1_culture_usage_other")}
+              
+              <div>
+                <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด <span className="text-red-600">*</span></Label>
+                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                {renderRatingScale("", "section1_culture_level")}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 8: // ข้อ 9
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">9. องค์กรของท่านได้นำ กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderCheckboxGroup("", greenUsage, "section1_green_usage", "section1_green_usage_other")}
+              
+              <div>
+                <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด <span className="text-red-600">*</span></Label>
+                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                {renderRatingScale("", "section1_green_level")}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 9: // ข้อ 10-11
+        return (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">10. องค์กรของท่านได้นำ กลไกการพัฒนาใหม่ (บริษัทพัฒนาเมือง วิสาหกิจเพื่อสังคม สหการ) มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง <span className="text-red-600">*</span></CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderCheckboxGroup("", newDevUsage, "section1_new_dev_usage", "section1_new_dev_usage_other")}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">11. ท่านคิดว่าในภาพรวม กลไกการพัฒนาใหม่ ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด <span className="text-red-600">*</span></CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+                {renderRatingScale("", "section1_new_dev_level")}
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 10: // ข้อ 12
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">12. ท่านคิดว่า องค์ความรู้และการประยุกต์ใช้องค์ความรู้จากการอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ในประเด็นใดบ้าง <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderCheckboxGroup("", successFactors, "section1_success_factors", "section1_success_factors_other")}
+            </CardContent>
+          </Card>
+        );
+
+      case 11: // ข้อ 13
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">13. โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 1.12 <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="กรุณาอธิบาย..."
+                value={formData.section1_success_description || ''}
+                onChange={(e) => handleInputChange('section1_success_description', e.target.value)}
+                rows={5}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        );
+
+      case 12: // ข้อ 14
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">14. บทบาทของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ก่อให้เกิดการเปลี่ยนแปลงในพื้นที่ของท่านในระดับใด <span className="text-red-600">*</span></CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
+              {renderRatingScale("", "section1_overall_change_level")}
+              
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3 text-green-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
+                <div className="text-sm space-y-1">
+                  <p><strong>ระดับ 1 :</strong> เมืองยังคงเป็นรูปแบบดั้งเดิม ไม่มีการเปลี่ยนแปลง</p>
+                  <p><strong>ระดับ 2 :</strong> เริ่มมีการวางแผนพัฒนาเมืองเบื้องต้น / เริ่มมีการวางแผนเรื่องระบบข้อมูล</p>
+                  <p><strong>ระดับ 3 :</strong> มีโครงการพัฒนาเล็ก ๆ แต่ยังไม่มีผลต่อโครงสร้างเมืองโดยรวม</p>
+                  <p><strong>ระดับ 4 :</strong> เริ่มมีการเปลี่ยนแปลงในโครงสร้างพื้นฐานหรือเศรษฐกิจบางส่วน</p>
+                  <p><strong>ระดับ 5 :</strong> เมืองเริ่มมีการขยายตัวในระดับปานกลาง เช่น พื้นที่อยู่อาศัย พื้นที่เศรษฐกิจ หรือสาธารณูปโภคใหม่ ๆ</p>
+                  <p><strong>ระดับ 6 :</strong> เมืองมีการเปลี่ยนแปลงหลายมิติ เช่น การคมนาคมสาธารณะ พื้นที่สีเขียว หรือการฟื้นฟูเมืองเก่า</p>
+                  <p><strong>ระดับ 7 :</strong> เมืองมีระบบบริหารจัดการที่มีประสิทธิภาพ เช่น การใช้ข้อมูลดิจิทัล (Smart City), การมีส่วนร่วมของประชาชนเพิ่มขึ้น</p>
+                  <p><strong>ระดับ 8 :</strong> เมืองกลายเป็นศูนย์กลางด้านเศรษฐกิจหรือวัฒนธรรมระดับภูมิภาค มีโครงการพัฒนาขนาดใหญ่ เช่น TOD หรือเขตเศรษฐกิจพิเศษ</p>
+                  <p><strong>ระดับ 9 :</strong> เมืองพัฒนาในระดับสูง มีความเชื่อมโยงระหว่าง, ใช้แนวคิดยั่งยืน/อัจฉริยะในหลายมิติ</p>
+                  <p><strong>ระดับ 10 :</strong> เมืองเป็นต้นแบบระดับประเทศหรือโลก เช่น เมืองอัจฉริยะที่ใช้เทคโนโลยีและนโยบายที่ยั่งยืนในทุกด้าน</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const progress = ((currentStep + 1) / formSteps.length) * 100;
+
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
+      {/* Header */}
       <div className="text-center bg-blue-50 p-4 rounded-lg">
         <h2 className="text-xl font-bold mb-2 text-blue-800">
           ส่วนที่ 1 ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน
         </h2>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">1. ผลลัพธ์ภายหลังจากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h4 className="font-medium text-base mb-3 underline">ด้านองค์ความรู้</h4>
-            {renderCheckboxGroup("", knowledgeOutcomes, "section1_knowledge_outcomes", undefined, false)}
-          </div>
-          
-          <div>
-            <h4 className="font-medium text-base mb-3 underline">ด้านการประยุกต์ใช้องค์ความรู้</h4>
-            {renderCheckboxGroup("", applicationOutcomes, "section1_application_outcomes", "section1_application_other")}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">2. โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="กรุณาอธิบาย..."
-            value={formData.section1_changes_description || ''}
-            onChange={(e) => handleInputChange('section1_changes_description', e.target.value)}
-            rows={5}
-            className="w-full"
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">3. ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {renderProblemsBeforeGroup(problemsBefore)}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCheckboxGroup("", knowledgeSolutions, "section1_knowledge_solutions", "section1_knowledge_solutions_other")}
-          
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <Label className="text-base font-medium">ก่อนเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด</Label>
-                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-                {renderRatingScale("", "section1_knowledge_before")}
-              </div>
-              
-              <div>
-                <Label className="text-base font-medium">หลังเข้าร่วมอบรมหลักสูตร พมส. ท่านมีองค์ความรู้ที่ท่านนำมาใช้ในการแก้ปัญหา อยู่ในระดับใด</Label>
-                <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-                {renderRatingScale("", "section1_knowledge_after")}
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-3 text-blue-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
-            <div className="text-sm space-y-1">
-              <p><strong>ระดับ 1 :</strong> ไม่ได้ใช้ในการแก้ปัญหา ไม่ตระหนักถึงการมีอยู่</p>
-              <p><strong>ระดับ 2 :</strong> ตระหนัก แต่ไม่ได้นำไปใช้ในการแก้ปัญหา</p>
-              <p><strong>ระดับ 3 :</strong> นำไปใช้ในการวิเคราะห์ปัญหา หรือคำนึงถึงในงานของตน</p>
-              <p><strong>ระดับ 4 :</strong> นำไปใช้ในการออกแบบวิธีการแก้ปัญหา (วางแผน/สร้างแนวทาง/อยู่ในขั้นตอนการทำงาน)</p>
-              <p><strong>ระดับ 5 :</strong> นำไปใช้ในการบรรจุเป็นแผนระดับสำนัก ภายใต้หน่วยงานของตน</p>
-              <p><strong>ระดับ 6 :</strong> นำไปใช้บรรจุลงในแผนขับเคลื่อนระดับหน่วยงาน/องค์กรของตนเอง</p>
-              <p><strong>ระดับ 7 :</strong> นำไปใช้ในการขับเคลื่อนเชิงปฏิบัติการในพื้นที่ที่อธิบายผลได้อย่างชัดเจน</p>
-              <p><strong>ระดับ 8 :</strong> สามารถเผยแพร่ และมีส่วนในการผลักดันแผน/นโยบายของหน่วยงานหรือพื้นที่อื่น ๆ ได้อย่างชัดเจน อธิบายผลได้</p>
-              <p><strong>ระดับ 9 :</strong> สามารถขยายผล/ต่อยอด การแก้ปัญหาระดับพื้นที่ได้อย่างชัดเจน อธิบายผลได้</p>
-              <p><strong>ระดับ 10 :</strong> สามารถนำไปกำหนดระดับนโยบายระดับอำเภอ/จังหวัด/ประเทศ</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">5. องค์กรของท่านได้นำ กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCheckboxGroup("", itUsage, "section1_it_usage", "section1_it_usage_other")}
-          
-          <div>
-            <Label className="text-base font-medium">ท่านคิดว่า ในภาพรวม กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
-            <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "section1_it_level")}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">6. องค์กรของท่านได้นำ กลไกประสานความร่วมมือ มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCheckboxGroup("", cooperationUsage, "section1_cooperation_usage", "section1_cooperation_usage_other")}
-          
-          <div>
-            <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกประสานความร่วมมือ ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
-            <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "section1_cooperation_level")}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">7. องค์กรของท่านได้นำ กลไกการระดมทุน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCheckboxGroup("", fundingUsage, "section1_funding_usage", "section1_funding_usage_other")}
-          
-          <div>
-            <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกการระดมทุน ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
-            <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "section1_funding_level")}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">8. องค์กรของท่านได้นำ กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCheckboxGroup("", cultureUsage, "section1_culture_usage", "section1_culture_usage_other")}
-          
-          <div>
-            <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
-            <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "section1_culture_level")}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">9. องค์กรของท่านได้นำ กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderCheckboxGroup("", greenUsage, "section1_green_usage", "section1_green_usage_other")}
-          
-          <div>
-            <Label className="text-base font-medium">ท่านคิดว่าในภาพรวม กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</Label>
-            <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-            {renderRatingScale("", "section1_green_level")}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">10. องค์กรของท่านได้นำ กลไกการพัฒนาใหม่ (บริษัทพัฒนาเมือง วิสาหกิจเพื่อสังคม สหการ) มาใช้ในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองอย่างไรบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {renderCheckboxGroup("", newDevUsage, "section1_new_dev_usage", "section1_new_dev_usage_other")}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">11. ท่านคิดว่าในภาพรวม กลไกการพัฒนาใหม่ ช่วยในการยกระดับการพัฒนาท้องถิ่น/พัฒนาเมืองระดับใด</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-          {renderRatingScale("", "section1_new_dev_level")}
-        </CardContent>
-      </Card>
-
-      <div className="bg-yellow-50 p-4 rounded-lg">
-        <h4 className="font-medium mb-3 text-yellow-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
-        <div className="text-sm space-y-1">
-          <p><strong>ระดับ 1 :</strong> ไม่ได้ใช้ประโยชน์ในการยกระดับการพัฒนาท้องถิ่น ไม่ตระหนักถึงการมีอยู่</p>
-          <p><strong>ระดับ 2 :</strong> ตระหนัก แต่ไม่ได้นำไปใช้ประโยชน์ในการยกระดับการพัฒนาท้องถิ่น</p>
-          <p><strong>ระดับ 3 :</strong> นำไปใช้ในการวิเคราะห์การยกระดับการพัฒนาท้องถิ่น หรือคำนึงถึงในงานของตน</p>
-          <p><strong>ระดับ 4 :</strong> นำไปใช้ในการออกแบบการยกระดับการพัฒนาท้องถิ่น (วางแผน/สร้างแนวทาง/อยู่ในขั้นตอนการทำงาน)</p>
-          <p><strong>ระดับ 5 :</strong> นำไปใช้ในการบรรจุเป็นแผนการยกระดับการพัฒนาท้องถิ่นในระดับสำนัก ภายใต้หน่วยงานของตน</p>
-          <p><strong>ระดับ 6 :</strong> นำไปใช้บรรจุลงในแผนการยกระดับการพัฒนาท้องถิ่น ขับเคลื่อนระดับหน่วยงาน/องค์กรของตนเอง</p>
-          <p><strong>ระดับ 7 :</strong> นำแผนการยกระดับการพัฒนาท้องถิ่นไปใช้ในการขับเคลื่อนเชิงปฏิบัติการในพื้นที่ ที่อธิบายผลได้อย่างชัดเจน</p>
-          <p><strong>ระดับ 8 :</strong> สามารถเผยแพร่ และมีส่วนในการผลักดันแผน/นโยบายของหน่วยงานหรือพื้นที่อื่น ๆ ได้อย่างชัดเจน อธิบายผลได้</p>
-          <p><strong>ระดับ 9 :</strong> สามารถขยายผล/ต่อยอด การแก้ปัญหาระดับพื้นที่ได้อย่างชัดเจน อธิบายผลได้</p>
-          <p><strong>ระดับ 10 :</strong> สามารถนำไปกำหนดระดับนโยบายระดับอำเภอ/จังหวัด/ประเทศ</p>
+      {/* Progress Bar */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm font-medium">
+          <span>ความคืบหน้า: {currentStep + 1} จาก {formSteps.length} ขั้นตอน</span>
+          <span>{Math.round(progress)}%</span>
         </div>
+        <Progress value={progress} className="w-full" />
+        <p className="text-sm text-muted-foreground text-center">
+          {formSteps[currentStep].title}
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">12. ท่านคิดว่า องค์ความรู้และการประยุกต์ใช้องค์ความรู้จากการอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ในประเด็นใดบ้าง</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {renderCheckboxGroup("", successFactors, "section1_success_factors", "section1_success_factors_other")}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">13. โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 1.12</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="กรุณาอธิบาย..."
-            value={formData.section1_success_description || ''}
-            onChange={(e) => handleInputChange('section1_success_description', e.target.value)}
-            rows={5}
-            className="w-full"
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">14. บทบาทของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ก่อให้เกิดการเปลี่ยนแปลงในพื้นที่ของท่านในระดับใด</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">(ให้ทำสัญลักษณ์ ✓ ในระดับที่ท่านเลือก)</p>
-          {renderRatingScale("", "section1_overall_change_level")}
-          
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-3 text-green-800">หมายเหตุ : คำอธิบายระดับ 1-10</h4>
-            <div className="text-sm space-y-1">
-              <p><strong>ระดับ 1 :</strong> เมืองยังคงเป็นรูปแบบดั้งเดิม ไม่มีการเปลี่ยนแปลง</p>
-              <p><strong>ระดับ 2 :</strong> เริ่มมีการวางแผนพัฒนาเมืองเบื้องต้น / เริ่มมีการวางแผนเรื่องระบบข้อมูล</p>
-              <p><strong>ระดับ 3 :</strong> มีโครงการพัฒนาเล็ก ๆ แต่ยังไม่มีผลต่อโครงสร้างเมืองโดยรวม</p>
-              <p><strong>ระดับ 4 :</strong> เริ่มมีการเปลี่ยนแปลงในโครงสร้างพื้นฐานหรือเศรษฐกิจบางส่วน</p>
-              <p><strong>ระดับ 5 :</strong> เมืองเริ่มมีการขยายตัวในระดับปานกลาง เช่น พื้นที่อยู่อาศัย พื้นที่เศรษฐกิจ หรือสาธารณูปโภคใหม่ ๆ</p>
-              <p><strong>ระดับ 6 :</strong> เมืองมีการเปลี่ยนแปลงหลายมิติ เช่น การคมนาคมสาธารณะ พื้นที่สีเขียว หรือการฟื้นฟูเมืองเก่า</p>
-              <p><strong>ระดับ 7 :</strong> เมืองมีระบบบริหารจัดการที่มีประสิทธิภาพ เช่น การใช้ข้อมูลดิจิทัล (Smart City), การมีส่วนร่วมของประชาชนเพิ่มขึ้น</p>
-              <p><strong>ระดับ 8 :</strong> เมืองกลายเป็นศูนย์กลางด้านเศรษฐกิจหรือวัฒนธรรมระดับภูมิภาค มีโครงการพัฒนาขนาดใหญ่ เช่น TOD หรือเขตเศรษฐกิจพิเศษ</p>
-              <p><strong>ระดับ 9 :</strong> เมืองพัฒนาในระดับสูง มีความเชื่อมโยงระหว่าง, ใช้แนวคิดยั่งยืน/อัจฉริยะในหลายมิติ</p>
-              <p><strong>ระดับ 10 :</strong> เมืองเป็นต้นแบบระดับประเทศหรือโลก เช่น เมืองอัจฉริยะที่ใช้เทคโนโลยีและนโยบายที่ยั่งยืนในทุกด้าน</p>
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start space-x-2">
+            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-red-800 font-medium">กรุณาตรวจสอบข้อมูลต่อไปนี้:</h4>
+              <ul className="text-red-700 text-sm mt-1 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>• {error}</li>
+                ))}
+              </ul>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
-      <div className="pt-6">
-        <Button onClick={handleSave} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-          {isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 1"}
+      {/* Form Content */}
+      <div className="min-h-[500px]">
+        {renderStepContent()}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex justify-between items-center pt-6 border-t">
+        <Button
+          onClick={handlePrev}
+          disabled={currentStep === 0}
+          variant="outline"
+          className="flex items-center space-x-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span>ก่อนหน้า</span>
         </Button>
+
+        <div className="text-sm text-muted-foreground">
+          ขั้นตอน {currentStep + 1} จาก {formSteps.length}
+        </div>
+
+        {currentStep === formSteps.length - 1 ? (
+          <Button
+            onClick={handleSave}
+            disabled={saving || isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {saving || isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 1"}
+          </Button>
+        ) : (
+          <Button
+            onClick={handleNext}
+            className="flex items-center space-x-2"
+          >
+            <span>ถัดไป</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Instructions */}
+      <div className="bg-yellow-50 p-4 rounded-lg">
+        <h4 className="font-medium mb-3 text-yellow-800">💡 วิธีการใช้งาน:</h4>
+        <ul className="text-sm space-y-1 text-yellow-700">
+          <li>• กรอกข้อมูลในแต่ละขั้นตอนให้ครบถ้วน</li>
+          <li>• ช่องที่มีเครื่องหมาย <span className="text-red-600 font-bold">*</span> จำเป็นต้องตอบ</li>
+          <li>• คลิกปุ่ม "ถัดไป" เพื่อไปขั้นตอนถัดไป</li>
+          <li>• ระบบจะตรวจสอบความครบถ้วนก่อนให้ไปขั้นตอนถัดไป</li>
+          <li>• สามารถย้อนกลับไปแก้ไขข้อมูลได้ตลอดเวลา</li>
+        </ul>
       </div>
     </div>
   );
