@@ -379,7 +379,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
+          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup("", knowledgeSolutions, "section1_knowledge_solutions", "section1_knowledge_solutions_other")}
