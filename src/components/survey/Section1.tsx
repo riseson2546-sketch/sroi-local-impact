@@ -100,13 +100,96 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
   };
 
   /**
+   * ตรวจสอบความครบถ้วนของข้อมูล
+   */
+  const validateForm = () => {
+    const errors = [];
+    
+    // ข้อ 1.1 - ต้องเลือกอย่างน้อย 1 ข้อในด้านองค์ความรู้
+    if (!formData.section1_knowledge_outcomes || formData.section1_knowledge_outcomes.length === 0) {
+      errors.push("กรุณาเลือกผลลัพธ์ด้านองค์ความรู้ในข้อ 1 อย่างน้อย 1 ข้อ");
+    }
+    
+    // ข้อ 1.1 - ต้องเลือกอย่างน้อย 1 ข้อในด้านการประยุกต์ใช้องค์ความรู้
+    if (!formData.section1_application_outcomes || formData.section1_application_outcomes.length === 0) {
+      errors.push("กรุณาเลือกผลลัพธ์ด้านการประยุกต์ใช้องค์ความรู้ในข้อ 1 อย่างน้อย 1 ข้อ");
+    }
+    
+    // ข้อ 2 - ต้องกรอกอธิบายการเปลี่ยนแปลง
+    if (!formData.section1_changes_description || formData.section1_changes_description.trim() === '') {
+      errors.push("กรุณากรอกคำอธิบายการเปลี่ยนแปลงในข้อ 2");
+    }
+    
+    // ข้อ 3 - ต้องเลือกปัญหาอย่างน้อย 1 ข้อ
+    if (!formData.section1_problems_before || formData.section1_problems_before.length === 0) {
+      errors.push("กรุณาเลือกปัญหาก่อนเข้าร่วมอบรมในข้อ 3 อย่างน้อย 1 ข้อ");
+    }
+    
+    // ข้อ 4 - ต้องเลือกวิธีการใช้องค์ความรู้อย่างน้อย 1 ข้อ
+    if (!formData.section1_knowledge_solutions || formData.section1_knowledge_solutions.length === 0) {
+      errors.push("กรุณาเลือกวิธีการใช้องค์ความรู้ในข้อ 4 อย่างน้อย 1 ข้อ");
+    }
+    
+    // ข้อ 4 - ต้องระบุระดับความรู้ก่อนและหลังอบรม
+    if (!formData.section1_knowledge_before) {
+      errors.push("กรุณาระบุระดับองค์ความรู้ก่อนเข้าร่วมอบรมในข้อ 4");
+    }
+    
+    if (!formData.section1_knowledge_after) {
+      errors.push("กรุณาระบุระดับองค์ความรู้หลังเข้าร่วมอบรมในข้อ 4");
+    }
+    
+    // ข้อ 5-11 - ต้องระบุระดับการใช้กลไกต่างๆ
+    const mechanismFields = [
+      { field: 'section1_it_level', name: 'กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล', question: '5' },
+      { field: 'section1_cooperation_level', name: 'กลไกประสานความร่วมมือ', question: '6' },
+      { field: 'section1_funding_level', name: 'กลไกการระดมทุน', question: '7' },
+      { field: 'section1_culture_level', name: 'กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น', question: '8' },
+      { field: 'section1_green_level', name: 'กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน', question: '9' },
+      { field: 'section1_new_dev_level', name: 'กลไกการพัฒนาใหม่', question: '11' }
+    ];
+    
+    mechanismFields.forEach(({ field, name, question }) => {
+      if (!formData[field]) {
+        errors.push(`กรุณาระบุระดับ${name}ในข้อ ${question}`);
+      }
+    });
+    
+    // ข้อ 12 - ต้องเลือกปัจจัยความสำเร็จอย่างน้อย 1 ข้อ
+    if (!formData.section1_success_factors || formData.section1_success_factors.length === 0) {
+      errors.push("กรุณาเลือกปัจจัยความสำเร็จในข้อ 12 อย่างน้อย 1 ข้อ");
+    }
+    
+    // ข้อ 13 - ต้องกรอกอธิบายปัจจัยความสำเร็จ
+    if (!formData.section1_success_description || formData.section1_success_description.trim() === '') {
+      errors.push("กรุณากรอกคำอธิบายปัจจัยความสำเร็จในข้อ 13");
+    }
+    
+    // ข้อ 14 - ต้องระบุระดับการเปลี่ยนแปลงโดยรวม
+    if (!formData.section1_overall_change_level) {
+      errors.push("กรุณาระบุระดับการเปลี่ยนแปลงโดยรวมในข้อ 14");
+    }
+    
+    return errors;
+  };
+
+  /**
    * กดปุ่มบันทึก
+   * - ตรวจสอบความครบถ้วนก่อน
    * - แสดงสถานะกำลังบันทึก
    * - รอ onSave() เสร็จ (ต้องรับ Promise)
    */
   const handleSave = async () => {
     try {
       setSaving(true);
+      
+      // ตรวจสอบความครบถ้วนของข้อมูล
+      const validationErrors = validateForm();
+      if (validationErrors.length > 0) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน:\n\n" + validationErrors.join("\n"));
+        return;
+      }
+      
       console.log("[Section1] saving", formData);
       await onSave(formData); // ต้องคืน Promise เพื่อให้ await ทำงาน
     } catch (err) {
@@ -379,7 +462,7 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
+          <CardTitle className="text-lg">4. องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 3 อย่างไร (ตอบได้มากกว่า 1 ข้อ)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {renderCheckboxGroup("", knowledgeSolutions, "section1_knowledge_solutions", "section1_knowledge_solutions_other")}
