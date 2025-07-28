@@ -12,6 +12,10 @@ interface Section1Props {
   data: any;
   onSave: (data: any) => Promise<void> | void;
   isLoading?: boolean;
+  onNextSection?: () => void;
+  onPrevSection?: () => void;
+  isFirstSection?: boolean;
+  isLastSection?: boolean;
 }
 
 const defaultFormState: Record<string, any> = {
@@ -48,7 +52,7 @@ const defaultFormState: Record<string, any> = {
   section1_overall_change_level: null,
 };
 
-const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) => {
+const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false, onNextSection, onPrevSection, isFirstSection = false, isLastSection = false }) => {
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -732,11 +736,16 @@ const Section1: React.FC<Section1Props> = ({ data, onSave, isLoading = false }) 
 
         {currentStep === formSteps.length - 1 ? (
           <Button
-            onClick={handleSave}
+            onClick={async () => {
+              await handleSave();
+              if (onNextSection && !isLastSection) {
+                onNextSection();
+              }
+            }}
             disabled={saving || isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {saving || isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 1"}
+            {saving || isLoading ? "กำลังบันทึก..." : (isLastSection ? "บันทึกส่วนที่ 1" : "บันทึกและไปส่วนที่ 2")}
           </Button>
         ) : (
           <Button

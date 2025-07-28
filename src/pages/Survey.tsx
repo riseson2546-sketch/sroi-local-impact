@@ -236,6 +236,10 @@ const Survey = () => {
                 data={formData.section1 || formData}
                 onSave={(data) => handleSaveSection(data, 1)}
                 isLoading={isLoading}
+                onNextSection={() => setCurrentSection(2)}
+                onPrevSection={() => setCurrentSection(1)}
+                isFirstSection={true}
+                isLastSection={false}
               />
             )}
             {currentSection === 2 && (
@@ -243,6 +247,10 @@ const Survey = () => {
                 data={formData.section2 || {}}
                 onSave={(data) => handleSaveSection(data, 2)}
                 isLoading={isLoading}
+                onNextSection={() => setCurrentSection(3)}
+                onPrevSection={() => setCurrentSection(1)}
+                isFirstSection={false}
+                isLastSection={false}
               />
             )}
             {currentSection === 3 && (
@@ -250,33 +258,15 @@ const Survey = () => {
                 data={formData.section3 || {}}
                 onSave={(data) => handleSaveSection(data, 3)}
                 isLoading={isLoading}
+                onNextSection={handleSubmitSurvey}
+                onPrevSection={() => setCurrentSection(2)}
+                isFirstSection={false}
+                isLastSection={true}
               />
             )}
           </CardContent>
         </Card>
 
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentSection(Math.max(1, currentSection - 1))}
-            disabled={currentSection === 1}
-          >
-            ก่อนหน้า
-          </Button>
-          
-          {currentSection === 3 ? (
-            <Button onClick={handleSubmitSurvey} className="ml-auto">
-              ส่งแบบสอบถาม
-            </Button>
-          ) : (
-            <Button
-              onClick={() => setCurrentSection(Math.min(3, currentSection + 1))}
-              disabled={currentSection === 3}
-            >
-              ถัดไป
-            </Button>
-          )}
-        </div>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           ขอขอบพระคุณในการตอบแบบสอบถาม

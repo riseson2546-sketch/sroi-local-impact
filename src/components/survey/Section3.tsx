@@ -9,6 +9,10 @@ interface Section3Props {
   data: any;
   onSave: (data: any) => Promise<void> | void;
   isLoading?: boolean;
+  onNextSection?: () => void | Promise<void>;
+  onPrevSection?: () => void;
+  isFirstSection?: boolean;
+  isLastSection?: boolean;
 }
 
 const defaultFormState = {
@@ -37,7 +41,7 @@ const defaultFormState = {
   reaching_target_groups: null,
 };
 
-const Section3: React.FC<Section3Props> = ({ data, onSave, isLoading = false }) => {
+const Section3: React.FC<Section3Props> = ({ data, onSave, isLoading = false, onNextSection, onPrevSection, isFirstSection = false, isLastSection = false }) => {
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -377,11 +381,16 @@ const Section3: React.FC<Section3Props> = ({ data, onSave, isLoading = false }) 
 
         {currentStep === formSteps.length - 1 ? (
           <Button
-            onClick={handleSave}
+            onClick={async () => {
+              await handleSave();
+              if (onNextSection && isLastSection) {
+                await onNextSection();
+              }
+            }}
             disabled={saving || isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {saving || isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 3"}
+            {saving || isLoading ? "กำลังบันทึก..." : "ส่งแบบสอบถาม"}
           </Button>
         ) : (
           <Button

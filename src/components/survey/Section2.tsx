@@ -12,6 +12,10 @@ interface Section2Props {
   data: any;
   onSave: (data: any) => Promise<void> | void;
   isLoading?: boolean;
+  onNextSection?: () => void;
+  onPrevSection?: () => void;
+  isFirstSection?: boolean;
+  isLastSection?: boolean;
 }
 
 const defaultFormState = {
@@ -28,7 +32,7 @@ const defaultFormState = {
   section2_network_expansion: {},
 };
 
-const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading = false }) => {
+const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading = false, onNextSection, onPrevSection, isFirstSection = false, isLastSection = false }) => {
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -564,11 +568,16 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading = false }) 
 
         {currentStep === formSteps.length - 1 ? (
           <Button
-            onClick={handleSave}
+            onClick={async () => {
+              await handleSave();
+              if (onNextSection && !isLastSection) {
+                onNextSection();
+              }
+            }}
             disabled={saving || isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {saving || isLoading ? "กำลังบันทึก..." : "บันทึกส่วนที่ 2"}
+            {saving || isLoading ? "กำลังบันทึก..." : (isLastSection ? "บันทึกส่วนที่ 2" : "บันทึกและไปส่วนที่ 3")}
           </Button>
         ) : (
           <Button
