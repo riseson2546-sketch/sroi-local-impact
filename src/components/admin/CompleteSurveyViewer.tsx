@@ -27,8 +27,11 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 
 // **** START OF CHANGE ****
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // Read the selected checkbox values from the top-level data object
-    const selectedValues = allData.section1_problems_before || [];
+    // Correctly access the nested section1 object within allData
+    const section1Data = allData.section1 || {};
+    
+    // Read the selected checkbox values from the nested object
+    const selectedValues = section1Data.section1_problems_before || [];
     
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
@@ -36,8 +39,9 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
             <div className="space-y-3">
                 {options.map((opt, i) => { 
                     const isChecked = selectedValues.includes(opt.text);
-                    // Read the detail value from the TOP-LEVEL allData object
-                    const detailValue = allData?.[`section1_problems_detail_${i}`];
+                    // Read the detail value from the nested object using the dynamic key
+                    const detailValue = section1Data[`section1_problems_detail_${i}`];
+                    
                     return (
                         <div key={i} className="print-sub-item">
                             <div className="flex items-start space-x-3">
@@ -46,10 +50,10 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                 </div>
                                 <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                             </div>
-                            {isChecked && opt.hasDetail && detailValue && (
+                            {isChecked && opt.hasDetail && (
                                 <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
                                     <p className="text-sm text-blue-800">
-                                        <strong>ระบุ:</strong> {detailValue}
+                                        <strong>ระบุ:</strong> {detailValue || <span className="text-gray-400">ไม่ได้ระบุ</span>}
                                     </p>
                                 </div>
                             )}
