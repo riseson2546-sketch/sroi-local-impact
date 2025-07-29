@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, Trash2, Users, FileText, BarChart3 } from 'lucide-react';
-import ResponseViewer from '@/components/admin/ResponseViewer';
+import CompleteSurveyViewer from '@/components/admin/CompleteSurveyViewer';
 
 const AdminDashboard = () => {
   const [responses, setResponses] = useState([]);
@@ -68,6 +68,58 @@ const AdminDashboard = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // แปลงข้อมูลจาก database เป็นรูปแบบที่ CompleteSurveyViewer ต้องการ
+  const transformResponseData = (response) => {
+    if (!response) return null;
+
+    return {
+      respondent: {
+        name: response.survey_users?.full_name || 'ไม่ระบุ',
+        position: response.survey_users?.position || 'ไม่ระบุ',
+        organization: response.survey_users?.organization || 'ไม่ระบุ',
+        province: 'ไม่ระบุ', // อาจจะต้องเพิ่มในฐานข้อมูล
+        email: 'ไม่ระบุ', // อาจจะต้องเพิ่มในฐานข้อมูล
+        phone: response.survey_users?.phone || 'ไม่ระบุ',
+        survey_date: new Date(response.created_at).toLocaleDateString('th-TH')
+      },
+      section1: {
+        section1_knowledge_outcomes: response.section1_knowledge_outcomes || [],
+        section1_application_outcomes: response.section1_application_outcomes || [],
+        section1_application_other: response.section1_application_other || '',
+        section1_changes_description: response.section1_changes_description || '',
+        section1_problems_before: response.section1_problems_before || [],
+        section1_knowledge_solutions: response.section1_knowledge_solutions || [],
+        section1_knowledge_solutions_other: response.section1_knowledge_solutions_other || '',
+        section1_knowledge_before: response.section1_knowledge_before || null,
+        section1_knowledge_after: response.section1_knowledge_after || null,
+        section1_it_usage: response.section1_it_usage || [],
+        section1_it_usage_other: response.section1_it_usage_other || '',
+        section1_it_level: response.section1_it_level || null,
+        section1_cooperation_usage: response.section1_cooperation_usage || [],
+        section1_cooperation_usage_other: response.section1_cooperation_usage_other || '',
+        section1_cooperation_level: response.section1_cooperation_level || null,
+        section1_funding_usage: response.section1_funding_usage || [],
+        section1_funding_usage_other: response.section1_funding_usage_other || '',
+        section1_funding_level: response.section1_funding_level || null,
+        section1_culture_usage: response.section1_culture_usage || [],
+        section1_culture_usage_other: response.section1_culture_usage_other || '',
+        section1_culture_level: response.section1_culture_level || null,
+        section1_green_usage: response.section1_green_usage || [],
+        section1_green_usage_other: response.section1_green_usage_other || '',
+        section1_green_level: response.section1_green_level || null,
+        section1_new_dev_usage: response.section1_new_dev_usage || [],
+        section1_new_dev_usage_other: response.section1_new_dev_usage_other || '',
+        section1_new_dev_level: response.section1_new_dev_level || null,
+        section1_success_factors: response.section1_success_factors || [],
+        section1_success_factors_other: response.section1_success_factors_other || '',
+        section1_success_description: response.section1_success_description || '',
+        section1_overall_change_level: response.section1_overall_change_level || null
+      },
+      section2: response.survey_responses_section2?.[0] || {},
+      section3: response.survey_responses_section3?.[0] || {}
+    };
   };
 
   const handleViewResponse = (response) => {
@@ -237,6 +289,7 @@ const AdminDashboard = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleViewResponse(response)}
+                          className="text-blue-600 hover:text-blue-900"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -256,16 +309,22 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Survey Viewer Dialog */}
         <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                คำตอบแบบสอบถาม - {selectedResponse?.survey_users?.full_name}
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
+            <DialogHeader className="p-6 pb-2">
+              <DialogTitle className="text-xl">
+                📋 แบบสอบถาม - {selectedResponse?.survey_users?.full_name}
               </DialogTitle>
+              <p className="text-sm text-gray-600">
+                {selectedResponse?.survey_users?.organization} • {selectedResponse && new Date(selectedResponse.created_at).toLocaleDateString('th-TH')}
+              </p>
             </DialogHeader>
-            {selectedResponse && (
-              <ResponseViewer response={selectedResponse} />
-            )}
+            <div className="flex-1 overflow-auto p-6 pt-2">
+              {selectedResponse && (
+                <CompleteSurveyViewer data={transformResponseData(selectedResponse)} />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>
