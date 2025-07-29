@@ -4,8 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react';
 
-// ไม่ต้อง import print-styles.css แล้ว เพราะเราจะเขียน style เข้าไปตรงๆ
-
 // --- โครงสร้างคำถามและตัวเลือกทั้งหมด (เหมือนเดิม) ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
 const applicationOutcomes = ["นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง", "สามารถพัฒนาฐานข้อมูลเมืองของตนได้", "สามารถพัฒนาข้อเสนอโครงงานพัฒนาเมืองและนำไปสู่การนำเสนอไอเดีย (Pitching) ขอทุนได้", "ประสานความร่วมมือกับภาคส่วนต่าง ๆ ในการพัฒนาเมือง"];
@@ -124,6 +122,7 @@ const renderRatingScale = (title: string, value?: number, max: number = 10, desc
     </div>
 );
 
+
 interface SurveyViewerProps {
   data?: any;
 }
@@ -139,71 +138,94 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
   const handlePrint = () => {
     setIsPrinting(true);
 
-    const contentToPrint = document.getElementById('printable-area')?.innerHTML;
-    if (!contentToPrint) {
+    const printableContent = document.getElementById('printable-area')?.outerHTML;
+    if (!printableContent) {
         alert("ไม่พบเนื้อหาสำหรับพิมพ์");
         setIsPrinting(false);
         return;
     }
 
-    // ดึง Link ของ Stylesheets ทั้งหมดในหน้าปัจจุบัน
-    const stylesheets = Array.from(document.styleSheets)
-        .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : '')
+    // ดึง Stylesheet <link> และ <style> ทั้งหมดจากหน้าปัจจุบัน
+    const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+        .map(link => link.outerHTML)
         .join('');
+
+    const styles = Array.from(document.querySelectorAll('style'))
+        .map(style => style.outerHTML)
+        .join('');
+
+    // สร้างสไตล์สำหรับบังคับการพิมพ์ให้สวยงามโดยเฉพาะ
+    const printSpecificStyles = `
+        <style>
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+            body {
+                font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                font-size: 10pt;
+                background-color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            #printable-area {
+                background-color: #ffffff !important;
+            }
+            .print-card {
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+                margin-bottom: 20px !important;
+                page-break-inside: avoid !important; /* คำสั่งสำคัญ: พยายามไม่ให้ Card ถูกตัดแบ่งหน้า */
+            }
+            .print-card-header {
+                background-color: #f8f9fa !important;
+                border-bottom: 1px solid #dee2e6 !important;
+            }
+            .bg-green-100\\/20, .bg-yellow-100\\/20, .bg-purple-100\\/20 {
+                 background-color: #ffffff !important;
+            }
+        </style>
+    `;
 
     const printWindow = window.open('', '', 'height=800,width=1000');
     if (printWindow) {
-        printWindow.document.write('<html><head><title>พิมพ์แบบสอบถาม</title>');
-        printWindow.document.write(stylesheets);
-        printWindow.document.write(`
-            <style>
-                @page { size: A4; margin: 1.5cm; }
-                body { 
-                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                  -webkit-print-color-adjust: exact !important;
-                  print-color-adjust: exact !important;
-                  font-size: 10pt;
-                }
-                .print-card { 
-                  border: 1px solid #e5e7eb; 
-                  border-radius: 0.5rem;
-                  margin-bottom: 1.5rem;
-                  page-break-inside: avoid;
-                }
-                .print-card-header {
-                  padding: 1.5rem;
-                  border-bottom: 1px solid #e5e7eb;
-                  background-color: #f9fafb !important;
-                }
-                .print-card-content { padding: 1.5rem; }
-                .hidden { display: none !important; }
-            </style>
-        `);
+        printWindow.document.write('<!DOCTYPE html><html><head><title>พิมพ์แบบสอบถาม</title>');
+        printWindow.document.write(links); // ใส่ <link> ทั้งหมด
+        printWindow.document.write(styles); // ใส่ <style> ทั้งหมด
+        printWindow.document.write(printSpecificStyles); // ใส่สไตล์สำหรับพิมพ์โดยเฉพาะ
         printWindow.document.write('</head><body>');
-        printWindow.document.write(contentToPrint);
+        printWindow.document.write(printableContent); // ใส่เนื้อหา
         printWindow.document.write('</body></html>');
-
         printWindow.document.close();
-        
-        // รอให้รูปภาพและสไตล์โหลดเสร็จ
+
         printWindow.onload = () => {
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-            setIsPrinting(false);
+            try {
+                printWindow.focus();
+                printWindow.print();
+            } catch (e) {
+                console.error("Print failed:", e);
+                alert("เกิดข้อผิดพลาดในการพิมพ์");
+            } finally {
+                printWindow.close();
+                setIsPrinting(false);
+            }
         };
-        // Fallback for browsers that don't fire onload
+        // Fallback ในกรณีที่ onload ไม่ทำงาน
         setTimeout(() => {
-            if(!printWindow.closed) {
-              printWindow.focus();
-              printWindow.print();
-              printWindow.close();
+            if (!printWindow.closed) {
+                try {
+                    printWindow.focus();
+                    printWindow.print();
+                } catch(e) {
+                    console.error("Print fallback failed:", e);
+                } finally {
+                   printWindow.close();
+                }
             }
             setIsPrinting(false);
-        }, 1000);
-
+        }, 1500);
     } else {
-        alert("ไม่สามารถเปิดหน้าต่างสำหรับพิมพ์ได้ กรุณาตรวจสอบการตั้งค่า Popup Blocker ของเบราว์เซอร์");
+        alert("ไม่สามารถเปิดหน้าต่างสำหรับพิมพ์ได้ กรุณาตรวจสอบการตั้งค่า Popup Blocker");
         setIsPrinting(false);
     }
   };
@@ -336,7 +358,6 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
                 ))}
             </CardContent>
         </Card>
-
       </div>
     </div>
   );
