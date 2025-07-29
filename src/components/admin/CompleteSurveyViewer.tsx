@@ -26,28 +26,30 @@ const RatingDescription = ({ items }: { items: string[] }) => (<div className="b
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
 // **** START OF CHANGE ****
-const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // Read the selected checkbox values from the nested section1 object
-    const selectedValues = allData.section1?.section1_problems_before || [];
-    
+const renderProblemsCheckboxes = (title: string, options: { text: string; hasDetail: boolean }[], allData: any) => {
+    // The root data object `allData` contains nested data for each section.
+    // We need to access everything for section 1 from the `allData.section1` object.
+    const section1Data = allData.section1 || {};
+    const selectedValues = section1Data.section1_problems_before || [];
+
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
             <div className="space-y-3">
-                {options.map((opt, i) => { 
+                {options.map((opt, i) => {
                     const isChecked = selectedValues.includes(opt.text);
-                    // Read the detail value from the TOP-LEVEL allData object
-                    const detailValue = allData?.[`section1_problems_detail_${i}`];
+                    // Correctly read the detail value from the nested section1Data object.
+                    const detailValue = section1Data[`section1_problems_detail_${i}`];
                     return (
                         <div key={i} className="print-sub-item">
                             <div className="flex items-start space-x-3">
-                                <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500' : 'bg-white'}`}>
+                                <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
                                     {isChecked && <span className="text-white font-bold text-xs">✓</span>}
                                 </div>
                                 <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                             </div>
                             {isChecked && opt.hasDetail && (
-                                <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border">
+                                <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
                                     <p className="text-sm text-blue-800">
                                         <strong>ระบุ:</strong> {detailValue || <span className="text-gray-400">ไม่ได้ระบุ</span>}
                                     </p>
@@ -98,7 +100,7 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
             
             {/* **** START OF CHANGE **** */}
-            {/* Call the function with the full `data` object */}
+            {/* Call the function with the full `data` object which contains the nested section1 data */}
             {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, data)}
             {/* **** END OF CHANGE **** */}
 
