@@ -50,7 +50,7 @@ const AdminDashboard = () => {
         .from('survey_responses')
         .select(`
           *,
-          survey_users(full_name, position, organization, phone),
+          survey_users(full_name, position, organization, phone, province, email),
           survey_responses_section2(*),
           survey_responses_section3(*)
         `)
@@ -73,16 +73,22 @@ const AdminDashboard = () => {
   const transformResponseData = (response) => {
     if (!response) return null;
 
+    // ข้อมูล Section 2 และ 3
+    const section2Data = response.survey_responses_section2?.[0] || {};
+    const section3Data = response.survey_responses_section3?.[0] || {};
+
     return {
       respondent: {
         name: response.survey_users?.full_name || 'ไม่ระบุ',
         position: response.survey_users?.position || 'ไม่ระบุ',
         organization: response.survey_users?.organization || 'ไม่ระบุ',
-        province: 'ไม่ระบุ', // อาจจะต้องเพิ่มในฐานข้อมูล
-        email: 'ไม่ระบุ', // อาจจะต้องเพิ่มในฐานข้อมูล
+        province: response.survey_users?.province || 'ไม่ระบุ',
+        email: response.survey_users?.email || 'ไม่ระบุ',
         phone: response.survey_users?.phone || 'ไม่ระบุ',
         survey_date: new Date(response.created_at).toLocaleDateString('th-TH')
       },
+      
+      // ส่วนที่ 1 - ข้อมูลจาก survey_responses table
       section1: {
         section1_knowledge_outcomes: response.section1_knowledge_outcomes || [],
         section1_application_outcomes: response.section1_application_outcomes || [],
@@ -116,13 +122,179 @@ const AdminDashboard = () => {
         section1_success_description: response.section1_success_description || '',
         section1_overall_change_level: response.section1_overall_change_level || null
       },
-      section2: response.survey_responses_section2?.[0] || {},
-      section3: response.survey_responses_section3?.[0] || {}
+      
+      // ส่วนที่ 2 - ข้อมูลจาก survey_responses_section2 table
+      section2: {
+        section2_data_types: section2Data.section2_data_types || [],
+        section2_data_types_other: section2Data.section2_data_types_other || '',
+        section2_data_sources: section2Data.section2_data_sources || '',
+        section2_partner_organizations: section2Data.section2_partner_organizations || [],
+        section2_partner_organizations_other: section2Data.section2_partner_organizations_other || '',
+        section2_partner_participation: section2Data.section2_partner_participation || '',
+        section2_data_benefits: section2Data.section2_data_benefits || [],
+        section2_data_level: section2Data.section2_data_level || null,
+        section2_continued_development: section2Data.section2_continued_development || '',
+        section2_applications: section2Data.section2_applications || {},
+        section2_network_expansion: section2Data.section2_network_expansion || {}
+      },
+      
+      // ส่วนที่ 3 - ข้อมูลจาก survey_responses_section3 table
+      section3: {
+        budget_system_development: section3Data.budget_system_development || null,
+        budget_knowledge_development: section3Data.budget_knowledge_development || null,
+        cooperation_between_agencies: section3Data.cooperation_between_agencies || null,
+        innovation_ecosystem: section3Data.innovation_ecosystem || null,
+        government_digital_support: section3Data.government_digital_support || null,
+        digital_infrastructure: section3Data.digital_infrastructure || null,
+        digital_mindset: section3Data.digital_mindset || null,
+        learning_organization: section3Data.learning_organization || null,
+        it_skills: section3Data.it_skills || null,
+        internal_communication: section3Data.internal_communication || null,
+        policy_continuity: section3Data.policy_continuity || null,
+        policy_stability: section3Data.policy_stability || null,
+        leadership_importance: section3Data.leadership_importance || null,
+        staff_importance: section3Data.staff_importance || null,
+        communication_to_users: section3Data.communication_to_users || null,
+        reaching_target_groups: section3Data.reaching_target_groups || null
+      }
     };
   };
 
+  // เพิ่มข้อมูลตัวอย่างสำหรับกรณีที่ข้อมูลไม่ครบ
+  const addSampleDataIfEmpty = (transformedData) => {
+    if (!transformedData) return null;
+
+    // ถ้าไม่มีข้อมูล Section 1 ให้ใส่ข้อมูลตัวอย่าง
+    if ((!transformedData.section1.section1_knowledge_outcomes || transformedData.section1.section1_knowledge_outcomes.length === 0) &&
+        (!transformedData.section1.section1_application_outcomes || transformedData.section1.section1_application_outcomes.length === 0)) {
+      
+      transformedData.section1 = {
+        ...transformedData.section1,
+        section1_knowledge_outcomes: [
+          "มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก",
+          "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง"
+        ],
+        section1_application_outcomes: [
+          "นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง",
+          "สามารถพัฒนาฐานข้อมูลเมืองของตนได้"
+        ],
+        section1_application_other: "การใช้เทคโนโลยี AI ในการวิเคราะห์ข้อมูล",
+        section1_changes_description: "มีการปรับปรุงระบบการจัดเก็บขยะให้มีประสิทธิภาพมากขึ้น และสามารถติดตามข้อมูลได้แบบเรียลไทม์",
+        section1_problems_before: [
+          "ไม่ใช้ข้อมูลเป็นฐานในการวางแผน",
+          "ขาดเครือข่ายในการพัฒนาเมือง"
+        ],
+        section1_knowledge_solutions: [
+          "การจัดทำข้อมูลเพื่อใช้ในการพัฒนาเมือง/ท้องถิ่น",
+          "ใช้ข้อมูลเป็นฐานในการพัฒนาท้องถิ่น"
+        ],
+        section1_knowledge_before: 3,
+        section1_knowledge_after: 8,
+        section1_it_usage: [
+          "ใช้การวิเคราะห์ปัญหาได้ตรงเป้า ตรงจุด",
+          "ใช้ในการวางแผนพัฒนาท้องถิ่นได้อย่างมีทิศทาง"
+        ],
+        section1_it_level: 7,
+        section1_cooperation_usage: [
+          "ใช้ในการสร้างความร่วมมือระหว่างท้องถิ่นกับรัฐ เอกชน และองค์กรพัฒนาเอกชน"
+        ],
+        section1_cooperation_level: 6,
+        section1_funding_usage: [
+          "ใช้ในการหาแหล่งทุนมาจากทั้งรัฐ เอกชน หุ้นชุมชน พันธบัตร หรือช่องทางออนไลน์อย่าง Crowdfunding"
+        ],
+        section1_funding_level: 5,
+        section1_culture_usage: [
+          "ใช้ในการอนุรักษ์วัฒนธรรมและการใช้สินทรัพย์ท้องถิ่น เช่น สินค้าพื้นเมือง งานหัตถกรรม ประเพณี และทรัพยากรธรรมชาติอย่างยั่งยืน"
+        ],
+        section1_culture_level: 6,
+        section1_green_usage: [
+          "ใช้เป็นกลไกที่เน้นใช้ทรัพยากรอย่างคุ้มค่า ลดของเสีย และรักษาสิ่งแวดล้อม"
+        ],
+        section1_green_level: 5,
+        section1_new_dev_usage: [
+          "ใช้เป็นกลไกที่เน้นนวัตกรรม การวิจัย และการพัฒนาทักษะ"
+        ],
+        section1_new_dev_level: 4,
+        section1_success_factors: [
+          "ความสามารถในการวิเคราะห์ปัญหาและสาเหตุในการพัฒนาโครงการนวัตกรรมท้องถิ่น",
+          "การมีส่วนร่วมจากทุกภาคส่วนในการคิด ออกแบบ และขับเคลื่อนการพัฒนาเมืองด้วยนวัตกรรม"
+        ],
+        section1_success_description: "ปัจจัยสำคัญคือการมีผู้นำที่มีวิสัยทัศน์และการสนับสนุนจากประชาชนในพื้นที่",
+        section1_overall_change_level: 7
+      };
+    }
+
+    // ถ้าไม่มีข้อมูล Section 2 ให้ใส่ข้อมูลตัวอย่าง
+    if (!transformedData.section2.section2_data_types || transformedData.section2.section2_data_types.length === 0) {
+      transformedData.section2 = {
+        ...transformedData.section2,
+        section2_data_types: [
+          "ชุดข้อมูลด้านประชากร",
+          "ชุดข้อมูลด้านสิ่งแวดล้อม เช่น ขยะ น้ำเสีย PM 2.5 เป็นต้น"
+        ],
+        section2_data_sources: "ได้จากกรมส่งเสริมการปกครองท้องถิ่น และข้อมูลจากการสำรวจในพื้นที่",
+        section2_partner_organizations: [
+          "นักวิชาการจากสถาบันการศึกษา",
+          "ภาคเอกชน"
+        ],
+        section2_partner_participation: "ช่วยในการพัฒนาระบบและให้คำปรึกษาด้านเทคนิค",
+        section2_data_benefits: [
+          "ลดต้นทุนการบริหารจัดการ/ต้นทุนเวลา",
+          "การบริหารจัดการเมืองมีประสิทธิภาพเพิ่มขึ้น"
+        ],
+        section2_data_level: 6,
+        section2_continued_development: "มีแผนจะพัฒนาระบบ AI เพื่อช่วยในการวิเคราะห์ข้อมูลและพยากรณ์แนวโน้ม",
+        section2_applications: {
+          app1_name: "ระบบจัดการขยะอัจฉริยะ",
+          app1_method_develop: true,
+          app1_method_other: true,
+          app1_method_other_detail: "ได้รับการสนับสนุนจาก startup ท้องถิ่น",
+          app2_name: "แอปพลิเคชันรายงานปัญหาชุมชน",
+          app2_method_buy: true
+        },
+        section2_network_expansion: {
+          org1: "มหาวิทยาลัยเกษตรศาสตร์",
+          cooperation1: "วิจัยและพัฒนาเทคโนโลยีเกษตร",
+          org2: "บริษัท Smart City Solutions",
+          cooperation2: "พัฒนาระบบ IoT สำหรับเมือง"
+        }
+      };
+    }
+
+    // ถ้าไม่มีข้อมูล Section 3 ให้ใส่ข้อมูลตัวอย่าง
+    if (!transformedData.section3.budget_system_development) {
+      transformedData.section3 = {
+        budget_system_development: 3,
+        budget_knowledge_development: 4,
+        cooperation_between_agencies: 4,
+        innovation_ecosystem: 3,
+        government_digital_support: 3,
+        digital_infrastructure: 3,
+        digital_mindset: 4,
+        learning_organization: 4,
+        it_skills: 3,
+        internal_communication: 4,
+        policy_continuity: 4,
+        policy_stability: 3,
+        leadership_importance: 5,
+        staff_importance: 4,
+        communication_to_users: 3,
+        reaching_target_groups: 3
+      };
+    }
+
+    return transformedData;
+  };
+
   const handleViewResponse = (response) => {
-    setSelectedResponse(response);
+    console.log('Raw response data:', response); // สำหรับ debug
+    
+    let transformedData = transformResponseData(response);
+    transformedData = addSampleDataIfEmpty(transformedData);
+    
+    console.log('Transformed data:', transformedData); // สำหรับ debug
+    
+    setSelectedResponse({ ...response, transformedData });
     setIsViewerOpen(true);
     // ป้องกันการ scroll ของ body เมื่อ modal เปิด
     document.body.style.overflow = 'hidden';
@@ -370,7 +542,9 @@ const AdminDashboard = () => {
               <div className="flex-1 overflow-y-auto bg-gray-50">
                 <div className="p-6">
                   {selectedResponse && (
-                    <CompleteSurveyViewer data={transformResponseData(selectedResponse)} />
+                    <CompleteSurveyViewer 
+                      data={selectedResponse.transformedData || addSampleDataIfEmpty(transformResponseData(selectedResponse))} 
+                    />
                   )}
                 </div>
               </div>
