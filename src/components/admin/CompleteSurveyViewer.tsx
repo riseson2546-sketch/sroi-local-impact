@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
 // --- โครงสร้างคำถามและตัวเลือกทั้งหมด (เหมือนเดิม) ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
@@ -21,16 +21,68 @@ const partnerOrgs = ['มูลนิธิส่งเสริมการป�
 const dataBenefits = ['ลดต้นทุนการบริหารจัดการ/ต้นทุนเวลา', 'ลดระยะเวลาในการดำเนินงาน', 'การบริหารจัดการเมืองมีประสิทธิภาพเพิ่มขึ้น', 'ทำให้สามารถเชื่อมโยงข้อมูลของหน่วยงานภายในได้', 'ลดเอกสาร', 'ทำให้การวางแผนเมืองตรงเป้า ตรงจุดมากขึ้น'];
 const section3Factors = [{ category: "1. ทรัพยากรภายในองค์กร", items: [{ field: "budget_system_development", title: "งบประมาณจัดสรรในการพัฒนาระบบ" }, { field: "budget_knowledge_development", title: "งบประมาณจัดสรรในการพัฒนาองค์ความรู้" }, { field: "cooperation_between_agencies", title: "การสร้างความร่วมมือระหว่างหน่วยงาน/ภาคีเครือข่าย" }, { field: "innovation_ecosystem", title: "การสร้างระบบนิเวศที่เชื่อมต่อการพัฒนานวัตกรรม" }, { field: "government_digital_support", title: "การสนับสนุนระบบดิจิทัลพื้นฐานจากภาครัฐที่เกี่ยวกับภารกิจพื้นฐานของท้องถิ่น" }] }, { category: "2. สถานะหน่วยงาน เทศบาล/อปท.", items: [{ field: "digital_infrastructure", title: "ความพร้อมด้านโครงสร้างทางกายภาพทางเทคโนโลยี (Digital Infrastructure)" }, { field: "digital_mindset", title: "บุคลากรภายในหน่วยงาน มีชุดความคิดแบบดิจิทัล (Digital Mindset)" }, { field: "learning_organization", title: "เป็นองค์กรแห่งการเรียนรู้ ที่มีความพร้อมในการพัฒนานวัตกรรม" }, { field: "it_skills", title: "เจ้าหน้าที่ที่เกี่ยวข้องกับการใช้นวัตกรรมดิจิทัล มีความรู้ ทักษะด้าน IT ที่เพียงพอ" }, { field: "internal_communication", title: "ประสิทธิภาพในการสื่อสารภายในองค์กร" }] }, { category: "3. พันธะผูกพันของหน่วยงาน", items: [{ field: "policy_continuity", title: "ความต่อเนื่องของนโยบายขององค์กรในการพัฒนาโครงการนวัตกรรมท้องถิ่น" }, { field: "policy_stability", title: "ความมีเสถียรภาพของนโยบายในการขับเคลื่อนองค์กรด้วยเทคโนโลยีและนวัตกรรม" }, { field: "leadership_importance", title: "ผู้นำให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น" }, { field: "staff_importance", title: "เจ้าหน้าที่ปฏิบัติงานให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น" }] }, { category: "4. การสื่อสารกับผู้ใช้บริการ/กลุ่มเป้าหมาย", items: [{ field: "communication_to_users", title: "มีการสื่อสารข้อมูลนวัตกรรมท้องถิ่นไปยังผู้ใช้บริการได้อย่างเพียงพอ" }, { field: "reaching_target_groups", title: "การสื่อสารข้อมูลนวัตกรรมท้องถิ่น สามารถเข้าถึงกลุ่มเป้าหมาย" }] }];
 
+// **** START OF NEW CODE ****
+// Function to safely parse a JSON string
+const safeJsonParse = (jsonString: string, fallback: any = {}) => {
+  if (typeof jsonString !== 'string') return fallback;
+  try {
+    return JSON.parse(jsonString) || fallback;
+  } catch (error) {
+    console.error("Failed to parse JSON string:", jsonString, error);
+    return fallback;
+  }
+};
+
+// Function to transform the raw row data into a structured object for the component
+const transformRawData = (rawData: any) => {
+  if (!rawData || typeof rawData !== 'object') {
+    return { respondent: {}, section1: {}, section2: {}, section3: {} };
+  }
+
+  // Section 1: All top-level fields starting with 'section1_'
+  const section1Data: { [key: string]: any } = {};
+  Object.keys(rawData).forEach(key => {
+    if (key.startsWith('section1_')) {
+      section1Data[key] = rawData[key];
+    }
+  });
+
+  // Section 2: Comes from survey_responses_section2, which is an array in a string
+  const section2Array = safeJsonParse(rawData.survey_responses_section2, []);
+  const section2Data = Array.isArray(section2Array) ? section2Array[0] : {};
+
+  // Section 3: Comes from survey_responses_section3, which is an array in a string
+  const section3Array = safeJsonParse(rawData.survey_responses_section3, []);
+  const section3Data = Array.isArray(section3Array) ? section3Array[0] : {};
+
+  // Respondent Info (Assuming it's available in a 'user' object or similar)
+  // This part needs to be adjusted based on the actual user data structure.
+  // For now, using placeholders.
+  const respondentData = {
+    name: rawData.user?.full_name || 'N/A',
+    position: rawData.user?.position || 'N/A',
+    organization: rawData.user?.organization || 'N/A',
+    survey_date: rawData.created_at ? new Date(rawData.created_at).toLocaleDateString('th-TH') : 'N/A'
+  };
+  
+  return {
+    respondent: respondentData,
+    section1: section1Data,
+    section2: section2Data,
+    section3: section3Data,
+  };
+};
+// **** END OF NEW CODE ****
+
+
 // Helper Components & Functions
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
-// **** START OF CHANGE ****
-const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // 1. Get the nested section1 object, with a fallback to an empty object.
-    const section1Data = allData.section1 || {};
 
-    // 2. Get the array of selected checkbox values from the nested object.
+// **** START OF FINAL FIX ****
+const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], section1Data: any) => {
+    // We now receive the already-processed section1Data object.
     const selectedValues = section1Data.section1_problems_before || [];
     
     return (
@@ -38,16 +90,13 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
             <h4 className="font-semibold mb-3">{title}</h4>
             <div className="space-y-3">
                 {options.map((opt, i) => { 
-                    // 3. Check if the current option's text is in the array of selected values.
                     const isChecked = selectedValues.includes(opt.text);
                     
-                    // 4. Get the corresponding detail value from the TOP-LEVEL `allData` object.
-                    // This is the correct location for the detail fields.
-                    const detailValue = allData[`section1_problems_detail_${i}`];
+                    // The detail value is now correctly accessed from the passed section1Data object.
+                    const detailValue = section1Data[`section1_problems_detail_${i}`];
                     
                     return (
                         <div key={i} className="print-sub-item">
-                            {/* This is the main row for the checkbox and text */}
                             <div className="flex items-start space-x-3">
                                 <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
                                     {isChecked && <span className="text-white font-bold text-xs">✓</span>}
@@ -55,7 +104,6 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                 <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                             </div>
 
-                            {/* This block is now correctly placed to only show up under a checked item */}
                             {isChecked && opt.hasDetail && (
                                 <div className="ml-8 mt-2 p-3 bg-blue-50 rounded-md border border-blue-200">
                                     <p className="text-sm text-blue-800">
@@ -70,14 +118,20 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
         </div>
     );
 };
-// **** END OF CHANGE ****
+// **** END OF FINAL FIX ****
 
 const renderTextField = (title: string, value?: string) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="p-4 bg-gray-50 rounded-md border min-h-[60px]"><p className="text-sm whitespace-pre-wrap">{value || <span className="text-gray-400">ไม่ได้ระบุ</span>}</p></div></div>);
 const renderRatingScale = (title: string, value?: number, max = 10, description?: React.ReactNode) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="flex items-center space-x-4 flex-wrap"><div className="flex flex-wrap gap-1">{Array.from({ length: max }, (_, i) => i + 1).map(num => (<div key={num} className={`w-9 h-9 r-m border flex items-center justify-center text-xs font-medium ${value === num ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>{num}</div>))}</div>{value != null && (<Badge variant="secondary">คะแนน: {value}/{max}</Badge>)}</div>{description}</div>);
 
-const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
+// The component now expects the raw data row
+const CompleteSurveyViewer: React.FC<{ rawData?: any }> = ({ rawData = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
-  const respondent = data.respondent || {}; const section1 = data.section1 || {}; const section2 = data.section2 || {}; const section3 = data.section3 || {};
+
+  // **** START OF CHANGE ****
+  // Transform the raw data into the structured format the component needs
+  const data = transformRawData(rawData);
+  const { respondent, section1, section2, section3 } = data;
+  // **** END OF CHANGE ****
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -108,8 +162,8 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
             
             {/* **** START OF CHANGE **** */}
-            {/* Call the function with the full `data` object */}
-            {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, data)}
+            {/* Now we pass the processed section1 object directly */}
+            {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, section1)}
             {/* **** END OF CHANGE **** */}
 
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
