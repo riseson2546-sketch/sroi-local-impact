@@ -4,10 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Trash2, Users, FileText, BarChart3 } from 'lucide-react';
+import { Eye, Trash2, Users, FileText, BarChart3, X } from 'lucide-react';
 import CompleteSurveyViewer from '@/components/admin/CompleteSurveyViewer';
 
 const AdminDashboard = () => {
@@ -125,6 +124,15 @@ const AdminDashboard = () => {
   const handleViewResponse = (response) => {
     setSelectedResponse(response);
     setIsViewerOpen(true);
+    // ป้องกันการ scroll ของ body เมื่อ modal เปิด
+    document.body.style.overflow = 'hidden';
+  };
+
+  const handleCloseViewer = () => {
+    setIsViewerOpen(false);
+    setSelectedResponse(null);
+    // คืนค่าการ scroll ของ body
+    document.body.style.overflow = 'unset';
   };
 
   const handleDeleteResponse = async (responseId) => {
@@ -178,10 +186,26 @@ const AdminDashboard = () => {
     }
   };
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.keyCode === 27) {
+        handleCloseViewer();
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div>กำลังโหลด...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div>กำลังโหลด...</div>
+        </div>
       </div>
     );
   }
@@ -309,24 +333,50 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Survey Viewer Dialog */}
-        <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-          <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
-            <DialogHeader className="p-6 pb-2">
-              <DialogTitle className="text-xl">
-                📋 แบบสอบถาม - {selectedResponse?.survey_users?.full_name}
-              </DialogTitle>
-              <p className="text-sm text-gray-600">
-                {selectedResponse?.survey_users?.organization} • {selectedResponse && new Date(selectedResponse.created_at).toLocaleDateString('th-TH')}
-              </p>
-            </DialogHeader>
-            <div className="flex-1 overflow-auto p-6 pt-2">
-              {selectedResponse && (
-                <CompleteSurveyViewer data={transformResponseData(selectedResponse)} />
-              )}
+        {/* Custom Survey Viewer Modal */}
+        {isViewerOpen && (
+          <div 
+            className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleCloseViewer();
+              }
+            }}
+          >
+            <div className="bg-white rounded-lg w-[98vw] h-[98vh] flex flex-col max-w-none shadow-2xl">
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-semibold text-gray-900 truncate">
+                    📋 แบบสอบถาม - {selectedResponse?.survey_users?.full_name}
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1 truncate">
+                    {selectedResponse?.survey_users?.organization} • วันที่ตอบ: {selectedResponse && new Date(selectedResponse.created_at).toLocaleDateString('th-TH')}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2 ml-4">
+                  <span className="text-xs text-gray-500">กด ESC เพื่อปิด</span>
+                  <button
+                    onClick={handleCloseViewer}
+                    className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+                    title="ปิด (ESC)"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto bg-gray-50">
+                <div className="p-6">
+                  {selectedResponse && (
+                    <CompleteSurveyViewer data={transformResponseData(selectedResponse)} />
+                  )}
+                </div>
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </div>
     </div>
   );
