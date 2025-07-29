@@ -19,27 +19,24 @@ const successFactors = ["ความสามารถในการวิเ�
 const dataTypes = ['ชุดข้อมูลด้านประชากร', 'ชุดข้อมูลด้านโครงสร้างพื้นฐาน', 'ชุดข้อมูลด้านสิ่งแวดล้อม เช่น ขยะ น้ำเสีย PM 2.5 เป็นต้น', 'ชุดข้อมูลด้านการจัดการภัยพิบัติ', 'ชุดข้อมูลด้านสุขภาพ', 'ชุดข้อมูลด้านการจราจร', 'ชุดข้อมูลด้านการจัดการสินทรัพย์ท้องถิ่น'];
 const partnerOrgs = ['มูลนิธิส่งเสริมการปกครองท้องถิ่น', 'นักวิชาการจากสถาบันการศึกษา', 'ผู้เชี่ยวชาญจากภายนอก', 'ภาคีเครือข่ายในพื้นที่', 'ภาคเอกชน'];
 const dataBenefits = ['ลดต้นทุนการบริหารจัดการ/ต้นทุนเวลา', 'ลดระยะเวลาในการดำเนินงาน', 'การบริหารจัดการเมืองมีประสิทธิภาพเพิ่มขึ้น', 'ทำให้สามารถเชื่อมโยงข้อมูลของหน่วยงานภายในได้', 'ลดเอกสาร', 'ทำให้การวางแผนเมืองตรงเป้า ตรงจุดมากขึ้น'];
-const section3Factors = [{ category: "1. ทรัพยากรภายในองค์กร", items: [{ field: "budget_system_development", title: "งบประมาณจัดสรรในการพัฒนาระบบ" }, { field: "budget_knowledge_development", title: "งบประมาณจัดสรรในการพัฒนาองค์ความรู้" }, { field: "cooperation_between_agencies", title: "การสร้างความร่วมมือระหว่างหน่วยงาน/ภาคีเครือข่าย" }, { field: "innovation_ecosystem", title: "การสร้างระบบนิเวศที่เชื่อมต่อการพัฒนานวัตกรรม" }, { field: "government_digital_support", title: "การสนับสนุนระบบดิจิทัลพื้นฐานจากภาครัฐที่เกี่ยวกับภารกิจพื้นฐานของท้องถิ่น" }] }, { category: "2. สถานะหน่วยงาน เทศบาล/อปท.", items: [{ field: "digital_infrastructure", title: "ความพร้อมด้านโครงสร้างทางกายภาพทางเทคโนโลยี (Digital Infrastructure)" }, { field: "digital_mindset", title: "บุคลากรภายในหน่วยงาน มีชุดความคิดแบบดิจิทัล (Digital Mindset)" }, { field: "learning_organization", title: "เป็นองค์กรแห่งการเรียนรู้ ที่มีความพร้อมในการพัฒนานวัตกรรม" }, { field: "it_skills", title: "เจ้าหน้าที่ที่เกี่ยวข้องกับการใช้นวัตกรรมดิจิทัล มีความรู้ ทักษะด้าน IT ที่เพียงพอ" }, { field: "internal_communication", title: "ประสิทธิภาพในการสื่อสารภายในองค์กร" }] }, { category: "3. พันธะผูกพันของหน่วยงาน", items: [{ field: "policy_continuity", title: "ความต่อเนื่องของนโยบายขององค์กรในการพัฒนาโครงการนวัตกรรมท้องถิ่น" }, { field: "policy_stability", title: "ความมีเสถียรภาพของนโยบายในการขับเคลื่อนองค์กรด้วยเทคโนโลยีและนวัตกรรม" }, { field: "leadership_importance", title: "ผู้นำให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น" }, { field: "staff_importance", title: "เจ้าหน้าที่ปฏิบัติงานให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น" }] }, { category: "4. การสื่อสารกับผู้ใช้บริการ/กลุ่มเป้าหมาย", items: [{ field: "communication_to_users", title: "มีการสื่อสารข้อมูลนวัตกรรมท้องถิ่นไปยังผู้ใช้บริการได้อย่างเพียงพอ" }, { field: "reaching_target_groups", title: "การสื่อสารข้อมูลนวัตกรรมท้องถิ่น สามารถเข้าถึงกลุ่มเป้าหมาย" }] }];
+const section3Factors = [{ category: "1. ทรัพยากรภายในองค์กร", items: [{ field: "budget_system_development", title: "งบประมาณจัดสรรในการพัฒนาระบบ" }, { field: "budget_knowledge_development", title: "งบประมาณจัดสรรในการพัฒนาองค์ความรู้" }, { field: "cooperation_between_agencies", title: "การสร้างความร่วมมือระหว่างหน่วยงาน/ภาคีเครือข่าย" }, { field: "innovation_ecosystem", title: "การสร้างระบบนิเวศที่เชื่อมต่อการพัฒนานวัตกรรม" }, { field: "government_digital_support", title: "การสนับสนุนระบบดิจิทัลพื้นฐานจากภาครัฐที่เกี่ยวกับภารกิจพื้นฐานของท้องถิ่น" }] }, { category: "2. สถานะหน่วยงาน เทศบาล/อปท.", items: [{ field: "digital_infrastructure", title: "ความพร้อมด้านโครงสร้างทางกายภาพทางเทคโนโลยี (Digital Infrastructure)" }, { field: "digital_mindset", title: "บุคลากรภายในหน่วยงาน มีชุดความคิดแบบดิจิทัล (Digital Mindset)" }, { field: "learning_organization", title: "เป็นองค์กรแห่งการเรียนรู้ ที่มีความพร้อมในการพัฒนานวัตกรรม" }, { field: "it_skills", title: "เจ้าหน้าที่ที่เกี่ยวข้องกับการใช้นวัตกรรมดิจิทัล มีความรู้ ทักษะด้าน IT ที่เพียงพอ" }, { field: "internal_communication", title: "ประสิทธิภาพในการสื่อสารภายในองค์กร" }] }, { category: "3. พันธะผูกพันของหน่วยงาน", items: [{ field: "policy_continuity", title: "ความต่อเนื่องของนโยบายขององค์กรในการพัฒนาโครงการนวัตกรรมท้องถิ่น" }, { field: "policy_stability", "title": "ความมีเสถียรภาพของนโยบายในการขับเคลื่อนองค์กรด้วยเทคโนโลยีและนวัตกรรม" }, { field: "leadership_importance", "title": "ผู้นำให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น" }, { field: "staff_importance", "title": "เจ้าหน้าที่ปฏิบัติงานให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น" }] }, { category: "4. การสื่อสารกับผู้ใช้บริการ/กลุ่มเป้าหมาย", items: [{ field: "communication_to_users", title: "มีการสื่อสารข้อมูลนวัตกรรมท้องถิ่นไปยังผู้ใช้บริการได้อย่างเพียงพอ" }, { field: "reaching_target_groups", "title": "การสื่อสารข้อมูลนวัตกรรมท้องถิ่น สามารถเข้าถึงกลุ่มเป้าหมาย" }] }];
 
-// **** START OF NEW CODE ****
-// Function to safely parse a JSON string
+
 const safeJsonParse = (jsonString: string, fallback: any = {}) => {
   if (typeof jsonString !== 'string') return fallback;
   try {
-    return JSON.parse(jsonString) || fallback;
+    const parsed = JSON.parse(jsonString);
+    return parsed === null ? fallback : parsed;
   } catch (error) {
-    console.error("Failed to parse JSON string:", jsonString, error);
     return fallback;
   }
 };
 
-// Function to transform the raw row data into a structured object for the component
 const transformRawData = (rawData: any) => {
   if (!rawData || typeof rawData !== 'object') {
     return { respondent: {}, section1: {}, section2: {}, section3: {} };
   }
 
-  // Section 1: All top-level fields starting with 'section1_'
   const section1Data: { [key: string]: any } = {};
   Object.keys(rawData).forEach(key => {
     if (key.startsWith('section1_')) {
@@ -47,17 +44,16 @@ const transformRawData = (rawData: any) => {
     }
   });
 
-  // Section 2: Comes from survey_responses_section2, which is an array in a string
+  // **** START OF FIX ****
   const section2Array = safeJsonParse(rawData.survey_responses_section2, []);
-  const section2Data = Array.isArray(section2Array) ? section2Array[0] : {};
+  // Ensure section2Data is an object, even if the array is empty
+  const section2Data = (Array.isArray(section2Array) && section2Array.length > 0) ? section2Array[0] : {};
 
-  // Section 3: Comes from survey_responses_section3, which is an array in a string
   const section3Array = safeJsonParse(rawData.survey_responses_section3, []);
-  const section3Data = Array.isArray(section3Array) ? section3Array[0] : {};
-
-  // Respondent Info (Assuming it's available in a 'user' object or similar)
-  // This part needs to be adjusted based on the actual user data structure.
-  // For now, using placeholders.
+  // Ensure section3Data is an object, even if the array is empty
+  const section3Data = (Array.isArray(section3Array) && section3Array.length > 0) ? section3Array[0] : {};
+  // **** END OF FIX ****
+  
   const respondentData = {
     name: rawData.user?.full_name || 'N/A',
     position: rawData.user?.position || 'N/A',
@@ -72,17 +68,13 @@ const transformRawData = (rawData: any) => {
     section3: section3Data,
   };
 };
-// **** END OF NEW CODE ****
 
 
 // Helper Components & Functions
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
-
-// **** START OF FINAL FIX ****
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], section1Data: any) => {
-    // We now receive the already-processed section1Data object.
     const selectedValues = section1Data.section1_problems_before || [];
     
     return (
@@ -91,8 +83,6 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
             <div className="space-y-3">
                 {options.map((opt, i) => { 
                     const isChecked = selectedValues.includes(opt.text);
-                    
-                    // The detail value is now correctly accessed from the passed section1Data object.
                     const detailValue = section1Data[`section1_problems_detail_${i}`];
                     
                     return (
@@ -103,7 +93,6 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                 </div>
                                 <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                             </div>
-
                             {isChecked && opt.hasDetail && (
                                 <div className="ml-8 mt-2 p-3 bg-blue-50 rounded-md border border-blue-200">
                                     <p className="text-sm text-blue-800">
@@ -118,20 +107,15 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
         </div>
     );
 };
-// **** END OF FINAL FIX ****
 
 const renderTextField = (title: string, value?: string) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="p-4 bg-gray-50 rounded-md border min-h-[60px]"><p className="text-sm whitespace-pre-wrap">{value || <span className="text-gray-400">ไม่ได้ระบุ</span>}</p></div></div>);
 const renderRatingScale = (title: string, value?: number, max = 10, description?: React.ReactNode) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="flex items-center space-x-4 flex-wrap"><div className="flex flex-wrap gap-1">{Array.from({ length: max }, (_, i) => i + 1).map(num => (<div key={num} className={`w-9 h-9 r-m border flex items-center justify-center text-xs font-medium ${value === num ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>{num}</div>))}</div>{value != null && (<Badge variant="secondary">คะแนน: {value}/{max}</Badge>)}</div>{description}</div>);
 
-// The component now expects the raw data row
 const CompleteSurveyViewer: React.FC<{ rawData?: any }> = ({ rawData = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // **** START OF CHANGE ****
-  // Transform the raw data into the structured format the component needs
   const data = transformRawData(rawData);
   const { respondent, section1, section2, section3 } = data;
-  // **** END OF CHANGE ****
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -160,12 +144,7 @@ const CompleteSurveyViewer: React.FC<{ rawData?: any }> = ({ rawData = {} }) => 
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes, undefined, false)}
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
-            
-            {/* **** START OF CHANGE **** */}
-            {/* Now we pass the processed section1 object directly */}
             {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, section1)}
-            {/* **** END OF CHANGE **** */}
-
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
             {renderRatingScale("ระดับความรู้ก่อนอบรม", section1.section1_knowledge_before, 10, <RatingDescription items={["ระดับ 1 : ไม่ได้ใช้ในการแก้ปัญหา ไม่ตระหนักถึงการมีอยู่", "ระดับ 2 : ตระหนัก แต่ไม่ได้นำไปใช้ในการแก้ปัญหา", "ระดับ 3 : นำไปใช้ในการวิเคราะห์ปัญหา หรือคำนึงถึงในงานของตน", "ระดับ 4 : นำไปใช้ในการออกแบบวิธีการแก้ปัญหา (วางแผน/สร้างแนวทาง/อยู่ในขั้นตอนการทำงาน)", "ระดับ 5 : นำไปใช้ในการบรรจุเป็นแผนระดับสำนัก ภายใต้หน่วยงานของตน", "ระดับ 6 : นำไปใช้บรรจุลงในแผนขับเคลื่อนระดับหน่วยงาน/องค์กรของตนเอง", "ระดับ 7 : นำไปใช้ในการขับเคลื่อนเชิงปฏิบัติการในพื้นที่ที่อธิบายผลได้อย่างชัดเจน", "ระดับ 8 : สามารถเผยแพร่ และมีส่วนในการผลักดันแผน/นโยบายของหน่วยงานหรือพื้นที่อื่น ๆ ได้อย่างชัดเจน อธิบายผลได้", "ระดับ 9 : สามารถขยายผล/ต่อยอด การแก้ปัญหาระดับพื้นที่ได้อย่างชัดเจน อธิบายผลได้", "ระดับ 10 : สามารถนำไปกำหนดระดับนโยบายระดับอำเภอ/จังหวัด/ประเทศ"]}/>)}
             {renderRatingScale("ระดับความรู้หลังอบรม", section1.section1_knowledge_after, 10)}
