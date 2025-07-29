@@ -25,16 +25,15 @@ const section3Factors = [{ category: "1. ทรัพยากรภายใน
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
-const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], dataForSection1: any) => {
-    const selectedValues = dataForSection1.section1_problems_before || [];
-    
+const renderProblemsCheckboxes = (title: string, options: { text: string; hasDetail: boolean }[], dataForSection: any) => {
+    const selectedValues = dataForSection.section1_problems_before || [];
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
             <div className="space-y-3">
                 {options.map((opt, i) => { 
                     const isChecked = selectedValues.includes(opt.text);
-                    const detailValue = dataForSection1[`section1_problems_detail_${i}`];
+                    const detailValue = dataForSection[`section1_problems_detail_${i}`];
                     return (
                         <div key={i} className="print-sub-item">
                             <div className="flex items-start space-x-3">
@@ -63,15 +62,13 @@ const renderRatingScale = (title: string, value?: number, max = 10, description?
 
 const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
-
+  
   // **** START OF CHANGE ****
-  // This is the main correction.
-  // The 'data' prop contains flat 'section1_...' fields, and nested 'respondent', 'section2', 'section3' objects.
-  // We align our variables to this actual structure.
-  const respondent = data.respondent || {};
-  const section1 = data || {}; // section1 fields are at the root of the 'data' prop.
-  const section2 = data.section2 || {};
-  const section3 = data.section3 || {};
+  // Map data from the actual response structure to variables used for rendering.
+  const respondent = data.survey_users || {};
+  const section1 = data || {}; // Section 1 fields are at the root level of `data`.
+  const section2 = data.survey_responses_section2?.[0] || {};
+  const section3 = data.survey_responses_section3?.[0] || {};
   // **** END OF CHANGE ****
 
   const handlePrint = () => {
@@ -94,18 +91,26 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
       <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6 no-print"><h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1><Button onClick={handlePrint} disabled={isPrinting}><Printer className="mr-2 h-4 w-4" />{isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}</Button></div>
       <div id="printable-area" className="space-y-6">
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader><CardContent className="p-6"><div className="grid grid-cols-2 gap-4"><div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.name || 'N/A'}</div><div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div><div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div><div><span className="font-medium">วันที่ตอบ:</span> {respondent.survey_date || 'N/A'}</div></div></CardContent></Card>
+        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader><CardContent className="p-6"><div className="grid grid-cols-2 gap-4">
+            {/* **** START OF CHANGE **** */}
+            {/* Use the correct field names from the 'respondent' (survey_users) object */}
+            <div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.full_name || 'N/A'}</div>
+            <div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div>
+            <div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div>
+            {/* The submission date is likely a top-level field on the `data` object itself */}
+            <div><span className="font-medium">วันที่ตอบ:</span> {data.created_at ? new Date(data.created_at).toLocaleDateString('th-TH') : 'N/A'}</div>
+            {/* **** END OF CHANGE **** */}
+        </div></CardContent></Card>
         
         <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-2">
+            {/* **** START OF CHANGE **** */}
+            {/* All calls in this section now correctly use the `section1` variable */}
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes, undefined, false)}
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
             
-            {/* **** START OF CHANGE **** */}
-            {/* Now this call correctly passes the `section1` object which holds all needed data */}
             {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, section1)}
-            {/* **** END OF CHANGE **** */}
 
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
             {renderRatingScale("ระดับความรู้ก่อนอบรม", section1.section1_knowledge_before, 10, <RatingDescription items={["ระดับ 1 : ไม่ได้ใช้ในการแก้ปัญหา ไม่ตระหนักถึงการมีอยู่", "ระดับ 2 : ตระหนัก แต่ไม่ได้นำไปใช้ในการแก้ปัญหา", "ระดับ 3 : นำไปใช้ในการวิเคราะห์ปัญหา หรือคำนึงถึงในงานของตน", "ระดับ 4 : นำไปใช้ในการออกแบบวิธีการแก้ปัญหา (วางแผน/สร้างแนวทาง/อยู่ในขั้นตอนการทำงาน)", "ระดับ 5 : นำไปใช้ในการบรรจุเป็นแผนระดับสำนัก ภายใต้หน่วยงานของตน", "ระดับ 6 : นำไปใช้บรรจุลงในแผนขับเคลื่อนระดับหน่วยงาน/องค์กรของตนเอง", "ระดับ 7 : นำไปใช้ในการขับเคลื่อนเชิงปฏิบัติการในพื้นที่ที่อธิบายผลได้อย่างชัดเจน", "ระดับ 8 : สามารถเผยแพร่ และมีส่วนในการผลักดันแผน/นโยบายของหน่วยงานหรือพื้นที่อื่น ๆ ได้อย่างชัดเจน อธิบายผลได้", "ระดับ 9 : สามารถขยายผล/ต่อยอด การแก้ปัญหาระดับพื้นที่ได้อย่างชัดเจน อธิบายผลได้", "ระดับ 10 : สามารถนำไปกำหนดระดับนโยบายระดับอำเภอ/จังหวัด/ประเทศ"]}/>)}
@@ -125,11 +130,14 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderCheckboxes("1.12 ท่านคิดว่า องค์ความรู้และการประยุกต์ใช้องค์ความรู้จากการอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ในประเด็นใดบ้าง", successFactors, section1.section1_success_factors, section1.section1_success_factors_other)}
             {renderTextField("1.13 โปรดอธิบายปัจจัยที่ส่งผลต่อความสำเร็จในการพัฒนาเมืองในพื้นที่ของท่าน ตามที่ท่านระบุไว้ในข้อ 1.12", section1.section1_success_description)}
             {renderRatingScale("1.14 บทบาทของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ก่อให้เกิดการเปลี่ยนแปลงในพื้นที่ของท่านในระดับใด", section1.section1_overall_change_level, 10, <RatingDescription items={["ระดับ 1 : เมืองยังคงเป็นรูปแบบดั้งเดิม ไม่มีการเปลี่ยนแปลง", "ระดับ 2 : เริ่มมีการวางแผนพัฒนาเมืองเบื้องต้น / เริ่มมีการวางแผนเรื่องระบบข้อมูล", "ระดับ 3 : มีโครงการพัฒนาเล็ก ๆ แต่ยังไม่มีผลต่อโครงสร้างเมืองโดยรวม", "ระดับ 4 : เริ่มมีการเปลี่ยนแปลงในโครงสร้างพื้นฐานหรือเศรษฐกิจบางส่วน", "ระดับ 5 : เมืองเริ่มมีการขยายตัวในระดับปานกลาง เช่น พื้นที่อยู่อาศัย พื้นที่เศรษฐกิจ หรือสาธารณูปโภคใหม่ ๆ", "ระดับ 6 : เมืองมีการเปลี่ยนแปลงหลายมิติ เช่น การคมนาคมสาธารณะ พื้นที่สีเขียว หรือการฟื้นฟูเมืองเก่า", "ระดับ 7 : เมืองมีระบบบริหารจัดการที่มีประสิทธิภาพ เช่น การใช้ข้อมูลดิจิทัล (Smart City), การมีส่วนร่วมของประชาชนเพิ่มขึ้น", "ระดับ 8 : เมืองกลายเป็นศูนย์กลางด้านเศรษฐกิจหรือวัฒนธรรมระดับภูมิภาค มีโครงการพัฒนาขนาดใหญ่ เช่น TOD หรือเขตเศรษฐกิจพิเศษ", "ระดับ 9 : เมืองพัฒนาในระดับสูง มีความเชื่อมโยงระหว่าง, ใช้แนวคิดยั่งยืน/อัจฉริยะในหลายมิติ", "ระดับ 10 : เมืองเป็นต้นแบบระดับประเทศหรือโลก เช่น เมืองอัจฉริยะที่ใช้เทคโนโลยีและนโยบายที่ยั่งยืนในทุกด้าน"]}/>)}
+            {/* **** END OF CHANGE **** */}
           </CardContent>
         </Card>
 
         <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล ความรู้ และความร่วมมือระดับประเทศ</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-2">
+            {/* **** START OF CHANGE **** */}
+            {/* All calls in this section now correctly use the `section2` variable */}
             {renderCheckboxes("2.1 1) ในการพัฒนาเมือง ได้ใช้ชุดข้อมูลใดบ้างในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
             {renderTextField("2.1 2) ตามที่ท่านระบุในข้อ 1) ชุดข้อมูลที่ใช้นั้นได้ใช้งานจากแหล่งที่มาใด หรือชุดข้อมูลที่ได้จากการสนับสนุนทุนจากโครงการ", section2.section2_data_sources)}
             {renderCheckboxes("2.1 3) ในการจัดทำชุดข้อมูลหรือฐานข้อมูลในการพัฒนานั้น มีหน่วยงานใดเข้ามาร่วมบ้าง", partnerOrgs, section2.section2_partner_organizations, section2.section2_partner_organizations_other)}
@@ -139,12 +147,16 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderTextField("2.4 ปัจจุบันการพัฒนาชุดข้อมูลเพื่อการพัฒนาเมืองของท่าน ยังได้มีการพัฒนาอย่างต่อเนื่อง หรือ ไม่ หากได้ ข้อมูลใดที่ได้มีการจัดหาเพิ่มเติม หรือข้อมูลใดที่ยังต้องการ แต่ยังไม่มี", section2.section2_continued_development)}
             <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.5 องค์กรของท่านมีแอปพลิเคชัน (Application) ใด ในการพัฒนาเมืองหรือไม่</h4>{[1, 2].map(num => {const appName = section2.section2_applications?.[`app${num}_name`]; if (!appName || !appName.trim()) return null; const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`]; const methods = [{key:'buy',label:'ซื้อ'},{key:'develop',label:'องค์กรพัฒนาขึ้นเอง'},{key:'transfer',label:'องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้'},{key:'other',label:'อื่น ๆ'}]; return(<div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border print-sub-item"><strong>{num}) ชื่อแอปพลิเคชัน:</strong> {appName}<div className="mt-2"><p className="text-sm font-semibold">• วิธีการได้มา:</p><div className="flex flex-wrap gap-x-4 gap-y-1 ml-4">{methods.map(method => { const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`]; return (<div key={method.key} className="flex items-center space-x-1.5"><div className={`w-4 h-4 border-2 r-m flex items-center justify-center ${isChecked ? 'bg-black' : ''}`} /><span>{method.label}</span></div>);})}{section2.section2_applications?.[`app${num}_method_other`] && otherDetail && (<div className="w-full mt-1 p-2 bg-blue-50 text-sm text-blue-700 rounded"><strong>ระบุ:</strong> {otherDetail}</div>)}</div></div></div>);})}</div>
             <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.6 ในปัจจุบันองค์กรของท่านได้มีการขยายเครือข่ายความร่วมมือไปยังหน่วยงานใดบ้าง และเป็นความร่วมมือในด้านใด</h4><div className="space-y-2"><div className="grid grid-cols-2 gap-4 font-medium text-center"><div className="p-2 bg-gray-100 rounded">หน่วยงาน</div><div className="p-2 bg-gray-100 rounded">ด้านความร่วมมือ</div></div>{[...Array(5)].map((_, i) => {const org = section2.section2_network_expansion?.[`org${i+1}`]; const coop = section2.section2_network_expansion?.[`cooperation${i+1}`]; if (!org) return null; return (<div key={i} className="grid grid-cols-2 gap-4 text-sm border-b pb-2"><div className="p-2">{org}</div><div className="p-2">{coop || 'N/A'}</div></div>);})}</div></div>
+            {/* **** END OF CHANGE **** */}
           </CardContent>
         </Card>
 
         <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 3: การขับเคลื่อนระบบข้อมูลเมืองหรือโครงการนวัตกรรมต่อยอดสู่การเป็นองค์กร ที่ขับเคลื่อนด้วยข้อมูล (Data Driven Organization)</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-4">
+            {/* **** START OF CHANGE **** */}
+            {/* All calls in this section now correctly use the `section3` variable */}
             {section3Factors.map(cat => (<div key={cat.category} className="print-item-block mb-6"><h3 className="text-lg font-bold mb-2 text-purple-700 print-category-heading">{cat.category}</h3><div className="space-y-3">{cat.items.map(item => (<div key={item.field} className="print-sub-item">{renderRatingScale(item.title, section3[item.field], 5)}</div>))}</div></div>))}
+            {/* **** END OF CHANGE **** */}
           </CardContent>
         </Card>
       </div>
