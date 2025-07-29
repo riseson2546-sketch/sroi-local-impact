@@ -126,6 +126,20 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading = false, on
       }
     }
 
+    // ตรวจสอบ "อื่น ๆ" สำหรับแอปพลิเคชัน
+    if (currentStepData.id === 'applications') {
+      // ตรวจสอบแอปพลิเคชัน 1
+      if (formData.section2_applications?.app1_method_other && 
+          (!formData.section2_applications?.app1_method_other_detail || formData.section2_applications?.app1_method_other_detail.trim() === '')) {
+        errors.push('กรุณาระบุรายละเอียดใน "อื่น ๆ" ของแอปพลิเคชัน 1');
+      }
+      // ตรวจสอบแอปพลิเคชัน 2
+      if (formData.section2_applications?.app2_method_other && 
+          (!formData.section2_applications?.app2_method_other_detail || formData.section2_applications?.app2_method_other_detail.trim() === '')) {
+        errors.push('กรุณาระบุรายละเอียดใน "อื่น ๆ" ของแอปพลิเคชัน 2');
+      }
+    }
+
     setValidationErrors(errors);
     return errors.length === 0;
   };
@@ -319,6 +333,34 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading = false, on
               })}
             />
             <Label htmlFor={`app${appNumber}-transfer`} className="text-sm cursor-pointer">องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้</Label>
+          </div>
+
+          {/* เพิ่มตัวเลือก "อื่น ๆ" */}
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              id={`app${appNumber}-other`}
+              checked={formData.section2_applications?.[`app${appNumber}_method_other`] || false}
+              onCheckedChange={(checked) => handleInputChange('section2_applications', {
+                ...formData.section2_applications,
+                [`app${appNumber}_method_other`]: checked as boolean
+              })}
+              className="mt-1 flex-shrink-0"
+            />
+            <div className="flex-1 space-y-2">
+              <Label htmlFor={`app${appNumber}-other`} className="text-sm cursor-pointer">
+                อื่น ๆ
+              </Label>
+              <Input
+                placeholder="ระบุรายละเอียด"
+                value={formData.section2_applications?.[`app${appNumber}_method_other_detail`] || ''}
+                onChange={(e) => handleInputChange('section2_applications', {
+                  ...formData.section2_applications,
+                  [`app${appNumber}_method_other_detail`]: e.target.value
+                })}
+                className="w-full"
+                disabled={!formData.section2_applications?.[`app${appNumber}_method_other`]}
+              />
+            </div>
           </div>
         </div>
       </div>
