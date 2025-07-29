@@ -26,9 +26,10 @@ const section3Factors = [
     { category: "4. การสื่อสารกับผู้ใช้บริการ/กลุ่มเป้าหมาย", icon: MessageSquare, color: "orange", items: [{ field: "communication_to_users", title: "มีการสื่อสารข้อมูลนวัตกรรมท้องถิ่นไปยังผู้ใช้บริการได้อย่างเพียงพอ" }, { field: "reaching_target_groups", title: "การสื่อสารข้อมูลนวัตกรรมท้องถิ่น สามารถเข้าถึงกลุ่มเป้าหมาย" }] }
 ];
 
-// --- Helper Functions (เหมือนเดิม) ---
+
+// --- Helper Functions ที่มีการเพิ่ม class 'print-item-block' ---
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, otherTitle: string = "อื่น ๆ:") => (
-    <div className="mb-6 p-4 border rounded-lg bg-white">
+    <div className="mb-6 p-4 border rounded-lg bg-white print-item-block">
         <h4 className="font-semibold mb-3 text-gray-800">{title}</h4>
         <div className="space-y-2">
             {options.map((option, index) => {
@@ -42,8 +43,7 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
                     </div>
                 );
             })}
-             {/* ส่วนของ "อื่นๆ" ที่มีเงื่อนไข */}
-            <div className="flex items-start space-x-3 p-2 rounded-md">
+             <div className="flex items-start space-x-3 p-2 rounded-md">
                 <div className="mt-1 w-5 h-5 rounded-md border-2 bg-white border-gray-300 flex-shrink-0" />
                 <span className="text-sm text-gray-500">{otherTitle}</span>
             </div>
@@ -59,14 +59,14 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], data: any) => {
     const selectedValues = data?.section1_problems_before || [];
     return (
-        <div className="mb-6 p-4 border rounded-lg bg-white">
+        <div className="mb-6 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3 text-gray-800">{title}</h4>
             <div className="space-y-3">
                 {options.map((option, index) => {
                     const isChecked = selectedValues.includes(option.text);
                     const detailValue = data?.[`section1_problems_detail_${index}`];
                     return (
-                        <div key={index}>
+                        <div key={index} className="print-sub-item"> {/* Group sub-items */}
                             <div className="flex items-start space-x-3 p-2 rounded-md">
                                 <div className={`mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isChecked ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
                                     {isChecked && <span className="text-white font-bold text-xs">✓</span>}
@@ -89,7 +89,7 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
 };
 
 const renderTextField = (title: string, value?: string) => (
-    <div className="mb-6 p-4 border rounded-lg bg-white">
+    <div className="mb-6 p-4 border rounded-lg bg-white print-item-block">
         <h4 className="font-semibold mb-3 text-gray-800">{title}</h4>
         <div className="p-4 bg-gray-50 rounded-md border border-gray-200 min-h-[60px]">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{value || <span className="text-gray-400">ไม่ได้ระบุ</span>}</p>
@@ -98,7 +98,7 @@ const renderTextField = (title: string, value?: string) => (
 );
 
 const renderRatingScale = (title: string, value?: number, max: number = 10, description?: React.ReactNode) => (
-    <div className="mb-6 p-4 border rounded-lg bg-white">
+    <div className="mb-6 p-4 border rounded-lg bg-white print-item-block">
         <h4 className="font-semibold mb-3 text-gray-800">{title}</h4>
         <div className="flex items-center space-x-4 flex-wrap">
             <div className="flex flex-wrap gap-1">
@@ -108,7 +108,7 @@ const renderRatingScale = (title: string, value?: number, max: number = 10, desc
                     </div>
                 ))}
             </div>
-            {value != null && ( // Check for null or undefined
+            {value != null && (
                 <Badge className="px-3 py-1 text-base bg-blue-100 text-blue-800 border-blue-300">
                     คะแนน: {value}/{max}
                 </Badge>
@@ -145,7 +145,6 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
         return;
     }
 
-    // ดึง Stylesheet <link> และ <style> ทั้งหมดจากหน้าปัจจุบัน
     const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
         .map(link => link.outerHTML)
         .join('');
@@ -153,34 +152,48 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
     const styles = Array.from(document.querySelectorAll('style'))
         .map(style => style.outerHTML)
         .join('');
-
-    // สร้างสไตล์สำหรับบังคับการพิมพ์ให้สวยงามโดยเฉพาะ
+    
+    // *** CSS ที่สำคัญที่สุดสำหรับการจัดหน้า ***
     const printSpecificStyles = `
         <style>
             @page {
                 size: A4;
-                margin: 1.5cm;
+                margin: 1.2cm; /* ลดขอบเล็กน้อย */
             }
             body {
-                font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                font-family: 'Sarabun', 'Helvetica Neue', Arial, sans-serif;
                 font-size: 10pt;
                 background-color: #ffffff !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            #printable-area {
-                background-color: #ffffff !important;
+            /* --- กฎการตัดหน้า --- */
+            
+            /* 1. บังคับให้แต่ละ Section ใหญ่ ขึ้นหน้าใหม่ (ยกเว้นอันแรก) */
+            .print-section-card:not(:first-child) {
+                page-break-before: always !important;
             }
-            .print-card {
-                border: 1px solid #dee2e6 !important;
-                box-shadow: none !important;
-                margin-bottom: 20px !important;
-                page-break-inside: avoid !important; /* คำสั่งสำคัญ: พยายามไม่ให้ Card ถูกตัดแบ่งหน้า */
+
+            /* 2. บล็อกคำถามแต่ละข้อ (สำคัญที่สุด) ห้ามฉีกกลางบล็อก */
+            .print-item-block {
+                page-break-inside: avoid !important;
             }
+
+            /* 3. หัวข้อหมวดหมู่ย่อย (เช่นใน Section 3) ห้ามอยู่ท้ายหน้าคนเดียว */
+            .print-category-heading {
+                page-break-after: avoid !important;
+            }
+            
+            /* 4. ในข้อที่มีตัวเลือกย่อยๆ พยายามอย่าฉีกกลาง */
+            .print-sub-item {
+                 page-break-inside: avoid !important;
+            }
+
+            /* --- กฎการจัดสไตล์ --- */
             .print-card-header {
                 background-color: #f8f9fa !important;
-                border-bottom: 1px solid #dee2e6 !important;
             }
+            /* ลบสีพื้นหลังที่ไม่จำเป็นออก */
             .bg-green-100\\/20, .bg-yellow-100\\/20, .bg-purple-100\\/20 {
                  background-color: #ffffff !important;
             }
@@ -190,11 +203,11 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
     const printWindow = window.open('', '', 'height=800,width=1000');
     if (printWindow) {
         printWindow.document.write('<!DOCTYPE html><html><head><title>พิมพ์แบบสอบถาม</title>');
-        printWindow.document.write(links); // ใส่ <link> ทั้งหมด
-        printWindow.document.write(styles); // ใส่ <style> ทั้งหมด
-        printWindow.document.write(printSpecificStyles); // ใส่สไตล์สำหรับพิมพ์โดยเฉพาะ
+        printWindow.document.write(links);
+        printWindow.document.write(styles);
+        printWindow.document.write(printSpecificStyles);
         printWindow.document.write('</head><body>');
-        printWindow.document.write(printableContent); // ใส่เนื้อหา
+        printWindow.document.write(printableContent);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
 
@@ -204,20 +217,18 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
                 printWindow.print();
             } catch (e) {
                 console.error("Print failed:", e);
-                alert("เกิดข้อผิดพลาดในการพิมพ์");
             } finally {
                 printWindow.close();
                 setIsPrinting(false);
             }
         };
-        // Fallback ในกรณีที่ onload ไม่ทำงาน
         setTimeout(() => {
             if (!printWindow.closed) {
                 try {
                     printWindow.focus();
                     printWindow.print();
                 } catch(e) {
-                    console.error("Print fallback failed:", e);
+                    // silent fail
                 } finally {
                    printWindow.close();
                 }
@@ -243,29 +254,26 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
         </Button>
       </div>
       
-      {/* --- ส่วนของเนื้อหาที่จะถูกพิมพ์ --- */}
       <div id="printable-area" className="space-y-6">
-        {/* Respondent Info */}
-        <Card className="shadow-sm print-card">
+        <Card className="shadow-sm print-section-card">
           <CardHeader className="print-card-header">
              <CardTitle className="text-xl text-blue-800">ข้อมูลผู้ตอบ</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 print-card-content">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2"><User className="h-4 w-4 text-blue-600" /><span className="font-medium">ชื่อ-สกุล:</span><span>{respondent.name || 'N/A'}</span></div>
-              <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">ตำแหน่ง:</span><span>{respondent.position || 'N/A'}</span></div>
-              <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">หน่วยงาน:</span><span>{respondent.organization || 'N/A'}</span></div>
-              <div className="flex items-center space-x-2"><Calendar className="h-4 w-4 text-blue-600" /><span className="font-medium">วันที่ตอบ:</span><span>{respondent.survey_date || 'N/A'}</span></div>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2"><User className="h-4 w-4" /><span className="font-medium">ชื่อ-สกุล:</span><span>{respondent.name || 'N/A'}</span></div>
+              <div className="flex items-center space-x-2"><Building className="h-4 w-4" /><span className="font-medium">ตำแหน่ง:</span><span>{respondent.position || 'N/A'}</span></div>
+              <div className="flex items-center space-x-2"><Building className="h-4 w-4" /><span className="font-medium">หน่วยงาน:</span><span>{respondent.organization || 'N/A'}</span></div>
+              <div className="flex items-center space-x-2"><Calendar className="h-4 w-4" /><span className="font-medium">วันที่ตอบ:</span><span>{respondent.survey_date || 'N/A'}</span></div>
             </div>
           </CardContent>
         </Card>
         
-        {/* Section 1 */}
-        <Card className="shadow-sm print-card">
+        <Card className="shadow-sm print-section-card">
            <CardHeader className="print-card-header">
              <CardTitle className="text-xl text-green-800">ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมฯ</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 space-y-4 bg-green-100/20 print-card-content">
+          <CardContent className="p-6 space-y-4 bg-green-100/20">
               {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes)}
               {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
               {renderTextField("1.2 อธิบายการเปลี่ยนแปลงที่เกิดขึ้น", section1.section1_changes_description)}
@@ -291,12 +299,11 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
             </CardContent>
         </Card>
         
-        {/* Section 2 */}
-        <Card className="shadow-sm print-card">
+        <Card className="shadow-sm print-section-card">
             <CardHeader className="print-card-header">
                 <CardTitle className="text-xl text-yellow-800">ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล</CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-4 bg-yellow-100/20 print-card-content">
+            <CardContent className="p-6 space-y-4 bg-yellow-100/20">
                 {renderCheckboxes("2.1 ชุดข้อมูลที่ใช้ในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
                 {renderTextField("2.1 แหล่งที่มาของข้อมูล", section2.section2_data_sources)}
                 {renderCheckboxes("2.1 หน่วยงานที่เข้าร่วมจัดทำข้อมูล", partnerOrgs, section2.section2_partner_organizations, section2.section2_partner_organizations_other)}
@@ -304,15 +311,14 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
                 {renderCheckboxes("2.2 ประโยชน์ของชุดข้อมูล", dataBenefits, section2.section2_data_benefits, undefined, false)}
                 {renderRatingScale("2.3 ระดับการตอบโจทย์ของข้อมูล", section2.section2_data_level, 10)}
                 {renderTextField("2.4 การพัฒนาอย่างต่อเนื่อง", section2.section2_continued_development)}
-                
-                <div className="p-4 border rounded-lg bg-white">
+                <div className="p-4 border rounded-lg bg-white print-item-block">
                     <h4 className="font-semibold mb-3 text-gray-800">2.5 แอพพลิเคชั่น/ระบบที่พัฒนา</h4>
                     {[1, 2, 3].map(num => {
                         const appName = section2.section2_applications?.[`app${num}_name`];
                         if (!appName) return null;
                         const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`];
                         return (
-                            <div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border">
+                            <div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border print-sub-item">
                                 <p className="font-semibold text-sm mb-2">แอพพลิเคชั่น {num}: <span className="font-normal">{appName}</span></p>
                                 <p className="font-semibold text-xs mb-2">วิธีการได้มา:</p>
                                 <div className="flex flex-wrap gap-4 ml-2">
@@ -338,15 +344,14 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
             </CardContent>
         </Card>
 
-        {/* Section 3 */}
-        <Card className="shadow-sm print-card">
+        <Card className="shadow-sm print-section-card">
             <CardHeader className="print-card-header">
                 <CardTitle className="text-xl text-purple-800">ส่วนที่ 3: ปัจจัยขับเคลื่อนองค์กร</CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-8 bg-purple-100/20 print-card-content">
+            <CardContent className="p-6 space-y-8 bg-purple-100/20">
                 {section3Factors.map((cat, catIdx) => (
-                    <div key={catIdx}>
-                        <h3 className="text-lg font-bold mb-4 text-purple-700">{cat.category}</h3>
+                    <div key={catIdx} className="print-item-block">
+                        <h3 className="text-lg font-bold mb-4 text-purple-700 print-category-heading">{cat.category}</h3>
                         <div className="space-y-4">
                             {cat.items.map((item, itemIdx) => (
                                 <div key={itemIdx}>
