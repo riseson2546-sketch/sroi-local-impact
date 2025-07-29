@@ -1,4 +1,4 @@
-import React, 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, AlertCircle } from "lucide-react";
-import { useState, useEffect } from 'react';
 
 
 interface Section2Props {
