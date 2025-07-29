@@ -30,50 +30,107 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
     console.log("=== FULL DEBUG: Complete allData object ===");
     console.log("Type of allData:", typeof allData);
     console.log("allData keys:", Object.keys(allData || {}));
-    console.log("Full allData:", JSON.stringify(allData, null, 2));
     
     // ลองหาข้อมูล problems_before จากหลายตำแหน่ง
-    const possibleProblemsKeys = [
-        'section1_problems_before',
-        'problems_before',
-        'section1.section1_problems_before'
-    ];
-    
     let selectedValues = [];
     let selectedValuesSource = 'Not found';
     
-    // ลองหาใน allData ระดับบนสุด
-    for (const key of possibleProblemsKeys) {
-        if (allData && allData[key]) {
-            selectedValues = allData[key];
-            selectedValuesSource = `allData.${key}`;
-            break;
-        }
+    // ลองหาใน allData.section1 ก่อน
+    if (allData?.section1?.section1_problems_before) {
+        selectedValues = allData.section1.section1_problems_before;
+        selectedValuesSource = 'allData.section1.section1_problems_before';
     }
-    
-    // ลองหาใน allData.section1
-    if (selectedValues.length === 0 && allData && allData.section1) {
-        if (allData.section1.section1_problems_before) {
-            selectedValues = allData.section1.section1_problems_before;
-            selectedValuesSource = 'allData.section1.section1_problems_before';
-        }
+    // ลองหาใน allData ระดับบนสุด
+    else if (allData?.section1_problems_before) {
+        selectedValues = allData.section1_problems_before;
+        selectedValuesSource = 'allData.section1_problems_before';
     }
     
     console.log("=== PROBLEMS BEFORE DEBUG ===");
     console.log("selectedValues:", selectedValues);
-    console.log("selectedValues type:", typeof selectedValues);
-    console.log("selectedValues length:", selectedValues?.length);
     console.log("selectedValues source:", selectedValuesSource);
     
-    // หาข้อมูลรายละเอียดทั้งหมด
-    const allKeys = Object.keys(allData || {});
-    const detailKeys = allKeys.filter(key => key.includes('problems_detail'));
-    console.log("All detail keys found:", detailKeys);
+    // หาข้อมูลรายละเอียดจากทุกระดับ
+    const findDetailKeys = (obj: any, prefix = '') => {
+        const keys = [];
+        if (obj && typeof obj === 'object') {
+            for (const key in obj) {
+                const fullKey = prefix ? `${prefix}.${key}` : key;
+                if (key.includes('problems_detail')) {
+                    keys.push({ key: fullKey, value: obj[key] });
+                }
+                if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    keys.push(...findDetailKeys(obj[key], fullKey));
+                }
+            }
+        }
+        return keys;
+    };
     
-    // แสดงข้อมูลรายละเอียดทั้งหมด
-    detailKeys.forEach(key => {
-        console.log(`${key}:`, allData[key]);
-    });
+    const allDetailKeys = findDetailKeys(allData);
+    console.log("All detail keys found:", allDetailKeys);
+    
+    // ฟังก์ชันหาข้อมูลรายละเอียดสำหรับ index ที่กำหนด
+    const findDetailValue = (index: number) => {
+        const possibleKeys = [
+            `section1_problems_detail_${index}`,
+            `problems_detail_${index}`,
+            `detail_${index}`
+        ];
+        
+        // ตรวจสอบในระดับบนสุด
+        for (const key of possibleKeys) {
+            if (allData?.[key]) {
+                let value = allData[key];
+                if (typeof value === 'string') {
+                    value = value.replace(/^"(.*)"$/, '$1');
+                    value = value.replace(/\\"/g, '"');
+                    if (value === 'null' || value.trim() === '') {
+                        value = null;
+                    }
+                }
+                console.log(`Found detail for index ${index} at allData.${key}:`, value);
+                return value;
+            }
+        }
+        
+        // ตรวจสอบใน section1
+        if (allData?.section1) {
+            for (const key of possibleKeys) {
+                if (allData.section1[key]) {
+                    let value = allData.section1[key];
+                    if (typeof value === 'string') {
+                        value = value.replace(/^"(.*)"$/, '$1');
+                        value = value.replace(/\\"/g, '"');
+                        if (value === 'null' || value.trim() === '') {
+                            value = null;
+                        }
+                    }
+                    console.log(`Found detail for index ${index} at allData.section1.${key}:`, value);
+                    return value;
+                }
+            }
+        }
+        
+        // ตรวจสอบในโครงสร้างข้อมูลลึก
+        for (const detailItem of allDetailKeys) {
+            if (detailItem.key.includes(`problems_detail_${index}`) || 
+                detailItem.key.includes(`detail_${index}`)) {
+                let value = detailItem.value;
+                if (typeof value === 'string') {
+                    value = value.replace(/^"(.*)"$/, '$1');
+                    value = value.replace(/\\"/g, '"');
+                    if (value === 'null' || value.trim() === '') {
+                        value = null;
+                    }
+                }
+                console.log(`Found detail for index ${index} at ${detailItem.key}:`, value);
+                return value;
+            }
+        }
+        
+        return null;
+    };
     
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
@@ -84,25 +141,14 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                 <p><strong>Debug Info:</strong></p>
                 <p>Selected values source: {selectedValuesSource}</p>
                 <p>Selected values: {JSON.stringify(selectedValues)}</p>
-                <p>Detail keys found: {detailKeys.join(', ')}</p>
+                <p>Detail keys found: {allDetailKeys.map(item => `${item.key}="${item.value}"`).join(', ')}</p>
                 <p>Total options: {options.length}</p>
             </div>
             
             <div className="space-y-3">
                 {options.map((opt, i) => { 
                     const isChecked = Array.isArray(selectedValues) && selectedValues.includes(opt.text);
-                    
-                    // อ่านข้อมูลรายละเอียดจาก section1_problems_detail_${i}
-                    let detailValue = allData?.[`section1_problems_detail_${i}`];
-                    
-                    // ล้างค่า quotes ที่ไม่จำเป็นออก
-                    if (detailValue && typeof detailValue === 'string') {
-                        detailValue = detailValue.replace(/^"(.*)"$/, '$1');
-                        detailValue = detailValue.replace(/\\"/g, '"');
-                        if (detailValue === 'null' || detailValue.trim() === '') {
-                            detailValue = null;
-                        }
-                    }
+                    const detailValue = findDetailValue(i);
                     
                     console.log(`Problem ${i} (${opt.text.substring(0, 30)}...): checked=${isChecked}, detail="${detailValue}"`);
                     
@@ -116,7 +162,7 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                     <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                                     {/* แสดง debug info สำหรับแต่ละข้อ */}
                                     <div className="text-xs text-gray-400 mt-1">
-                                        Index: {i}, Checked: {isChecked ? 'Yes' : 'No'}, Detail: {detailValue ? 'Has detail' : 'No detail'}
+                                        Index: {i}, Checked: {isChecked ? 'Yes' : 'No'}, Detail: {detailValue ? `"${detailValue}"` : 'No detail'}
                                     </div>
                                 </div>
                             </div>
@@ -130,7 +176,7 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                         )}
                                     </p>
                                     <div className="mt-1 text-xs text-gray-500">
-                                        Field: section1_problems_detail_{i}
+                                        Looking for: section1_problems_detail_{i}
                                     </div>
                                 </div>
                             )}
