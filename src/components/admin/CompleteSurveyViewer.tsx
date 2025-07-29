@@ -27,48 +27,84 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 
 // **** ส่วนที่แก้ไข - ฟังก์ชัน renderProblemsCheckboxes ****
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // อ่านค่า checkbox ที่เลือกจาก section1_problems_before (ที่ระดับบนสุด)
-    const selectedValues = allData.section1_problems_before || [];
+    console.log("=== FULL DEBUG: Complete allData object ===");
+    console.log("Type of allData:", typeof allData);
+    console.log("allData keys:", Object.keys(allData || {}));
+    console.log("Full allData:", JSON.stringify(allData, null, 2));
     
-    // Debug log เพื่อดูโครงสร้างข้อมูล
-    console.log("=== DEBUG: Problems Before Data ===");
-    console.log("selectedValues:", selectedValues);
-    console.log("Available detail keys:", Object.keys(allData).filter(key => key.includes('problems_detail')));
+    // ลองหาข้อมูล problems_before จากหลายตำแหน่ง
+    const possibleProblemsKeys = [
+        'section1_problems_before',
+        'problems_before',
+        'section1.section1_problems_before'
+    ];
     
-    // สร้าง mapping ระหว่างข้อความที่เลือกกับ index
-    const selectedIndexes = new Set();
-    selectedValues.forEach(selectedText => {
-        const index = options.findIndex(opt => opt.text === selectedText);
-        if (index !== -1) {
-            selectedIndexes.add(index);
+    let selectedValues = [];
+    let selectedValuesSource = 'Not found';
+    
+    // ลองหาใน allData ระดับบนสุด
+    for (const key of possibleProblemsKeys) {
+        if (allData && allData[key]) {
+            selectedValues = allData[key];
+            selectedValuesSource = `allData.${key}`;
+            break;
         }
-    });
+    }
     
-    console.log("Selected indexes:", Array.from(selectedIndexes));
+    // ลองหาใน allData.section1
+    if (selectedValues.length === 0 && allData && allData.section1) {
+        if (allData.section1.section1_problems_before) {
+            selectedValues = allData.section1.section1_problems_before;
+            selectedValuesSource = 'allData.section1.section1_problems_before';
+        }
+    }
+    
+    console.log("=== PROBLEMS BEFORE DEBUG ===");
+    console.log("selectedValues:", selectedValues);
+    console.log("selectedValues type:", typeof selectedValues);
+    console.log("selectedValues length:", selectedValues?.length);
+    console.log("selectedValues source:", selectedValuesSource);
+    
+    // หาข้อมูลรายละเอียดทั้งหมด
+    const allKeys = Object.keys(allData || {});
+    const detailKeys = allKeys.filter(key => key.includes('problems_detail'));
+    console.log("All detail keys found:", detailKeys);
+    
+    // แสดงข้อมูลรายละเอียดทั้งหมด
+    detailKeys.forEach(key => {
+        console.log(`${key}:`, allData[key]);
+    });
     
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
+            
+            {/* แสดงข้อมูล debug บนหน้าเว็บ */}
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                <p><strong>Debug Info:</strong></p>
+                <p>Selected values source: {selectedValuesSource}</p>
+                <p>Selected values: {JSON.stringify(selectedValues)}</p>
+                <p>Detail keys found: {detailKeys.join(', ')}</p>
+                <p>Total options: {options.length}</p>
+            </div>
+            
             <div className="space-y-3">
                 {options.map((opt, i) => { 
-                    const isChecked = selectedValues.includes(opt.text);
+                    const isChecked = Array.isArray(selectedValues) && selectedValues.includes(opt.text);
                     
                     // อ่านข้อมูลรายละเอียดจาก section1_problems_detail_${i}
-                    let detailValue = allData[`section1_problems_detail_${i}`];
+                    let detailValue = allData?.[`section1_problems_detail_${i}`];
                     
                     // ล้างค่า quotes ที่ไม่จำเป็นออก
                     if (detailValue && typeof detailValue === 'string') {
-                        // ลบ quotes ที่อยู่ต้นและท้าย
                         detailValue = detailValue.replace(/^"(.*)"$/, '$1');
-                        // ลบ quotes ที่เป็น escape sequence
                         detailValue = detailValue.replace(/\\"/g, '"');
-                        // ถ้าเป็น "null" string ให้เปลี่ยนเป็น null
-                        if (detailValue === 'null') {
+                        if (detailValue === 'null' || detailValue.trim() === '') {
                             detailValue = null;
                         }
                     }
                     
-                    console.log(`Problem ${i} (${opt.text.substring(0, 40)}...): checked=${isChecked}, detail="${detailValue}"`);
+                    console.log(`Problem ${i} (${opt.text.substring(0, 30)}...): checked=${isChecked}, detail="${detailValue}"`);
                     
                     return (
                         <div key={i} className="print-sub-item">
@@ -76,7 +112,13 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                 <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
                                     {isChecked && <span className="text-white font-bold text-xs">✓</span>}
                                 </div>
-                                <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
+                                <div className="flex-1">
+                                    <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
+                                    {/* แสดง debug info สำหรับแต่ละข้อ */}
+                                    <div className="text-xs text-gray-400 mt-1">
+                                        Index: {i}, Checked: {isChecked ? 'Yes' : 'No'}, Detail: {detailValue ? 'Has detail' : 'No detail'}
+                                    </div>
+                                </div>
                             </div>
                             {isChecked && opt.hasDetail && (
                                 <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
@@ -87,9 +129,8 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                             <span className="text-gray-400 italic">ไม่ได้ระบุ</span>
                                         )}
                                     </p>
-                                    {/* Debug info */}
                                     <div className="mt-1 text-xs text-gray-500">
-                                        (Field: section1_problems_detail_{i})
+                                        Field: section1_problems_detail_{i}
                                     </div>
                                 </div>
                             )}
