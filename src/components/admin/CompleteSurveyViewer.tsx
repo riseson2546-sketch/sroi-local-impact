@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { ChevronDown, ChevronUp, Eye, Search, User, Calendar, Building, MessageSquare, BarChart3, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button'; // เพิ่ม Button
+import { ChevronDown, ChevronUp, Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react'; // เพิ่ม Printer
 
-// --- โครงสร้างคำถามและตัวเลือกทั้งหมด (Source of Truth) ---
-// ดึงมาจาก Section1.tsx, Section2.tsx, Section3.tsx
+// Import CSS สำหรับการพิมพ์
+import './print-styles.css';
 
-// Section 1 Choices
+// --- โครงสร้างคำถามและตัวเลือกทั้งหมด (เหมือนเดิม) ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
 const applicationOutcomes = ["นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง", "สามารถพัฒนาฐานข้อมูลเมืองของตนได้", "สามารถพัฒนาข้อเสนอโครงงานพัฒนาเมืองและนำไปสู่การนำเสนอไอเดีย (Pitching) ขอทุนได้", "ประสานความร่วมมือกับภาคส่วนต่าง ๆ ในการพัฒนาเมือง"];
 const problemsBefore = [{ text: "มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่", hasDetail: true }, { text: "วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น", hasDetail: true }, { text: "การบริหารจัดการองค์กร", hasDetail: true }, { text: "ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน", hasDetail: true }, { text: "ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น", hasDetail: true }, { text: "ไม่ใช้ข้อมูลเป็นฐานในการวางแผน", hasDetail: true }, { text: "บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด", hasDetail: true }, { text: "ขาดเครือข่ายในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดความรู้ทักษะในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง", hasDetail: true }];
@@ -19,13 +19,9 @@ const cultureUsage = ["ใช้ในการอนุรักษ์วัฒ
 const greenUsage = ["ใช้เป็นกลไกที่เน้นใช้ทรัพยากรอย่างคุ้มค่า ลดของเสีย และรักษาสิ่งแวดล้อม", "ช่วยสนับสนุนเกษตรอินทรีย์ จัดการขยะและน้ำเสียอย่างมีระบบ", "ใช้พลังงานทดแทน ลดการพึ่งพาทรัพยากรธรรมชาติที่ใช้แล้วหมด", "ช่วยสร้างงานและเศรษฐกิจที่ไม่ทำลายสิ่งแวดล้อม"];
 const newDevUsage = ["ใช้เป็นกลไกที่เน้นนวัตกรรม การวิจัย และการพัฒนาทักษะ", "ช่วยรองรับการเปลี่ยนแปลงระยะยาว เช่น การตั้งศูนย์นวัตกรรมท้องถิ่น", "ช่วยสร้างความร่วมมือกับมหาวิทยาลัย หรือการสนับสนุนผู้ประกอบการใหม่", "ช่วยสร้างสินค้า-บริการใหม่ เสริมเศรษฐกิจท้องถิ่น และยกระดับคุณภาพชีวิต ตัวอย่างเช่น \"บริษัทพัฒนาเมืองหรือ \"วิสาหกิจเพื่อสังคม\"", "ช่วยรวมพลังภาคเอกชนและชุมชนพัฒนาเมืองอย่างยั่งยืน"];
 const successFactors = ["ความสามารถในการวิเคราะห์ปัญหาและสาเหตุในการพัฒนาโครงการนวัตกรรมท้องถิ่น", "นวัตกรรมที่พัฒนาขึ้นสอดคล้องกับปัญหาและความต้องการของกลุ่มเป้าหมาย", "การกำหนดวัตถุประสงค์และเป้าหมายของการพัฒนาเมืองได้อย่างชัดเจน และสื่อสาร", "การมีส่วนร่วมจากทุกภาคส่วนในการคิด ออกแบบ และขับเคลื่อนการพัฒนาเมืองด้วยนวัตกรรม", "ภาวะผู้นำ ประสบการณ์ความรู้ ความเข้าใจในเทคโนโลยี และการใช้ประโยชน์จากเทคโนโลยี", "เสถียรภาพการเมืองที่ส่งผลให้การบริหารจัดการโครงการพัฒนา/นวัตกรรมท้องถิ่นเป็นไปอย่างต่อเนื่อง", "การให้ความรู้ และการสร้างเครือข่ายทางวิชาการ และ/หรือ เครือข่ายการพัฒนา", "การประชาสัมพันธ์ข้อมูลและการสร้างความเข้าใจในนวัตกรรมและเทคโนโลยีที่พัฒนาขึ้นให้กับประชาชนผู้รับบริการ/ผู้ใช้ประโยชน์", "การมีเจ้าหน้าที่และทีมงานที่ดี มีประสบการณ์ สามารถดูแลระบบได้อย่างต่อเนื่อง", "สร้างการมีส่วนร่วมของชุมชน/ภาคีต่างๆ มากขึ้น", "การประสานความร่วมมือของหน่วยงานต่างๆทั้งระดับท้องถิ่นและระดับประเทศ", "เพิ่มความโปร่งใสในการพัฒนาเมือง", "ทำให้กล้าคิด กล้าทำ หรือคิดนอกกรอบมากขึ้น", 'ทำให้มีข้อมูลในการพัฒนาเมือง ซึ่งนำไปสู่การแก้ไขปัญหาได้อย่างตรงจุด ตรงเป้า', 'การมีระบบในการติดตามและรายงานผลการใช้ประโยชน์จากนวัตกรรม'];
-
-// Section 2 Choices
 const dataTypes = ['ชุดข้อมูลด้านประชากร', 'ชุดข้อมูลด้านโครงสร้างพื้นฐาน', 'ชุดข้อมูลด้านสิ่งแวดล้อม เช่น ขยะ น้ำเสีย PM 2.5 เป็นต้น', 'ชุดข้อมูลด้านการจัดการภัยพิบัติ', 'ชุดข้อมูลด้านสุขภาพ', 'ชุดข้อมูลด้านการจราจร', 'ชุดข้อมูลด้านการจัดการสินทรัพย์ท้องถิ่น'];
 const partnerOrgs = ['มูลนิธิส่งเสริมการปกครองท้องถิ่น', 'นักวิชาการจากสถาบันการศึกษา', 'ผู้เชี่ยวชาญจากภายนอก', 'ภาคีเครือข่ายในพื้นที่', 'ภาคเอกชน'];
 const dataBenefits = ['ลดต้นทุนการบริหารจัดการ/ต้นทุนเวลา', 'ลดระยะเวลาในการดำเนินงาน', 'การบริหารจัดการเมืองมีประสิทธิภาพเพิ่มขึ้น', 'ทำให้สามารถเชื่อมโยงข้อมูลของหน่วยงานภายในได้', 'ลดเอกสาร', 'ทำให้การวางแผนเมืองตรงเป้า ตรงจุดมากขึ้น'];
-
-// Section 3 Choices
 const section3Factors = [
     { category: "1. ทรัพยากรภายในองค์กร", icon: Building, color: "blue", items: [{ field: "budget_system_development", title: "งบประมาณจัดสรรในการพัฒนาระบบ" }, { field: "budget_knowledge_development", title: "งบประมาณจัดสรรในการพัฒนาองค์ความรู้" }, { field: "cooperation_between_agencies", title: "การสร้างความร่วมมือระหว่างหน่วยงาน/ภาคีเครือข่าย" }, { field: "innovation_ecosystem", title: "การสร้างระบบนิเวศที่เชื่อมต่อการพัฒนานวัตกรรม" }, { field: "government_digital_support", title: "การสนับสนุนระบบดิจิทัลพื้นฐานจากภาครัฐที่เกี่ยวกับภารกิจพื้นฐานของท้องถิ่น" }] },
     { category: "2. สถานะหน่วยงาน เทศบาล/อปท.", icon: BarChart3, color: "green", items: [{ field: "digital_infrastructure", title: "ความพร้อมด้านโครงสร้างทางกายภาพทางเทคโนโลยี (Digital Infrastructure)" }, { field: "digital_mindset", title: "บุคลากรภายในหน่วยงานมีชุดความคิดแบบดิจิทัล (Digital Mindset)" }, { field: "learning_organization", title: "เป็นองค์กรแห่งการเรียนรู้ ที่มีความพร้อมในการพัฒนานวัตกรรม" }, { field: "it_skills", title: "เจ้าหน้าที่ที่เกี่ยวข้องกับการใช้นวัตกรรมดิจิทัล มีความรู้ทักษะด้าน IT ที่เพียงพอ" }, { field: "internal_communication", title: "ประสิทธิภาพในการสื่อสารภายในองค์กร" }] },
@@ -33,8 +29,7 @@ const section3Factors = [
     { category: "4. การสื่อสารกับผู้ใช้บริการ/กลุ่มเป้าหมาย", icon: MessageSquare, color: "orange", items: [{ field: "communication_to_users", title: "มีการสื่อสารข้อมูลนวัตกรรมท้องถิ่นไปยังผู้ใช้บริการได้อย่างเพียงพอ" }, { field: "reaching_target_groups", title: "การสื่อสารข้อมูลนวัตกรรมท้องถิ่น สามารถเข้าถึงกลุ่มเป้าหมาย" }] }
 ];
 
-// --- Helper Functions ที่ปรับปรุงใหม่ ---
-
+// --- Helper Functions (เหมือนเดิม) ---
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, otherTitle: string = "อื่น ๆ:") => (
     <div className="mb-6 p-4 border rounded-lg bg-white">
         <h4 className="font-semibold mb-3 text-gray-800">{title}</h4>
@@ -116,7 +111,7 @@ const renderRatingScale = (title: string, value?: number, max: number = 10, desc
                     </div>
                 ))}
             </div>
-            {value && (
+            {value != null && ( // Check for null or undefined
                 <Badge className="px-3 py-1 text-base bg-blue-100 text-blue-800 border-blue-300">
                     คะแนน: {value}/{max}
                 </Badge>
@@ -152,138 +147,173 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
   const section2 = data.section2 || {};
   const section3 = data.section3 || {};
 
+  const handlePrint = () => {
+    // บังคับให้เปิดทุก section ก่อนพิมพ์
+    setExpandedSections({
+        respondent: true,
+        section1: true,
+        section2: true,
+        section3: true
+    });
+
+    // ใช้ setTimeout เพื่อให้แน่ใจว่า state update และ re-render เสร็จสิ้นก่อนเรียก window.print()
+    setTimeout(() => {
+        window.print();
+    }, 500);
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 bg-gray-100">
-      <div className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm border">
-        <Eye className="h-7 w-7 text-blue-600" />
-        <h1 className="text-2xl font-bold text-gray-900">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1>
+    <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
+      {/* --- ส่วน Header ที่จะไม่ถูกพิมพ์ --- */}
+      <div className="no-print flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6">
+        <div className="flex items-center space-x-3">
+            <Eye className="h-7 w-7 text-blue-600" />
+            <h1 className="text-2xl font-bold text-gray-900">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1>
+        </div>
+        <Button onClick={handlePrint} variant="outline">
+            <Printer className="mr-2 h-4 w-4" />
+            พิมพ์เป็น PDF
+        </Button>
       </div>
-
-      {/* Respondent Info */}
-      <Card className="shadow-sm">
-        <CardHeader className="cursor-pointer bg-blue-50 hover:bg-blue-100" onClick={() => toggleSection('respondent')}>
-          <div className="flex items-center justify-between"><CardTitle className="text-xl text-blue-800">ข้อมูลผู้ตอบ</CardTitle>{expandedSections.respondent ? <ChevronUp /> : <ChevronDown />}</div>
-        </CardHeader>
-        {expandedSections.respondent && (
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2"><User className="h-4 w-4 text-blue-600" /><span className="font-medium">ชื่อ-สกุล:</span><span>{respondent.name || 'N/A'}</span></div>
-              <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">ตำแหน่ง:</span><span>{respondent.position || 'N/A'}</span></div>
-              <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">หน่วยงาน:</span><span>{respondent.organization || 'N/A'}</span></div>
-              <div className="flex items-center space-x-2"><Calendar className="h-4 w-4 text-blue-600" /><span className="font-medium">วันที่ตอบ:</span><span>{respondent.survey_date || 'N/A'}</span></div>
-            </div>
-          </CardContent>
-        )}
-      </Card>
       
-      {/* Section 1 */}
-      <Card className="shadow-sm">
-        <CardHeader className="cursor-pointer bg-green-50 hover:bg-green-100" onClick={() => toggleSection('section1')}>
-          <div className="flex items-center justify-between"><CardTitle className="text-xl text-green-800">ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมฯ</CardTitle>{expandedSections.section1 ? <ChevronUp /> : <ChevronDown />}</div>
-        </CardHeader>
-        {expandedSections.section1 && (
-          <CardContent className="p-6 space-y-4 bg-green-100/20">
-            {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes)}
-            {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
-            {renderTextField("1.2 อธิบายการเปลี่ยนแปลงที่เกิดขึ้น", section1.section1_changes_description)}
-            {renderProblemsCheckboxes("1.3 ปัญหาในการพัฒนาเมืองก่อนอบรม", problemsBefore, section1)}
-            {renderCheckboxes("1.4 การใช้องค์ความรู้แก้ปัญหา", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
-            {renderRatingScale("ระดับความรู้ก่อนอบรม", section1.section1_knowledge_before, 10)}
-            {renderRatingScale("ระดับความรู้หลังอบรม", section1.section1_knowledge_after, 10)}
-            {renderCheckboxes("1.5 การใช้กลไกข้อมูลสารสนเทศ", itUsage, section1.section1_it_usage, section1.section1_it_usage_other)}
-            {renderRatingScale("ระดับการช่วยเหลือของเทคโนโลยี", section1.section1_it_level, 10)}
-            {renderCheckboxes("1.6 การใช้กลไกประสานความร่วมมือ", cooperationUsage, section1.section1_cooperation_usage, section1.section1_cooperation_usage_other)}
-            {renderRatingScale("ระดับการช่วยเหลือของความร่วมมือ", section1.section1_cooperation_level, 10)}
-            {renderCheckboxes("1.7 การใช้กลไกการระดมทุน", fundingUsage, section1.section1_funding_usage, section1.section1_funding_usage_other)}
-            {renderRatingScale("ระดับการช่วยเหลือของการระดมทุน", section1.section1_funding_level, 10)}
-            {renderCheckboxes("1.8 การใช้กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น", cultureUsage, section1.section1_culture_usage, section1.section1_culture_usage_other)}
-            {renderRatingScale("ระดับการช่วยเหลือของวัฒนธรรม", section1.section1_culture_level, 10)}
-            {renderCheckboxes("1.9 การใช้กลไกเศรษฐกิจสีเขียว", greenUsage, section1.section1_green_usage, section1.section1_green_usage_other)}
-            {renderRatingScale("ระดับการช่วยเหลือของเศรษฐกิจสีเขียว", section1.section1_green_level, 10)}
-            {renderCheckboxes("1.10 การใช้กลไกการพัฒนาใหม่", newDevUsage, section1.section1_new_dev_usage, section1.section1_new_dev_usage_other)}
-            {renderRatingScale("1.11 ระดับการช่วยเหลือของการพัฒนาใหม่", section1.section1_new_dev_level, 10)}
-            {renderCheckboxes("1.12 ปัจจัยความสำเร็จ", successFactors, section1.section1_success_factors, section1.section1_success_factors_other)}
-            {renderTextField("1.13 อธิบายปัจจัยความสำเร็จ", section1.section1_success_description)}
-            {renderRatingScale("1.14 ระดับการเปลี่ยนแปลงโดยรวม", section1.section1_overall_change_level, 10, 
-              <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-800">...คำอธิบายระดับคะแนน...</div>
-            )}
-          </CardContent>
-        )}
-      </Card>
-      
-      {/* Section 2 */}
-      <Card className="shadow-sm">
-        <CardHeader className="cursor-pointer bg-yellow-50 hover:bg-yellow-100" onClick={() => toggleSection('section2')}>
-          <div className="flex items-center justify-between"><CardTitle className="text-xl text-yellow-800">ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล</CardTitle>{expandedSections.section2 ? <ChevronUp /> : <ChevronDown />}</div>
-        </CardHeader>
-        {expandedSections.section2 && (
-          <CardContent className="p-6 space-y-4 bg-yellow-100/20">
-            {renderCheckboxes("2.1 ชุดข้อมูลที่ใช้ในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
-            {renderTextField("2.1 แหล่งที่มาของข้อมูล", section2.section2_data_sources)}
-            {renderCheckboxes("2.1 หน่วยงานที่เข้าร่วมจัดทำข้อมูล", partnerOrgs, section2.section2_partner_organizations, section2.section2_partner_organizations_other)}
-            {renderTextField("2.1 วิธีการเข้าร่วมของหน่วยงานภาคี", section2.section2_partner_participation)}
-            {renderCheckboxes("2.2 ประโยชน์ของชุดข้อมูล", dataBenefits, section2.section2_data_benefits, undefined, false)}
-            {renderRatingScale("2.3 ระดับการตอบโจทย์ของข้อมูล", section2.section2_data_level, 10, 
-              <div className="bg-purple-50 p-3 rounded-lg text-xs text-purple-800">...คำอธิบายระดับคะแนน...</div>
-            )}
-            {renderTextField("2.4 การพัฒนาอย่างต่อเนื่อง", section2.section2_continued_development)}
-            
-            <div className="p-4 border rounded-lg bg-white">
-                <h4 className="font-semibold mb-3 text-gray-800">2.5 แอพพลิเคชั่น/ระบบที่พัฒนา</h4>
-                {[1, 2, 3].map(num => {
-                    const appName = section2.section2_applications?.[`app${num}_name`];
-                    if (!appName) return null;
-                    const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`];
-                    return (
-                        <div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border">
-                            <p className="font-semibold text-sm mb-2">แอพพลิเคชั่น {num}: <span className="font-normal">{appName}</span></p>
-                            <p className="font-semibold text-xs mb-2">วิธีการได้มา:</p>
-                            <div className="flex flex-wrap gap-4 ml-2">
-                                {[{key: 'buy', label: 'ซื้อ'}, {key: 'develop', label: 'พัฒนาเอง'}, {key: 'transfer', label: 'ถ่ายทอดเทคโนโลยี'}, {key: 'other', label: 'อื่น ๆ'}].map(method => {
-                                    const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`];
-                                    return (
-                                        <label key={method.key} className="flex items-center space-x-2 text-sm">
-                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isChecked ? 'bg-yellow-500 border-yellow-600' : 'border-gray-300'}`}>
-                                                {isChecked && <span className="text-white text-xs">✓</span>}
-                                            </div>
-                                            <span className={isChecked ? 'text-gray-800' : 'text-gray-400'}>{method.label}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-                            {otherDetail && (
-                                <div className="mt-2 ml-2 p-2 bg-blue-50 rounded"><p className="text-sm"><strong>รายละเอียด (อื่น ๆ):</strong> {otherDetail}</p></div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-          </CardContent>
-        )}
-      </Card>
-
-      {/* Section 3 */}
-      <Card className="shadow-sm">
-        <CardHeader className="cursor-pointer bg-purple-50 hover:bg-purple-100" onClick={() => toggleSection('section3')}>
-          <div className="flex items-center justify-between"><CardTitle className="text-xl text-purple-800">ส่วนที่ 3: ปัจจัยขับเคลื่อนองค์กร</CardTitle>{expandedSections.section3 ? <ChevronUp /> : <ChevronDown />}</div>
-        </CardHeader>
-        {expandedSections.section3 && (
-            <CardContent className="p-6 space-y-8 bg-purple-100/20">
-                {section3Factors.map((cat, catIdx) => (
-                    <div key={catIdx}>
-                        <h3 className="text-lg font-bold mb-4 text-purple-700">{cat.category}</h3>
-                        <div className="space-y-4">
-                            {cat.items.map((item, itemIdx) => (
-                                <div key={itemIdx}>
-                                    {renderRatingScale(item.title, section3[item.field], 5)}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
+      {/* --- ส่วนของเนื้อหาที่จะถูกพิมพ์ --- */}
+      <div className="printable-area space-y-6">
+        {/* Respondent Info */}
+        <Card className="shadow-sm print-card">
+          <CardHeader className="cursor-pointer bg-blue-50 hover:bg-blue-100 no-print" onClick={() => toggleSection('respondent')}>
+            <div className="flex items-center justify-between"><CardTitle className="text-xl text-blue-800">ข้อมูลผู้ตอบ</CardTitle>{expandedSections.respondent ? <ChevronUp /> : <ChevronDown />}</div>
+          </CardHeader>
+          {/* Header สำหรับพิมพ์ */}
+          <CardHeader className="hidden print:block print-card-header">
+             <CardTitle className="text-xl text-blue-800">ข้อมูลผู้ตอบ</CardTitle>
+          </CardHeader>
+          {expandedSections.respondent && (
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2"><User className="h-4 w-4 text-blue-600" /><span className="font-medium">ชื่อ-สกุล:</span><span>{respondent.name || 'N/A'}</span></div>
+                <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">ตำแหน่ง:</span><span>{respondent.position || 'N/A'}</span></div>
+                <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">หน่วยงาน:</span><span>{respondent.organization || 'N/A'}</span></div>
+                <div className="flex items-center space-x-2"><Calendar className="h-4 w-4 text-blue-600" /><span className="font-medium">วันที่ตอบ:</span><span>{respondent.survey_date || 'N/A'}</span></div>
+              </div>
             </CardContent>
-        )}
-      </Card>
+          )}
+        </Card>
+        
+        {/* Section 1 */}
+        <Card className="shadow-sm print-card">
+          <CardHeader className="cursor-pointer bg-green-50 hover:bg-green-100 no-print" onClick={() => toggleSection('section1')}>
+            <div className="flex items-center justify-between"><CardTitle className="text-xl text-green-800">ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมฯ</CardTitle>{expandedSections.section1 ? <ChevronUp /> : <ChevronDown />}</div>
+          </CardHeader>
+           <CardHeader className="hidden print:block print-card-header">
+             <CardTitle className="text-xl text-green-800">ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมฯ</CardTitle>
+          </CardHeader>
+          {expandedSections.section1 && (
+            <CardContent className="p-6 space-y-4 bg-green-100/20">
+              {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes)}
+              {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
+              {renderTextField("1.2 อธิบายการเปลี่ยนแปลงที่เกิดขึ้น", section1.section1_changes_description)}
+              {renderProblemsCheckboxes("1.3 ปัญหาในการพัฒนาเมืองก่อนอบรม", problemsBefore, section1)}
+              {renderCheckboxes("1.4 การใช้องค์ความรู้แก้ปัญหา", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
+              {renderRatingScale("ระดับความรู้ก่อนอบรม", section1.section1_knowledge_before, 10)}
+              {renderRatingScale("ระดับความรู้หลังอบรม", section1.section1_knowledge_after, 10)}
+              {renderCheckboxes("1.5 การใช้กลไกข้อมูลสารสนเทศ", itUsage, section1.section1_it_usage, section1.section1_it_usage_other)}
+              {renderRatingScale("ระดับการช่วยเหลือของเทคโนโลยี", section1.section1_it_level, 10)}
+              {renderCheckboxes("1.6 การใช้กลไกประสานความร่วมมือ", cooperationUsage, section1.section1_cooperation_usage, section1.section1_cooperation_usage_other)}
+              {renderRatingScale("ระดับการช่วยเหลือของความร่วมมือ", section1.section1_cooperation_level, 10)}
+              {renderCheckboxes("1.7 การใช้กลไกการระดมทุน", fundingUsage, section1.section1_funding_usage, section1.section1_funding_usage_other)}
+              {renderRatingScale("ระดับการช่วยเหลือของการระดมทุน", section1.section1_funding_level, 10)}
+              {renderCheckboxes("1.8 การใช้กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น", cultureUsage, section1.section1_culture_usage, section1.section1_culture_usage_other)}
+              {renderRatingScale("ระดับการช่วยเหลือของวัฒนธรรม", section1.section1_culture_level, 10)}
+              {renderCheckboxes("1.9 การใช้กลไกเศรษฐกิจสีเขียว", greenUsage, section1.section1_green_usage, section1.section1_green_usage_other)}
+              {renderRatingScale("ระดับการช่วยเหลือของเศรษฐกิจสีเขียว", section1.section1_green_level, 10)}
+              {renderCheckboxes("1.10 การใช้กลไกการพัฒนาใหม่", newDevUsage, section1.section1_new_dev_usage, section1.section1_new_dev_usage_other)}
+              {renderRatingScale("1.11 ระดับการช่วยเหลือของการพัฒนาใหม่", section1.section1_new_dev_level, 10)}
+              {renderCheckboxes("1.12 ปัจจัยความสำเร็จ", successFactors, section1.section1_success_factors, section1.section1_success_factors_other)}
+              {renderTextField("1.13 อธิบายปัจจัยความสำเร็จ", section1.section1_success_description)}
+              {renderRatingScale("1.14 ระดับการเปลี่ยนแปลงโดยรวม", section1.section1_overall_change_level, 10)}
+            </CardContent>
+          )}
+        </Card>
+        
+        {/* Section 2 */}
+        <Card className="shadow-sm print-card">
+            <CardHeader className="cursor-pointer bg-yellow-50 hover:bg-yellow-100 no-print" onClick={() => toggleSection('section2')}>
+                <div className="flex items-center justify-between"><CardTitle className="text-xl text-yellow-800">ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล</CardTitle>{expandedSections.section2 ? <ChevronUp /> : <ChevronDown />}</div>
+            </CardHeader>
+            <CardHeader className="hidden print:block print-card-header">
+                <CardTitle className="text-xl text-yellow-800">ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล</CardTitle>
+            </CardHeader>
+            {expandedSections.section2 && (
+            <CardContent className="p-6 space-y-4 bg-yellow-100/20">
+                {renderCheckboxes("2.1 ชุดข้อมูลที่ใช้ในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
+                {renderTextField("2.1 แหล่งที่มาของข้อมูล", section2.section2_data_sources)}
+                {renderCheckboxes("2.1 หน่วยงานที่เข้าร่วมจัดทำข้อมูล", partnerOrgs, section2.section2_partner_organizations, section2.section2_partner_organizations_other)}
+                {renderTextField("2.1 วิธีการเข้าร่วมของหน่วยงานภาคี", section2.section2_partner_participation)}
+                {renderCheckboxes("2.2 ประโยชน์ของชุดข้อมูล", dataBenefits, section2.section2_data_benefits, undefined, false)}
+                {renderRatingScale("2.3 ระดับการตอบโจทย์ของข้อมูล", section2.section2_data_level, 10)}
+                {renderTextField("2.4 การพัฒนาอย่างต่อเนื่อง", section2.section2_continued_development)}
+                
+                <div className="p-4 border rounded-lg bg-white">
+                    <h4 className="font-semibold mb-3 text-gray-800">2.5 แอพพลิเคชั่น/ระบบที่พัฒนา</h4>
+                    {[1, 2, 3].map(num => {
+                        const appName = section2.section2_applications?.[`app${num}_name`];
+                        if (!appName) return null;
+                        const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`];
+                        return (
+                            <div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border">
+                                <p className="font-semibold text-sm mb-2">แอพพลิเคชั่น {num}: <span className="font-normal">{appName}</span></p>
+                                <p className="font-semibold text-xs mb-2">วิธีการได้มา:</p>
+                                <div className="flex flex-wrap gap-4 ml-2">
+                                    {[{key: 'buy', label: 'ซื้อ'}, {key: 'develop', label: 'พัฒนาเอง'}, {key: 'transfer', label: 'ถ่ายทอดเทคโนโลยี'}, {key: 'other', label: 'อื่น ๆ'}].map(method => {
+                                        const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`];
+                                        return (
+                                            <label key={method.key} className="flex items-center space-x-2 text-sm">
+                                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isChecked ? 'bg-yellow-500 border-yellow-600' : 'border-gray-300'}`}>
+                                                    {isChecked && <span className="text-white text-xs">✓</span>}
+                                                </div>
+                                                <span className={isChecked ? 'text-gray-800' : 'text-gray-400'}>{method.label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                {otherDetail && (
+                                    <div className="mt-2 ml-2 p-2 bg-blue-50 rounded"><p className="text-sm"><strong>รายละเอียด (อื่น ๆ):</strong> {otherDetail}</p></div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </CardContent>
+            )}
+        </Card>
+
+        {/* Section 3 */}
+        <Card className="shadow-sm print-card">
+            <CardHeader className="cursor-pointer bg-purple-50 hover:bg-purple-100 no-print" onClick={() => toggleSection('section3')}>
+                <div className="flex items-center justify-between"><CardTitle className="text-xl text-purple-800">ส่วนที่ 3: ปัจจัยขับเคลื่อนองค์กร</CardTitle>{expandedSections.section3 ? <ChevronUp /> : <ChevronDown />}</div>
+            </CardHeader>
+            <CardHeader className="hidden print:block print-card-header">
+                <CardTitle className="text-xl text-purple-800">ส่วนที่ 3: ปัจจัยขับเคลื่อนองค์กร</CardTitle>
+            </CardHeader>
+            {expandedSections.section3 && (
+                <CardContent className="p-6 space-y-8 bg-purple-100/20">
+                    {section3Factors.map((cat, catIdx) => (
+                        <div key={catIdx}>
+                            <h3 className="text-lg font-bold mb-4 text-purple-700">{cat.category}</h3>
+                            <div className="space-y-4">
+                                {cat.items.map((item, itemIdx) => (
+                                    <div key={itemIdx}>
+                                        {renderRatingScale(item.title, section3[item.field], 5)}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </CardContent>
+            )}
+        </Card>
+
+      </div>
     </div>
   );
 };
