@@ -27,10 +27,8 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 
 // **** START OF CHANGE ****
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // Correctly access the nested section1 object within allData
+    // Get the selected checkbox values from the nested section1 object
     const section1Data = allData.section1 || {};
-    
-    // Read the selected checkbox values from the nested object
     const selectedValues = section1Data.section1_problems_before || [];
     
     return (
@@ -39,8 +37,10 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
             <div className="space-y-3">
                 {options.map((opt, i) => { 
                     const isChecked = selectedValues.includes(opt.text);
-                    // Read the detail value from the nested object using the dynamic key
-                    const detailValue = section1Data[`section1_problems_detail_${i}`];
+                    
+                    // **** THE CRITICAL CHANGE ****
+                    // Get the detail value from the TOP-LEVEL `allData` object.
+                    const detailValue = allData[`section1_problems_detail_${i}`];
                     
                     return (
                         <div key={i} className="print-sub-item">
