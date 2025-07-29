@@ -27,24 +27,13 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 
 // **** ส่วนที่แก้ไข - ฟังก์ชัน renderProblemsCheckboxes ****
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // อ่านค่า checkbox ที่เลือกจาก section1
-    const selectedValues = allData.section1?.section1_problems_before || [];
+    // อ่านค่า checkbox ที่เลือกจาก section1_problems_before (ที่ระดับบนสุด)
+    const selectedValues = allData.section1_problems_before || [];
     
-    // เพิ่มการ debug เพื่อดูโครงสร้างข้อมูลทั้งหมด
-    console.log("=== DEBUG: Complete Data Structure ===");
-    console.log("Full allData:", JSON.stringify(allData, null, 2));
+    // Debug log เพื่อดูโครงสร้างข้อมูล
+    console.log("=== DEBUG: Problems Before Data ===");
     console.log("selectedValues:", selectedValues);
-    
-    // ตรวจสอบทุก key ที่มีคำว่า "problems_detail" 
-    const allKeys = Object.keys(allData);
-    const detailKeys = allKeys.filter(key => key.includes('problems_detail'));
-    console.log("Found detail keys in allData:", detailKeys);
-    
-    if (allData.section1) {
-        const section1Keys = Object.keys(allData.section1);
-        const section1DetailKeys = section1Keys.filter(key => key.includes('problems_detail'));
-        console.log("Found detail keys in section1:", section1DetailKeys);
-    }
+    console.log("Available detail keys:", Object.keys(allData).filter(key => key.includes('problems_detail')));
     
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
@@ -53,67 +42,18 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                 {options.map((opt, i) => { 
                     const isChecked = selectedValues.includes(opt.text);
                     
-                    // ตรวจสอบรายละเอียดจากทุกตำแหน่งที่เป็นไปได้
-                    const possibleKeys = [
-                        `section1_problems_detail_${i}`,
-                        `problems_detail_${i}`,
-                        `detail_${i}`,
-                        `section1_problem_${i}_detail`,
-                        `problem_${i}_detail`
-                    ];
+                    // อ่านข้อมูลรายละเอียดจาก section1_problems_detail_${i}
+                    let detailValue = allData[`section1_problems_detail_${i}`];
                     
-                    let detailValue = null;
-                    let foundLocation = 'Not found';
-                    
-                    // ตรวจสอบใน allData (ระดับบนสุด)
-                    for (const key of possibleKeys) {
-                        if (allData[key]) {
-                            detailValue = allData[key];
-                            foundLocation = `allData.${key}`;
-                            break;
-                        }
+                    // ล้างค่า quotes ที่ไม่จำเป็นออก
+                    if (detailValue && typeof detailValue === 'string') {
+                        // ลบ quotes ที่อยู่ต้นและท้าย
+                        detailValue = detailValue.replace(/^"(.*)"$/, '$1');
+                        // ลบ quotes ที่เป็น escape sequence
+                        detailValue = detailValue.replace(/\\"/g, '"');
                     }
                     
-                    // ตรวจสอบใน allData.section1
-                    if (!detailValue && allData.section1) {
-                        for (const key of possibleKeys) {
-                            if (allData.section1[key]) {
-                                detailValue = allData.section1[key];
-                                foundLocation = `allData.section1.${key}`;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // ตรวจสอบในระดับลึกอื่นๆ
-                    if (!detailValue && allData.data) {
-                        for (const key of possibleKeys) {
-                            if (allData.data[key]) {
-                                detailValue = allData.data[key];
-                                foundLocation = `allData.data.${key}`;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // ตรวจสอบใน response data ถ้ามี
-                    if (!detailValue && allData.response) {
-                        for (const key of possibleKeys) {
-                            if (allData.response[key]) {
-                                detailValue = allData.response[key];
-                                foundLocation = `allData.response.${key}`;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Debug log สำหรับแต่ละข้อ
-                    console.log(`=== Problem ${i} Debug ===`);
-                    console.log(`Problem text: ${opt.text.substring(0, 50)}...`);
-                    console.log(`isChecked: ${isChecked}`);
-                    console.log(`detailValue: "${detailValue}"`);
-                    console.log(`Found at: ${foundLocation}`);
-                    console.log(`Checked keys:`, possibleKeys);
+                    console.log(`Problem ${i}: checked=${isChecked}, detail="${detailValue}"`);
                     
                     return (
                         <div key={i} className="print-sub-item">
@@ -129,19 +69,9 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                         <strong>ระบุ:</strong> {detailValue ? (
                                             <span className="text-green-700 font-medium">{detailValue}</span>
                                         ) : (
-                                            <span className="text-red-500 italic">ไม่พบข้อมูลรายละเอียด</span>
+                                            <span className="text-gray-400 italic">ไม่ได้ระบุ</span>
                                         )}
                                     </p>
-                                    {/* แสดงข้อมูล debug */}
-                                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                                        <p><strong>Debug Info:</strong></p>
-                                        <p>Problem Index: {i}</p>
-                                        <p>Found at: {foundLocation}</p>
-                                        <p>Possible keys checked: {possibleKeys.join(', ')}</p>
-                                        {detailKeys.length > 0 && (
-                                            <p>Available detail keys: {detailKeys.join(', ')}</p>
-                                        )}
-                                    </div>
                                 </div>
                             )}
                         </div>
