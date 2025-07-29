@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button'; // เพิ่ม Button
-import { ChevronDown, ChevronUp, Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react'; // เพิ่ม Printer
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp, Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react';
 
-// Import CSS สำหรับการพิมพ์
-import './print-styles.css';
+// ไม่ต้อง import print-styles.css แล้ว เพราะเราจะเขียน style เข้าไปตรงๆ
 
 // --- โครงสร้างคำถามและตัวเลือกทั้งหมด (เหมือนเดิม) ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
@@ -125,90 +124,126 @@ const renderRatingScale = (title: string, value?: number, max: number = 10, desc
     </div>
 );
 
-
 interface SurveyViewerProps {
   data?: any;
 }
 
 const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
-  const [expandedSections, setExpandedSections] = useState({ 
-    respondent: true,
-    section1: true, 
-    section2: true, 
-    section3: true 
-  });
-
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
+  const [isPrinting, setIsPrinting] = useState(false);
+  
   const respondent = data.respondent || {};
   const section1 = data.section1 || {};
   const section2 = data.section2 || {};
   const section3 = data.section3 || {};
 
   const handlePrint = () => {
-    // บังคับให้เปิดทุก section ก่อนพิมพ์
-    setExpandedSections({
-        respondent: true,
-        section1: true,
-        section2: true,
-        section3: true
-    });
+    setIsPrinting(true);
 
-    // ใช้ setTimeout เพื่อให้แน่ใจว่า state update และ re-render เสร็จสิ้นก่อนเรียก window.print()
-    setTimeout(() => {
-        window.print();
-    }, 500);
+    const contentToPrint = document.getElementById('printable-area')?.innerHTML;
+    if (!contentToPrint) {
+        alert("ไม่พบเนื้อหาสำหรับพิมพ์");
+        setIsPrinting(false);
+        return;
+    }
+
+    // ดึง Link ของ Stylesheets ทั้งหมดในหน้าปัจจุบัน
+    const stylesheets = Array.from(document.styleSheets)
+        .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : '')
+        .join('');
+
+    const printWindow = window.open('', '', 'height=800,width=1000');
+    if (printWindow) {
+        printWindow.document.write('<html><head><title>พิมพ์แบบสอบถาม</title>');
+        printWindow.document.write(stylesheets);
+        printWindow.document.write(`
+            <style>
+                @page { size: A4; margin: 1.5cm; }
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                  font-size: 10pt;
+                }
+                .print-card { 
+                  border: 1px solid #e5e7eb; 
+                  border-radius: 0.5rem;
+                  margin-bottom: 1.5rem;
+                  page-break-inside: avoid;
+                }
+                .print-card-header {
+                  padding: 1.5rem;
+                  border-bottom: 1px solid #e5e7eb;
+                  background-color: #f9fafb !important;
+                }
+                .print-card-content { padding: 1.5rem; }
+                .hidden { display: none !important; }
+            </style>
+        `);
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(contentToPrint);
+        printWindow.document.write('</body></html>');
+
+        printWindow.document.close();
+        
+        // รอให้รูปภาพและสไตล์โหลดเสร็จ
+        printWindow.onload = () => {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+            setIsPrinting(false);
+        };
+        // Fallback for browsers that don't fire onload
+        setTimeout(() => {
+            if(!printWindow.closed) {
+              printWindow.focus();
+              printWindow.print();
+              printWindow.close();
+            }
+            setIsPrinting(false);
+        }, 1000);
+
+    } else {
+        alert("ไม่สามารถเปิดหน้าต่างสำหรับพิมพ์ได้ กรุณาตรวจสอบการตั้งค่า Popup Blocker ของเบราว์เซอร์");
+        setIsPrinting(false);
+    }
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
-      {/* --- ส่วน Header ที่จะไม่ถูกพิมพ์ --- */}
-      <div className="no-print flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6">
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6">
         <div className="flex items-center space-x-3">
             <Eye className="h-7 w-7 text-blue-600" />
             <h1 className="text-2xl font-bold text-gray-900">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1>
         </div>
-        <Button onClick={handlePrint} variant="outline">
+        <Button onClick={handlePrint} disabled={isPrinting}>
             <Printer className="mr-2 h-4 w-4" />
-            พิมพ์เป็น PDF
+            {isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}
         </Button>
       </div>
       
       {/* --- ส่วนของเนื้อหาที่จะถูกพิมพ์ --- */}
-      <div className="printable-area space-y-6">
+      <div id="printable-area" className="space-y-6">
         {/* Respondent Info */}
         <Card className="shadow-sm print-card">
-          <CardHeader className="cursor-pointer bg-blue-50 hover:bg-blue-100 no-print" onClick={() => toggleSection('respondent')}>
-            <div className="flex items-center justify-between"><CardTitle className="text-xl text-blue-800">ข้อมูลผู้ตอบ</CardTitle>{expandedSections.respondent ? <ChevronUp /> : <ChevronDown />}</div>
-          </CardHeader>
-          {/* Header สำหรับพิมพ์ */}
-          <CardHeader className="hidden print:block print-card-header">
+          <CardHeader className="print-card-header">
              <CardTitle className="text-xl text-blue-800">ข้อมูลผู้ตอบ</CardTitle>
           </CardHeader>
-          {expandedSections.respondent && (
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2"><User className="h-4 w-4 text-blue-600" /><span className="font-medium">ชื่อ-สกุล:</span><span>{respondent.name || 'N/A'}</span></div>
-                <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">ตำแหน่ง:</span><span>{respondent.position || 'N/A'}</span></div>
-                <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">หน่วยงาน:</span><span>{respondent.organization || 'N/A'}</span></div>
-                <div className="flex items-center space-x-2"><Calendar className="h-4 w-4 text-blue-600" /><span className="font-medium">วันที่ตอบ:</span><span>{respondent.survey_date || 'N/A'}</span></div>
-              </div>
-            </CardContent>
-          )}
+          <CardContent className="p-6 print-card-content">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2"><User className="h-4 w-4 text-blue-600" /><span className="font-medium">ชื่อ-สกุล:</span><span>{respondent.name || 'N/A'}</span></div>
+              <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">ตำแหน่ง:</span><span>{respondent.position || 'N/A'}</span></div>
+              <div className="flex items-center space-x-2"><Building className="h-4 w-4 text-blue-600" /><span className="font-medium">หน่วยงาน:</span><span>{respondent.organization || 'N/A'}</span></div>
+              <div className="flex items-center space-x-2"><Calendar className="h-4 w-4 text-blue-600" /><span className="font-medium">วันที่ตอบ:</span><span>{respondent.survey_date || 'N/A'}</span></div>
+            </div>
+          </CardContent>
         </Card>
         
         {/* Section 1 */}
         <Card className="shadow-sm print-card">
-          <CardHeader className="cursor-pointer bg-green-50 hover:bg-green-100 no-print" onClick={() => toggleSection('section1')}>
-            <div className="flex items-center justify-between"><CardTitle className="text-xl text-green-800">ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมฯ</CardTitle>{expandedSections.section1 ? <ChevronUp /> : <ChevronDown />}</div>
-          </CardHeader>
-           <CardHeader className="hidden print:block print-card-header">
+           <CardHeader className="print-card-header">
              <CardTitle className="text-xl text-green-800">ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมฯ</CardTitle>
           </CardHeader>
-          {expandedSections.section1 && (
-            <CardContent className="p-6 space-y-4 bg-green-100/20">
+          <CardContent className="p-6 space-y-4 bg-green-100/20 print-card-content">
               {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes)}
               {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
               {renderTextField("1.2 อธิบายการเปลี่ยนแปลงที่เกิดขึ้น", section1.section1_changes_description)}
@@ -232,19 +267,14 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
               {renderTextField("1.13 อธิบายปัจจัยความสำเร็จ", section1.section1_success_description)}
               {renderRatingScale("1.14 ระดับการเปลี่ยนแปลงโดยรวม", section1.section1_overall_change_level, 10)}
             </CardContent>
-          )}
         </Card>
         
         {/* Section 2 */}
         <Card className="shadow-sm print-card">
-            <CardHeader className="cursor-pointer bg-yellow-50 hover:bg-yellow-100 no-print" onClick={() => toggleSection('section2')}>
-                <div className="flex items-center justify-between"><CardTitle className="text-xl text-yellow-800">ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล</CardTitle>{expandedSections.section2 ? <ChevronUp /> : <ChevronDown />}</div>
-            </CardHeader>
-            <CardHeader className="hidden print:block print-card-header">
+            <CardHeader className="print-card-header">
                 <CardTitle className="text-xl text-yellow-800">ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล</CardTitle>
             </CardHeader>
-            {expandedSections.section2 && (
-            <CardContent className="p-6 space-y-4 bg-yellow-100/20">
+            <CardContent className="p-6 space-y-4 bg-yellow-100/20 print-card-content">
                 {renderCheckboxes("2.1 ชุดข้อมูลที่ใช้ในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
                 {renderTextField("2.1 แหล่งที่มาของข้อมูล", section2.section2_data_sources)}
                 {renderCheckboxes("2.1 หน่วยงานที่เข้าร่วมจัดทำข้อมูล", partnerOrgs, section2.section2_partner_organizations, section2.section2_partner_organizations_other)}
@@ -284,33 +314,27 @@ const CompleteSurveyViewer: React.FC<SurveyViewerProps> = ({ data = {} }) => {
                     })}
                 </div>
             </CardContent>
-            )}
         </Card>
 
         {/* Section 3 */}
         <Card className="shadow-sm print-card">
-            <CardHeader className="cursor-pointer bg-purple-50 hover:bg-purple-100 no-print" onClick={() => toggleSection('section3')}>
-                <div className="flex items-center justify-between"><CardTitle className="text-xl text-purple-800">ส่วนที่ 3: ปัจจัยขับเคลื่อนองค์กร</CardTitle>{expandedSections.section3 ? <ChevronUp /> : <ChevronDown />}</div>
-            </CardHeader>
-            <CardHeader className="hidden print:block print-card-header">
+            <CardHeader className="print-card-header">
                 <CardTitle className="text-xl text-purple-800">ส่วนที่ 3: ปัจจัยขับเคลื่อนองค์กร</CardTitle>
             </CardHeader>
-            {expandedSections.section3 && (
-                <CardContent className="p-6 space-y-8 bg-purple-100/20">
-                    {section3Factors.map((cat, catIdx) => (
-                        <div key={catIdx}>
-                            <h3 className="text-lg font-bold mb-4 text-purple-700">{cat.category}</h3>
-                            <div className="space-y-4">
-                                {cat.items.map((item, itemIdx) => (
-                                    <div key={itemIdx}>
-                                        {renderRatingScale(item.title, section3[item.field], 5)}
-                                    </div>
-                                ))}
-                            </div>
+            <CardContent className="p-6 space-y-8 bg-purple-100/20 print-card-content">
+                {section3Factors.map((cat, catIdx) => (
+                    <div key={catIdx}>
+                        <h3 className="text-lg font-bold mb-4 text-purple-700">{cat.category}</h3>
+                        <div className="space-y-4">
+                            {cat.items.map((item, itemIdx) => (
+                                <div key={itemIdx}>
+                                    {renderRatingScale(item.title, section3[item.field], 5)}
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </CardContent>
-            )}
+                    </div>
+                ))}
+            </CardContent>
         </Card>
 
       </div>
