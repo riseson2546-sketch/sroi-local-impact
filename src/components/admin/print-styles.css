@@ -1,0 +1,70 @@
+/* ใช้ CSS นี้เฉพาะเวลาพิมพ์เท่านั้น */
+@media print {
+  /* ซ่อนองค์ประกอบที่ไม่ต้องการพิมพ์ */
+  .no-print {
+    display: none !important;
+  }
+
+  /* ตั้งค่าหน้ากระดาษและ layout หลัก */
+  @page {
+    size: A4;
+    margin: 1.5cm; /* กำหนดขอบกระดาษ */
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important; /* ทำให้สีพื้นหลังติดไปด้วยใน Chrome/Safari */
+    print-color-adjust: exact !important; /* มาตรฐาน */
+    background-color: #ffffff !important;
+    font-size: 10pt; /* ลดขนาดตัวอักษรเล็กน้อยให้พอดีหน้า */
+  }
+
+  /* จัดการ layout ของพื้นที่ที่ต้องการพิมพ์ */
+  .printable-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: none !important;
+  }
+
+  /* จัดการ Card แต่ละใบ */
+  .printable-area .print-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid; /* พยายามไม่ให้ Card ถูกตัดแบ่งระหว่างหน้า */
+    margin-bottom: 20px;
+  }
+  
+  .printable-area .print-card-header {
+      background-color: #f0f0f0 !important; /* ทำให้ header มีสีพื้นหลังอ่อนๆ */
+      border-bottom: 1px solid #ccc !important;
+  }
+
+  /* จัดการการแบ่งหน้า */
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* ปรับปรุงการแสดงผลของ Checkbox และ Rating */
+  .printable-area .flex-wrap {
+      flex-wrap: wrap !important;
+  }
+
+  .printable-area .bg-green-500 {
+      background-color: #22c55e !important;
+  }
+
+  .printable-area .bg-blue-600 {
+    background-color: #2563eb !important;
+  }
+  .printable-area .text-white {
+    color: #ffffff !important;
+  }
+  
+  .printable-area a {
+    text-decoration: none;
+    color: inherit;
+  }
+}
