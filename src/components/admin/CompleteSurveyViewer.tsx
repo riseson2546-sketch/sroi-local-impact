@@ -27,8 +27,10 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 
 // **** START OF CHANGE ****
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // Get the selected checkbox values from the nested section1 object
+    // 1. Get the nested section1 object, with a fallback to an empty object.
     const section1Data = allData.section1 || {};
+
+    // 2. Get the array of selected checkbox values from the nested object.
     const selectedValues = section1Data.section1_problems_before || [];
     
     return (
@@ -36,22 +38,26 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
             <h4 className="font-semibold mb-3">{title}</h4>
             <div className="space-y-3">
                 {options.map((opt, i) => { 
+                    // 3. Check if the current option's text is in the array of selected values.
                     const isChecked = selectedValues.includes(opt.text);
                     
-                    // **** THE CRITICAL CHANGE ****
-                    // Get the detail value from the TOP-LEVEL `allData` object.
+                    // 4. Get the corresponding detail value from the TOP-LEVEL `allData` object.
+                    // This is the correct location for the detail fields.
                     const detailValue = allData[`section1_problems_detail_${i}`];
                     
                     return (
                         <div key={i} className="print-sub-item">
+                            {/* This is the main row for the checkbox and text */}
                             <div className="flex items-start space-x-3">
                                 <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
                                     {isChecked && <span className="text-white font-bold text-xs">✓</span>}
                                 </div>
                                 <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                             </div>
+
+                            {/* This block is now correctly placed to only show up under a checked item */}
                             {isChecked && opt.hasDetail && (
-                                <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
+                                <div className="ml-8 mt-2 p-3 bg-blue-50 rounded-md border border-blue-200">
                                     <p className="text-sm text-blue-800">
                                         <strong>ระบุ:</strong> {detailValue || <span className="text-gray-400">ไม่ได้ระบุ</span>}
                                     </p>
