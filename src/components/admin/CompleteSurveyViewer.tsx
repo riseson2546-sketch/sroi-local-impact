@@ -193,7 +193,24 @@ const renderRatingScale = (title: string, value?: number, max = 10, description?
 
 const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
-  const respondent = data.respondent || {}; const section1 = data.section1 || {}; const section2 = data.section2 || {}; const section3 = data.section3 || {};
+  
+  // Debug: แสดงข้อมูลทั้งหมดที่ส่งเข้ามา
+  console.log("=== CompleteSurveyViewer received data ===");
+  console.log("Full data object:", JSON.stringify(data, null, 2));
+  console.log("Data keys:", Object.keys(data));
+  
+  // หาทุก key ที่มีคำว่า problems_detail
+  const allKeys = Object.keys(data);
+  const problemDetailKeys = allKeys.filter(key => key.includes('problems_detail'));
+  console.log("Problem detail keys in main data:", problemDetailKeys);
+  problemDetailKeys.forEach(key => {
+    console.log(`${key}:`, data[key]);
+  });
+  
+  const respondent = data.respondent || {}; 
+  const section1 = data.section1 || {}; 
+  const section2 = data.section2 || {}; 
+  const section3 = data.section3 || {};
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -214,6 +231,25 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
       <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6"><h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1><Button onClick={handlePrint} disabled={isPrinting}><Printer className="mr-2 h-4 w-4" />{isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}</Button></div>
+      
+      {/* แสดงข้อมูล debug ที่ด้านบน */}
+      <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <h3 className="font-bold text-red-800 mb-2">🔍 Debug: Data Structure</h3>
+        <div className="text-xs space-y-1">
+          <p><strong>Total keys in data:</strong> {Object.keys(data).length}</p>
+          <p><strong>Main keys:</strong> {Object.keys(data).join(', ')}</p>
+          <p><strong>Problem detail keys found:</strong> {problemDetailKeys.length > 0 ? problemDetailKeys.join(', ') : 'None found!'}</p>
+          {problemDetailKeys.length > 0 && (
+            <div className="mt-2">
+              <p><strong>Detail values:</strong></p>
+              {problemDetailKeys.map(key => (
+                <p key={key} className="ml-4">• {key}: {JSON.stringify(data[key])}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      
       <div id="printable-area" className="space-y-6">
         <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader><CardContent className="p-6"><div className="grid grid-cols-2 gap-4"><div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.name || 'N/A'}</div><div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div><div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div><div><span className="font-medium">วันที่ตอบ:</span> {respondent.survey_date || 'N/A'}</div></div></CardContent></Card>
         
