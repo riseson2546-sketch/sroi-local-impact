@@ -2,16 +2,27 @@ import React from 'react';
 
 const SurveyReview = () => {
   return (
-    <div className="min-h-screen bg-red-100 p-8">
-      <h1 className="text-4xl font-bold text-red-800">
-        🎉 หน้าใหม่ทำงานแล้ว!
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#ff6b6b', 
+      padding: '2rem',
+      color: 'white'
+    }}>
+      <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+        🎉 สำเร็จแล้ว!
       </h1>
-      <p className="text-xl mt-4">
-        ถ้าเห็นข้อความนี้แปลว่า Route ใหม่ทำงานได้แล้ว
+      <p style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
+        หน้า Survey Review ทำงานได้แล้ว!
       </p>
-      <div className="mt-8 p-4 bg-white rounded shadow">
-        <p>URL ปัจจุบัน: /admin/survey-review</p>
-        <p>เวลา: {new Date().toLocaleString()}</p>
+      <div style={{ 
+        backgroundColor: 'white', 
+        color: 'black', 
+        padding: '1rem', 
+        borderRadius: '8px' 
+      }}>
+        <p><strong>URL:</strong> /admin/survey-review</p>
+        <p><strong>เวลา:</strong> {new Date().toLocaleString()}</p>
+        <p><strong>สถานะ:</strong> ✅ ทำงานปกติ</p>
       </div>
     </div>
   );
