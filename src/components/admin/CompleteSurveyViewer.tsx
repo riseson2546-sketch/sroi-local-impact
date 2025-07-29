@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react';
 
-// --- โครงสร้างคำถามและตัวเลือกทั้งหมด (เหมือนเดิม) ---
+// --- Todas as listas de opções e perguntas permanecem as mesmas ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
 const applicationOutcomes = ["นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง", "สามารถพัฒนาฐานข้อมูลเมืองของตนได้", "สามารถพัฒนาข้อเสนอโครงงานพัฒนาเมืองและนำไปสู่การนำเสนอไอเดีย (Pitching) ขอทุนได้", "ประสานความร่วมมือกับภาคส่วนต่าง ๆ ในการพัฒนาเมือง"];
 const problemsBefore = [{ text: "มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่", hasDetail: true }, { text: "วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น", hasDetail: true }, { text: "การบริหารจัดการองค์กร", hasDetail: true }, { text: "ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน", hasDetail: true }, { text: "ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น", hasDetail: true }, { text: "ไม่ใช้ข้อมูลเป็นฐานในการวางแผน", hasDetail: true }, { text: "บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด", hasDetail: true }, { text: "ขาดเครือข่ายในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดความรู้ทักษะในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง", hasDetail: true }];
@@ -64,20 +64,21 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
   
   // **** START OF CHANGE ****
-  // This is the correct way to map the data based on the application's structure.
+  // THIS IS THE DEFINITIVE CORRECTION BASED ON THE ACTUAL DATA STRUCTURE
   const respondent = data.survey_users || {};
-  const section1 = data || {}; // Section 1 fields are at the root level of the `data` prop.
+  const section1 = data || {}; 
   const section2 = data.survey_responses_section2?.[0] || {};
   const section3 = data.survey_responses_section3?.[0] || {};
   // **** END OF CHANGE ****
 
   const handlePrint = () => {
+    // A função de impressão permanece a mesma
     setIsPrinting(true);
     const printableContent = document.getElementById('printable-area')?.outerHTML;
     if (!printableContent) { setIsPrinting(false); return; }
     const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(link => link.outerHTML).join('');
     const styles = Array.from(document.querySelectorAll('style')).map(style => style.outerHTML).join('');
-    const printSpecificStyles = `<style>@page{size:A4;margin:1.2cm}body{font-family:'Sarabun','Helvetica Neue',Arial,sans-serif;font-size:10pt;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}.print-section-card:not(:first-child){page-break-before:always !important}.print-item-block,.print-sub-item{page-break-inside:avoid !important}.print-category-heading{page-break-after:avoid !important}.print-card-header{background-color:#f8f9fa !important}.bg-green-100\\/20,.bg-yellow-100\\/20,.bg-purple-100\\/20{background-color:#ffffff !important}.no-print{display:none !important;}</style>`;
+    const printSpecificStyles = `<style>@page{size:A4;margin:1.2cm}body{font-family:'Sarabun','Helvetica Neue',Arial,sans-serif;font-size:10pt;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}.print-section-card:not(:first-child){page-break-before:always !important}.print-item-block,.print-sub-item{page-break-inside:avoid !important}.print-category-heading{page-break-after:avoid !important}.print-card-header{background-color:#f8f9fa !important}.no-print{display:none !important;}</style>`;
     const printWindow = window.open('', '', 'height=800,width=1000');
     if (printWindow) {
         printWindow.document.write(`<!DOCTYPE html><html><head><title>พิมพ์แบบสอบถาม</title>${links}${styles}${printSpecificStyles}</head><body>${printableContent}</body></html>`);
@@ -89,23 +90,34 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
-      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6 no-print"><h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1><Button onClick={handlePrint} disabled={isPrinting}><Printer className="mr-2 h-4 w-4" />{isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}</Button></div>
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6 no-print">
+        <h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1>
+        <Button onClick={handlePrint} disabled={isPrinting}>
+          <Printer className="mr-2 h-4 w-4" />
+          {isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}
+        </Button>
+      </div>
+
       <div id="printable-area" className="space-y-6">
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader><CardContent className="p-6"><div className="grid grid-cols-2 gap-4">
-            <div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.full_name || 'N/A'}</div>
-            <div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div>
-            <div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div>
-            <div><span className="font-medium">วันที่ตอบ:</span> {data.created_at ? new Date(data.created_at).toLocaleDateString('th-TH') : 'N/A'}</div>
-        </div></CardContent></Card>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.full_name || 'N/A'}</div>
+              <div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div>
+              <div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div>
+              <div><span className="font-medium">วันที่ตอบ:</span> {data.created_at ? new Date(data.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric'}) : 'N/A'}</div>
+            </div>
+          </CardContent>
+        </Card>
         
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน</CardTitle></CardHeader>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header"><CardTitle>ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-2">
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes, undefined, false)}
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
-            
             {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, section1)}
-
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
             {renderRatingScale("ระดับความรู้ก่อนอบรม", section1.section1_knowledge_before, 10, <RatingDescription items={["ระดับ 1 : ไม่ได้ใช้ในการแก้ปัญหา ไม่ตระหนักถึงการมีอยู่", "ระดับ 2 : ตระหนัก แต่ไม่ได้นำไปใช้ในการแก้ปัญหา", "ระดับ 3 : นำไปใช้ในการวิเคราะห์ปัญหา หรือคำนึงถึงในงานของตน", "ระดับ 4 : นำไปใช้ในการออกแบบวิธีการแก้ปัญหา (วางแผน/สร้างแนวทาง/อยู่ในขั้นตอนการทำงาน)", "ระดับ 5 : นำไปใช้ในการบรรจุเป็นแผนระดับสำนัก ภายใต้หน่วยงานของตน", "ระดับ 6 : นำไปใช้บรรจุลงในแผนขับเคลื่อนระดับหน่วยงาน/องค์กรของตนเอง", "ระดับ 7 : นำไปใช้ในการขับเคลื่อนเชิงปฏิบัติการในพื้นที่ที่อธิบายผลได้อย่างชัดเจน", "ระดับ 8 : สามารถเผยแพร่ และมีส่วนในการผลักดันแผน/นโยบายของหน่วยงานหรือพื้นที่อื่น ๆ ได้อย่างชัดเจน อธิบายผลได้", "ระดับ 9 : สามารถขยายผล/ต่อยอด การแก้ปัญหาระดับพื้นที่ได้อย่างชัดเจน อธิบายผลได้", "ระดับ 10 : สามารถนำไปกำหนดระดับนโยบายระดับอำเภอ/จังหวัด/ประเทศ"]}/>)}
             {renderRatingScale("ระดับความรู้หลังอบรม", section1.section1_knowledge_after, 10)}
@@ -127,7 +139,8 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
           </CardContent>
         </Card>
 
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล ความรู้ และความร่วมมือระดับประเทศ</CardTitle></CardHeader>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header"><CardTitle>ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล ความรู้ และความร่วมมือระดับประเทศ</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-2">
             {renderCheckboxes("2.1 1) ในการพัฒนาเมือง ได้ใช้ชุดข้อมูลใดบ้างในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
             {renderTextField("2.1 2) ตามที่ท่านระบุในข้อ 1) ชุดข้อมูลที่ใช้นั้นได้ใช้งานจากแหล่งที่มาใด หรือชุดข้อมูลที่ได้จากการสนับสนุนทุนจากโครงการ", section2.section2_data_sources)}
@@ -136,12 +149,13 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderCheckboxes("2.2 ชุดข้อมูลเมืองที่พัฒนาขึ้นสามารถตอบโจทย์และแก้ปัญหาของหน่วยงานของท่านได้ในประเด็นใด", dataBenefits, section2.section2_data_benefits, undefined, false)}
             {renderRatingScale("2.3 ชุดข้อมูลเมืองสามารถตอบโจทย์และแก้ปัญหาของหน่วยงานได้ในระดับใด", section2.section2_data_level, 10, <RatingDescription items={["ระดับ 1 : มีการจัดเก็บเอกสารในรูป Digital แต่ยังไม่ได้ดำเนินการทั้งหมด", "ระดับ 2 : มีระบบจัดเก็บข้อมูลบางส่วนในรูปแบบดิจิทัล แต่ยังไม่มีการเชื่อมโยงหรือใช้จริงในการแก้ปัญหา", "ระดับ 3 : เริ่มมีการใช้ข้อมูลดิจิทัลในการทำงานบางมิติ แต่ยังจำกัดเฉพาะภายในหน่วยงาน", "ระดับ 4 : ข้อมูลถูกจัดเก็บเป็นระบบ และบางส่วนมีการใช้ในการรายงานหรือวิเคราะห์เชิงปฏิบัติการ แต่ยังไม่รองรับการตัดสินใจเชิงนโยบาย", "ระดับ 5 : หน่วยงานสามารถใช้ชุดข้อมูลเพื่อวิเคราะห์ และติดตามปัญหาได้ในระดับปฏิบัติการ เช่น การจัดการขยะ การจัดการภัยพิบัติ", "ระดับ 6 : มีการเชื่อมโยงข้อมูลระหว่างหน่วยงาน เพื่อใช้สนับสนุนการตัดสินใจในระดับโครงการหรือพื้นที่", "ระดับ 7 : ระบบรองรับการทำงานแบบบูรณาการ เช่น มีแดชบอร์ดวิเคราะห์สถานการณ์ร่วม ใช้ร่วมกับภาคประชาชน หรือหน่วยงานเครือข่ายได้", "ระดับ 8 : ชุดข้อมูลสามารถคาดการณ์แนวโน้ม และช่วยออกแบบนโยบายเชิงรุก เช่น การคาดการณ์ภัยพิบัติ", "ระดับ 9 : ชุดข้อมูลมีความสามารถเชิงวิเคราะห์สูง ใช้ปัญญาประดิษฐ์ (Artificial Intelligence : AI) หรือฐานข้อมูลขนาดใหญ่ (Big Data) วิเคราะห์ปัญหาที่ซับซ้อนได้แบบเรียลทา", "ระดับ 10 : ชุดข้อมูลกลายเป็นเครื่องมือหลักในการบริหารเมืองแบบ Smart Governance และขยายผลได้ระดับประเทศ หรือสากล"]}/>)}
             {renderTextField("2.4 ปัจจุบันการพัฒนาชุดข้อมูลเพื่อการพัฒนาเมืองของท่าน ยังได้มีการพัฒนาอย่างต่อเนื่อง หรือ ไม่ หากได้ ข้อมูลใดที่ได้มีการจัดหาเพิ่มเติม หรือข้อมูลใดที่ยังต้องการ แต่ยังไม่มี", section2.section2_continued_development)}
-            <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.5 องค์กรของท่านมีแอปพลิเคชัน (Application) ใด ในการพัฒนาเมืองหรือไม่</h4>{[1, 2].map(num => {const appName = section2.section2_applications?.[`app${num}_name`]; if (!appName || !appName.trim()) return null; const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`]; const methods = [{key:'buy',label:'ซื้อ'},{key:'develop',label:'องค์กรพัฒนาขึ้นเอง'},{key:'transfer',label:'องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้'},{key:'other',label:'อื่น ๆ'}]; return(<div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border print-sub-item"><strong>{num}) ชื่อแอปพลิเคชัน:</strong> {appName}<div className="mt-2"><p className="text-sm font-semibold">• วิธีการได้มา:</p><div className="flex flex-wrap gap-x-4 gap-y-1 ml-4">{methods.map(method => { const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`]; return (<div key={method.key} className="flex items-center space-x-1.5"><div className={`w-4 h-4 border-2 r-m flex items-center justify-center ${isChecked ? 'bg-black' : ''}`} /><span>{method.label}</span></div>);})}{section2.section2_applications?.[`app${num}_method_other`] && otherDetail && (<div className="w-full mt-1 p-2 bg-blue-50 text-sm text-blue-700 rounded"><strong>ระบุ:</strong> {otherDetail}</div>)}</div></div></div>);})}</div>
+            <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.5 องค์กรของท่านมีแอปพลิเคชัน (Application) ใด ในการพัฒนาเมืองหรือไม่</h4>{[1, 2].map(num => {const appName = section2.section2_applications?.[`app${num}_name`]; if (!appName || !appName.trim()) return null; const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`]; const methods = [{key:'buy',label:'ซื้อ'},{key:'develop',label:'องค์กรพัฒนาขึ้นเอง'},{key:'transfer',label:'องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้'},{key:'other',label:'อื่น ๆ'}]; return(<div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border print-sub-item"><strong>{num}) ชื่อแอปพลิเคชัน:</strong> {appName}<div className="mt-2"><p className="text-sm font-semibold">• วิธีการได้มา:</p><div className="flex flex-wrap gap-x-4 gap-y-1 ml-4">{methods.map(method => { const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`]; return (<div key={method.key} className="flex items-center space-x-1.5"><div className={`w-4 h-4 border-2 r-m flex items-center justify-center ${isChecked ? 'bg-blue-600' : ''}`}><span className="text-white font-bold text-xs">{isChecked ? '✓' : ''}</span></div><span>{method.label}</span></div>);})}{section2.section2_applications?.[`app${num}_method_other`] && otherDetail && (<div className="w-full mt-1 p-2 bg-blue-50 text-sm text-blue-700 rounded"><strong>ระบุ:</strong> {otherDetail}</div>)}</div></div></div>);})}</div>
             <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.6 ในปัจจุบันองค์กรของท่านได้มีการขยายเครือข่ายความร่วมมือไปยังหน่วยงานใดบ้าง และเป็นความร่วมมือในด้านใด</h4><div className="space-y-2"><div className="grid grid-cols-2 gap-4 font-medium text-center"><div className="p-2 bg-gray-100 rounded">หน่วยงาน</div><div className="p-2 bg-gray-100 rounded">ด้านความร่วมมือ</div></div>{[...Array(5)].map((_, i) => {const org = section2.section2_network_expansion?.[`org${i+1}`]; const coop = section2.section2_network_expansion?.[`cooperation${i+1}`]; if (!org && !coop) return null; return (<div key={i} className="grid grid-cols-2 gap-4 text-sm border-b pb-2"><div className="p-2">{org || 'N/A'}</div><div className="p-2">{coop || 'N/A'}</div></div>);})}</div></div>
           </CardContent>
         </Card>
 
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 3: การขับเคลื่อนระบบข้อมูลเมืองหรือโครงการนวัตกรรมต่อยอดสู่การเป็นองค์กร ที่ขับเคลื่อนด้วยข้อมูล (Data Driven Organization)</CardTitle></CardHeader>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header"><CardTitle>ส่วนที่ 3: การขับเคลื่อนระบบข้อมูลเมืองหรือโครงการนวัตกรรมต่อยอดสู่การเป็นองค์กร ที่ขับเคลื่อนด้วยข้อมูล (Data Driven Organization)</CardTitle></CardHeader>
           <CardContent className="p-6 space-y-4">
             {section3Factors.map(cat => (<div key={cat.category} className="print-item-block mb-6"><h3 className="text-lg font-bold mb-2 text-purple-700 print-category-heading">{cat.category}</h3><div className="space-y-3">{cat.items.map(item => (<div key={item.field} className="print-sub-item">{renderRatingScale(item.title, section3[item.field], 5)}</div>))}</div></div>))}
           </CardContent>
