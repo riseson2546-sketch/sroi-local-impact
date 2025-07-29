@@ -69,15 +69,27 @@ const AdminDashboard = () => {
     }
   };
 
-  // แปลงข้อมูลจาก database เป็นรูปแบบที่ CompleteSurveyViewer ต้องการ
+  // แปลงข้อมูลจาก database เป็นรูปแบบที่ CompleteSurveyViewer ต้องการ - ปรับปรุงใหม่
   const transformResponseData = (response) => {
-    if (!response) return null;
+    if (!response) {
+      console.log('❌ No response data');
+      return null;
+    }
+
+    console.log('📊 Section 1 fields:', {
+      section1_knowledge_outcomes: response.section1_knowledge_outcomes,
+      section1_application_outcomes: response.section1_application_outcomes,
+      section1_changes_description: response.section1_changes_description,
+    });
 
     // ข้อมูล Section 2 และ 3
     const section2Data = response.survey_responses_section2?.[0] || {};
     const section3Data = response.survey_responses_section3?.[0] || {};
 
-    return {
+    console.log('📊 Section 2 data:', section2Data);
+    console.log('📊 Section 3 data:', section3Data);
+
+    const result = {
       respondent: {
         name: response.survey_users?.full_name || 'ไม่ระบุ',
         position: response.survey_users?.position || 'ไม่ระบุ',
@@ -88,7 +100,7 @@ const AdminDashboard = () => {
         survey_date: new Date(response.created_at).toLocaleDateString('th-TH')
       },
       
-      // ส่วนที่ 1 - ข้อมูลจาก survey_responses table
+      // ส่วนที่ 1 - ข้อมูลจาก survey_responses table (ใช้ข้อมูลจริง)
       section1: {
         section1_knowledge_outcomes: response.section1_knowledge_outcomes || [],
         section1_application_outcomes: response.section1_application_outcomes || [],
@@ -123,7 +135,7 @@ const AdminDashboard = () => {
         section1_overall_change_level: response.section1_overall_change_level || null
       },
       
-      // ส่วนที่ 2 - ข้อมูลจาก survey_responses_section2 table
+      // ส่วนที่ 2 - ข้อมูลจาก survey_responses_section2 table (ใช้ข้อมูลจริง)
       section2: {
         section2_data_types: section2Data.section2_data_types || [],
         section2_data_types_other: section2Data.section2_data_types_other || '',
@@ -138,7 +150,7 @@ const AdminDashboard = () => {
         section2_network_expansion: section2Data.section2_network_expansion || {}
       },
       
-      // ส่วนที่ 3 - ข้อมูลจาก survey_responses_section3 table
+      // ส่วนที่ 3 - ข้อมูลจาก survey_responses_section3 table (ใช้ข้อมูลจริง)
       section3: {
         budget_system_development: section3Data.budget_system_development || null,
         budget_knowledge_development: section3Data.budget_knowledge_development || null,
@@ -158,18 +170,24 @@ const AdminDashboard = () => {
         reaching_target_groups: section3Data.reaching_target_groups || null
       }
     };
+
+    console.log('🎯 Final transformed result:', result);
+    return result;
   };
 
   // เพิ่มข้อมูลตัวอย่างสำหรับกรณีที่ข้อมูลไม่ครบ
   const addSampleDataIfEmpty = (transformedData) => {
     if (!transformedData) return null;
 
+    // สร้างสำเนาของข้อมูลเพื่อไม่ให้แก้ไขข้อมูลต้นฉบับ
+    const result = JSON.parse(JSON.stringify(transformedData));
+
     // ถ้าไม่มีข้อมูล Section 1 ให้ใส่ข้อมูลตัวอย่าง
-    if ((!transformedData.section1.section1_knowledge_outcomes || transformedData.section1.section1_knowledge_outcomes.length === 0) &&
-        (!transformedData.section1.section1_application_outcomes || transformedData.section1.section1_application_outcomes.length === 0)) {
+    if ((!result.section1.section1_knowledge_outcomes || result.section1.section1_knowledge_outcomes.length === 0) &&
+        (!result.section1.section1_application_outcomes || result.section1.section1_application_outcomes.length === 0)) {
       
-      transformedData.section1 = {
-        ...transformedData.section1,
+      result.section1 = {
+        ...result.section1,
         section1_knowledge_outcomes: [
           "มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก",
           "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง"
@@ -225,9 +243,9 @@ const AdminDashboard = () => {
     }
 
     // ถ้าไม่มีข้อมูล Section 2 ให้ใส่ข้อมูลตัวอย่าง
-    if (!transformedData.section2.section2_data_types || transformedData.section2.section2_data_types.length === 0) {
-      transformedData.section2 = {
-        ...transformedData.section2,
+    if (!result.section2.section2_data_types || result.section2.section2_data_types.length === 0) {
+      result.section2 = {
+        ...result.section2,
         section2_data_types: [
           "ชุดข้อมูลด้านประชากร",
           "ชุดข้อมูลด้านสิ่งแวดล้อม เช่น ขยะ น้ำเสีย PM 2.5 เป็นต้น"
@@ -262,8 +280,8 @@ const AdminDashboard = () => {
     }
 
     // ถ้าไม่มีข้อมูล Section 3 ให้ใส่ข้อมูลตัวอย่าง
-    if (!transformedData.section3.budget_system_development) {
-      transformedData.section3 = {
+    if (!result.section3.budget_system_development) {
+      result.section3 = {
         budget_system_development: 3,
         budget_knowledge_development: 4,
         cooperation_between_agencies: 4,
@@ -283,20 +301,24 @@ const AdminDashboard = () => {
       };
     }
 
-    return transformedData;
+    return result;
   };
 
   const handleViewResponse = (response) => {
-    console.log('Raw response data:', response); // สำหรับ debug
+    console.log('🔍 Raw response data:', response); // Debug ข้อมูลดิบ
     
+    // แสดงข้อมูลจริงก่อน ไม่ใส่ข้อมูลตัวอย่าง
     let transformedData = transformResponseData(response);
-    transformedData = addSampleDataIfEmpty(transformedData);
     
-    console.log('Transformed data:', transformedData); // สำหรับ debug
+    console.log('🔄 Transformed data (before sample):', transformedData); // Debug ข้อมูลที่แปลงแล้ว
+    
+    // ใส่ข้อมูลตัวอย่างเฉพาะเมื่อจำเป็น (แต่ให้ดูข้อมูลจริงก่อน)
+    // transformedData = addSampleDataIfEmpty(transformedData);
+    
+    console.log('✅ Final data for display:', transformedData); // Debug ข้อมูลสุดท้าย
     
     setSelectedResponse({ ...response, transformedData });
     setIsViewerOpen(true);
-    // ป้องกันการ scroll ของ body เมื่อ modal เปิด
     document.body.style.overflow = 'hidden';
   };
 
@@ -516,7 +538,7 @@ const AdminDashboard = () => {
             }}
           >
             <div className="bg-white rounded-lg w-[98vw] h-[98vh] flex flex-col max-w-none shadow-2xl">
-              {/* Header */}
+              {/* Header with Debug Controls */}
               <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-xl font-semibold text-gray-900 truncate">
@@ -525,6 +547,29 @@ const AdminDashboard = () => {
                   <p className="text-sm text-gray-600 mt-1 truncate">
                     {selectedResponse?.survey_users?.organization} • วันที่ตอบ: {selectedResponse && new Date(selectedResponse.created_at).toLocaleDateString('th-TH')}
                   </p>
+                  
+                  {/* Debug Buttons */}
+                  <div className="flex space-x-2 mt-2">
+                    <button
+                      onClick={() => {
+                        const realData = transformResponseData(selectedResponse);
+                        setSelectedResponse({ ...selectedResponse, transformedData: realData });
+                      }}
+                      className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      ดูข้อมูลจริง
+                    </button>
+                    <button
+                      onClick={() => {
+                        const realData = transformResponseData(selectedResponse);
+                        const sampleData = addSampleDataIfEmpty(realData);
+                        setSelectedResponse({ ...selectedResponse, transformedData: sampleData });
+                      }}
+                      className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      ดูข้อมูลตัวอย่าง
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2 ml-4">
                   <span className="text-xs text-gray-500">กด ESC เพื่อปิด</span>
@@ -543,7 +588,7 @@ const AdminDashboard = () => {
                 <div className="p-6">
                   {selectedResponse && (
                     <CompleteSurveyViewer 
-                      data={selectedResponse.transformedData || addSampleDataIfEmpty(transformResponseData(selectedResponse))} 
+                      data={selectedResponse.transformedData || transformResponseData(selectedResponse)} 
                     />
                   )}
                 </div>
