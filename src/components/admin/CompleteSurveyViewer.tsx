@@ -35,6 +35,17 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
     console.log("selectedValues:", selectedValues);
     console.log("Available detail keys:", Object.keys(allData).filter(key => key.includes('problems_detail')));
     
+    // สร้าง mapping ระหว่างข้อความที่เลือกกับ index
+    const selectedIndexes = new Set();
+    selectedValues.forEach(selectedText => {
+        const index = options.findIndex(opt => opt.text === selectedText);
+        if (index !== -1) {
+            selectedIndexes.add(index);
+        }
+    });
+    
+    console.log("Selected indexes:", Array.from(selectedIndexes));
+    
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
@@ -51,9 +62,13 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                         detailValue = detailValue.replace(/^"(.*)"$/, '$1');
                         // ลบ quotes ที่เป็น escape sequence
                         detailValue = detailValue.replace(/\\"/g, '"');
+                        // ถ้าเป็น "null" string ให้เปลี่ยนเป็น null
+                        if (detailValue === 'null') {
+                            detailValue = null;
+                        }
                     }
                     
-                    console.log(`Problem ${i}: checked=${isChecked}, detail="${detailValue}"`);
+                    console.log(`Problem ${i} (${opt.text.substring(0, 40)}...): checked=${isChecked}, detail="${detailValue}"`);
                     
                     return (
                         <div key={i} className="print-sub-item">
@@ -72,6 +87,10 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                             <span className="text-gray-400 italic">ไม่ได้ระบุ</span>
                                         )}
                                     </p>
+                                    {/* Debug info */}
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        (Field: section1_problems_detail_{i})
+                                    </div>
                                 </div>
                             )}
                         </div>
