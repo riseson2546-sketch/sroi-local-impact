@@ -4,13 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react';
 
-// --- โครงสร้างคำถามและตัวเลือกทั้งหมด (เหมือนเดิม) ---
+// --- โครงสร้างคำถามและตัวเลือกทั้งหมด ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
 const applicationOutcomes = ["นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง", "สามารถพัฒนาฐานข้อมูลเมืองของตนได้", "สามารถพัฒนาข้อเสนอโครงงานพัฒนาเมืองและนำไปสู่การนำเสนอไอเดีย (Pitching) ขอทุนได้", "ประสานความร่วมมือกับภาคส่วนต่าง ๆ ในการพัฒนาเมือง"];
 const problemsBefore = [{ text: "มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่", hasDetail: true }, { text: "วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น", hasDetail: true }, { text: "การบริหารจัดการองค์กร", hasDetail: true }, { text: "ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน", hasDetail: true }, { text: "ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น", hasDetail: true }, { text: "ไม่ใช้ข้อมูลเป็นฐานในการวางแผน", hasDetail: true }, { text: "บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด", hasDetail: true }, { text: "ขาดเครือข่ายในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดความรู้ทักษะในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง", hasDetail: true }];
 const knowledgeSolutions = ["การจัดทำข้อมูลเพื่อใช้ในการพัฒนาเมือง/ท้องถิ่น", "การประสานความร่วมมือกับภาคีเครือข่ายวิชาการและ อปท.", "การระบุปัญหาและความจำเป็นเร่งด่วนในพื้นที่ได้อย่างชัดเจน", "กำหนดหรือสร้างแนวคิดนวัตกรรมท้องถิ่นที่สอดคล้องกับปัญหา/ตรงกับความต้องการ", "ใช้ข้อมูลเป็นฐานในการพัฒนาท้องถิ่น", "การนำเทคโนโลยีดิจิทัลมาใช้ในการพัฒนาบริการสาธารณะ (E-Service)", "การกล้าลงมือทำโดยไม่กลัวความผิดพลาด", "การนำนวัตกรรมท้องถิ่นไปปฏิบัติจริง (การขับเคลื่อนนวัตกรรมท้องถิ่นไปยังกลุ่มเป้าหมาย การสร้างความรู้ความเข้าใจในพื้นที่ การติดตามและประเมินผล)"];
 const itUsage = ["ใช้การวิเคราะห์ปัญหาได้ตรงเป้า ตรงจุด", "ใช้ในการวางแผนพัฒนาท้องถิ่นได้อย่างมีทิศทาง", "ใช้ในการตัดสินใจในการพัฒนาท้องถิ่น", "ใช้ในการกำกับ ติดตาม และวางแผนการดำเนินโครงการต่างๆ", "ช่วยในการเพิ่มความเสมอภาคในการบริการ", "ช่วยในการให้บริการประชาชนได้อย่างไม่มีข้อจำกัดด้านเวลา และสถานที่", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน", "ช่วยพัฒนาบริการสาธารณะในลักษณะ E-Service"];
-const cooperationUsage = ["ใช้ในการสร้างความร่วมมือระหว่างท้องถิ่นกับรัฐ เอกชน และองค์กรพัฒนาเอกชน", "ใช้ในการเพิ่มทรัพยากรและความสามารถในการบริหารจัดการ แลกเปลี่ยนประสบการณ์ แก้ปัญหา", "ใช้ในการกำกับ ติดตาม และวางแผนการดำเนินโครงการต่างๆ", "ช่วยในการให้บริการประชาชนได้อย่างไม่มีข้อจำกัดด้านเวลา และสถานที่", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน", "ช่วยพัฒนาโครงการได้ดีขึ้น ขึ้น เช่น การทำโครงการร่วมรัฐ-เอกชน (PPP) หรือคลัสเตอร์อุตสาหกรรมท้องถิ่น", "ช่วยลดความซ้ำซ้อนและเพิ่มประสิทธิภาพในการพัฒนาอย่างยั่งยืน"];
+const cooperationUsage = ["ใช้ในการสร้างความร่วมมือระหว่างท้องถิ่นกับรัฐ เอกชน และองค์กรพัฒนาเอกชน", "ใช้ในการเพิ่มทรัพยากรและความสามารถในการบริหารจัดการ แลกเปลี่ยนประสบการณ์ แก้ปัญหา", "ใช้ในการกำกับ ติดตาม และวางแผนการดำเนินโครงการต่างๆ", "ช่วยในการให้บริการประชาชนได้อย่างไม่มีข้อจำกัดด้านเวลา และสถานที่", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน", "ช่วยพัฒนาโครงการได้ดีขึ้น เช่น การทำโครงการร่วมรัฐ-เอกชน (PPP) หรือคลัสเตอร์อุตสาหกรรมท้องถิ่น", "ช่วยลดความซ้ำซ้อนและเพิ่มประสิทธิภาพในการพัฒนาอย่างยั่งยืน"];
 const fundingUsage = ["ใช้ในการหาแหล่งทุนมาจากทั้งรัฐ เอกชน หุ้นชุมชน พันธบัตร หรือช่องทางออนไลน์อย่าง Crowdfunding", "ช่วยเพิ่มทรัพยากรและความสามารถในการบริหารจัดการ แลกเปลี่ยนประสบการณ์ แก้ปัญหา", "ช่วยให้โครงการไม่สะดุดจากปัญหาเงินทุน และดึงดูดการลงทุนจากภาคเอกชน", "ช่วยผลักดันการพัฒนาได้ต่อเนื่องและยั่งยืน", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน"];
 const cultureUsage = ["ใช้ในการอนุรักษ์วัฒนธรรมและการใช้สินทรัพย์ท้องถิ่น เช่น สินค้าพื้นเมือง งานหัตถกรรม ประเพณี และทรัพยากรธรรมชาติอย่างยั่งยืน", "ใช้ในการสร้างเอกลักษณ์ ดึงดูดนักท่องเที่ยวและการลงทุน เพิ่มมูลค่าเศรษฐกิจ", "ใช้ในการจัดทำหลักสูตรท้องถิ่น", "ใช้ในการส่งเสริมความมั่นคงทางสังคมและเศรษฐกิจของชุมชนได้ในระยะยาว"];
 const greenUsage = ["ใช้เป็นกลไกที่เน้นใช้ทรัพยากรอย่างคุ้มค่า ลดของเสีย และรักษาสิ่งแวดล้อม", "ช่วยสนับสนุนเกษตรอินทรีย์ จัดการขยะและน้ำเสียอย่างมีระบบ", "ใช้พลังงานทดแทน ลดการพึ่งพาทรัพยากรธรรมชาติที่ใช้แล้วหมด", "ช่วยสร้างงานและเศรษฐกิจที่ไม่ทำลายสิ่งแวดล้อม"];
@@ -25,50 +25,19 @@ const section3Factors = [{ category: "1. ทรัพยากรภายใน
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
-// **** ส่วนที่แก้ไข - ฟังก์ชัน renderProblemsCheckboxes ****
+// ฟังก์ชันสำหรับแสดงข้อ 1.3 ที่มีรายละเอียดเพิ่มเติม
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    console.log("=== FULL DEBUG: Complete allData object ===");
-    console.log("Type of allData:", typeof allData);
-    console.log("allData keys:", Object.keys(allData || {}));
-    
-    // ลองหาข้อมูล problems_before จากหลายตำแหน่ง
+    // อ่านค่า checkbox ที่เลือกจาก section1_problems_before
     let selectedValues = [];
-    let selectedValuesSource = 'Not found';
     
     // ลองหาใน allData.section1 ก่อน
     if (allData?.section1?.section1_problems_before) {
         selectedValues = allData.section1.section1_problems_before;
-        selectedValuesSource = 'allData.section1.section1_problems_before';
     }
     // ลองหาใน allData ระดับบนสุด
     else if (allData?.section1_problems_before) {
         selectedValues = allData.section1_problems_before;
-        selectedValuesSource = 'allData.section1_problems_before';
     }
-    
-    console.log("=== PROBLEMS BEFORE DEBUG ===");
-    console.log("selectedValues:", selectedValues);
-    console.log("selectedValues source:", selectedValuesSource);
-    
-    // หาข้อมูลรายละเอียดจากทุกระดับ
-    const findDetailKeys = (obj: any, prefix = '') => {
-        const keys = [];
-        if (obj && typeof obj === 'object') {
-            for (const key in obj) {
-                const fullKey = prefix ? `${prefix}.${key}` : key;
-                if (key.includes('problems_detail')) {
-                    keys.push({ key: fullKey, value: obj[key] });
-                }
-                if (typeof obj[key] === 'object' && obj[key] !== null) {
-                    keys.push(...findDetailKeys(obj[key], fullKey));
-                }
-            }
-        }
-        return keys;
-    };
-    
-    const allDetailKeys = findDetailKeys(allData);
-    console.log("All detail keys found:", allDetailKeys);
     
     // ฟังก์ชันหาข้อมูลรายละเอียดสำหรับ index ที่กำหนด
     const findDetailValue = (index: number) => {
@@ -89,7 +58,6 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                         value = null;
                     }
                 }
-                console.log(`Found detail for index ${index} at allData.${key}:`, value);
                 return value;
             }
         }
@@ -106,26 +74,8 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                             value = null;
                         }
                     }
-                    console.log(`Found detail for index ${index} at allData.section1.${key}:`, value);
                     return value;
                 }
-            }
-        }
-        
-        // ตรวจสอบในโครงสร้างข้อมูลลึก
-        for (const detailItem of allDetailKeys) {
-            if (detailItem.key.includes(`problems_detail_${index}`) || 
-                detailItem.key.includes(`detail_${index}`)) {
-                let value = detailItem.value;
-                if (typeof value === 'string') {
-                    value = value.replace(/^"(.*)"$/, '$1');
-                    value = value.replace(/\\"/g, '"');
-                    if (value === 'null' || value.trim() === '') {
-                        value = null;
-                    }
-                }
-                console.log(`Found detail for index ${index} at ${detailItem.key}:`, value);
-                return value;
             }
         }
         
@@ -135,22 +85,10 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
-            
-            {/* แสดงข้อมูล debug บนหน้าเว็บ */}
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                <p><strong>Debug Info:</strong></p>
-                <p>Selected values source: {selectedValuesSource}</p>
-                <p>Selected values: {JSON.stringify(selectedValues)}</p>
-                <p>Detail keys found: {allDetailKeys.map(item => `${item.key}="${item.value}"`).join(', ')}</p>
-                <p>Total options: {options.length}</p>
-            </div>
-            
             <div className="space-y-3">
                 {options.map((opt, i) => { 
                     const isChecked = Array.isArray(selectedValues) && selectedValues.includes(opt.text);
                     const detailValue = findDetailValue(i);
-                    
-                    console.log(`Problem ${i} (${opt.text.substring(0, 30)}...): checked=${isChecked}, detail="${detailValue}"`);
                     
                     return (
                         <div key={i} className="print-sub-item">
@@ -158,13 +96,7 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                 <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
                                     {isChecked && <span className="text-white font-bold text-xs">✓</span>}
                                 </div>
-                                <div className="flex-1">
-                                    <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
-                                    {/* แสดง debug info สำหรับแต่ละข้อ */}
-                                    <div className="text-xs text-gray-400 mt-1">
-                                        Index: {i}, Checked: {isChecked ? 'Yes' : 'No'}, Detail: {detailValue ? `"${detailValue}"` : 'No detail'}
-                                    </div>
-                                </div>
+                                <span className={`text-sm ${isChecked ? '' : 'text-gray-500'}`}>{opt.text}</span>
                             </div>
                             {isChecked && opt.hasDetail && (
                                 <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
@@ -175,9 +107,6 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                                             <span className="text-gray-400 italic">ไม่ได้ระบุ</span>
                                         )}
                                     </p>
-                                    <div className="mt-1 text-xs text-gray-500">
-                                        Looking for: section1_problems_detail_{i}
-                                    </div>
                                 </div>
                             )}
                         </div>
@@ -230,36 +159,84 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
-      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6"><h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1><Button onClick={handlePrint} disabled={isPrinting}><Printer className="mr-2 h-4 w-4" />{isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}</Button></div>
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6">
+        <h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1>
+        <Button onClick={handlePrint} disabled={isPrinting}>
+          <Printer className="mr-2 h-4 w-4" />
+          {isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}
+        </Button>
+      </div>
       
       {/* แสดงข้อมูล debug ที่ด้านบน */}
       <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-        <h3 className="font-bold text-red-800 mb-2">🔍 Debug: Data Structure</h3>
-        <div className="text-xs space-y-1">
-          <p><strong>Total keys in data:</strong> {Object.keys(data).length}</p>
-          <p><strong>Main keys:</strong> {Object.keys(data).join(', ')}</p>
-          <p><strong>Problem detail keys found:</strong> {problemDetailKeys.length > 0 ? problemDetailKeys.join(', ') : 'None found!'}</p>
+        <h3 className="font-bold text-red-800 mb-2">🔍 Debug: Data Structure Analysis</h3>
+        <div className="text-xs space-y-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p><strong>Total keys in data:</strong> {Object.keys(data).length}</p>
+              <p><strong>Main keys:</strong> {Object.keys(data).join(', ')}</p>
+              <p><strong>Problem detail keys found:</strong> {problemDetailKeys.length > 0 ? problemDetailKeys.join(', ') : '❌ None found!'}</p>
+            </div>
+            <div>
+              <p><strong>Section1 keys:</strong> {section1 ? Object.keys(section1).join(', ') : 'No section1 data'}</p>
+              <p><strong>Has problems_before:</strong> {section1.section1_problems_before ? '✅ Yes' : '❌ No'}</p>
+              <p><strong>Problems count:</strong> {section1.section1_problems_before?.length || 0}</p>
+            </div>
+          </div>
+          
           {problemDetailKeys.length > 0 && (
-            <div className="mt-2">
-              <p><strong>Detail values:</strong></p>
+            <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
+              <p><strong>✅ Detail values found:</strong></p>
               {problemDetailKeys.map(key => (
-                <p key={key} className="ml-4">• {key}: {JSON.stringify(data[key])}</p>
+                <p key={key} className="ml-4 text-green-800">• {key}: "{data[key]}"</p>
               ))}
             </div>
           )}
+          
+          {problemDetailKeys.length === 0 && (
+            <div className="mt-3 p-2 bg-red-100 border border-red-200 rounded">
+              <p className="text-red-800"><strong>❌ No detail fields found in data!</strong></p>
+              <p className="text-red-600 text-xs mt-1">This means either:</p>
+              <ul className="text-red-600 text-xs ml-4 list-disc">
+                <li>Migration didn't run successfully</li>
+                <li>Database query doesn't include detail fields</li>
+                <li>No detail data exists for this response</li>
+              </ul>
+            </div>
+          )}
+          
+          <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-blue-800"><strong>🔍 Expected detail fields:</strong></p>
+            <p className="text-blue-600 text-xs">section1_problems_detail_0, section1_problems_detail_1, ..., section1_problems_detail_9</p>
+          </div>
         </div>
       </div>
       
       <div id="printable-area" className="space-y-6">
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader><CardContent className="p-6"><div className="grid grid-cols-2 gap-4"><div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.name || 'N/A'}</div><div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div><div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div><div><span className="font-medium">วันที่ตอบ:</span> {respondent.survey_date || 'N/A'}</div></div></CardContent></Card>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header">
+            <CardTitle>ข้อมูลผู้ตอบ</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.name || 'N/A'}</div>
+              <div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div>
+              <div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div>
+              <div><span className="font-medium">วันที่ตอบ:</span> {respondent.survey_date || 'N/A'}</div>
+            </div>
+          </CardContent>
+        </Card>
         
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน</CardTitle></CardHeader>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header">
+            <CardTitle>ส่วนที่ 1: ผลลัพธ์จากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ที่เกิดขึ้นจนถึงปัจจุบัน</CardTitle>
+          </CardHeader>
           <CardContent className="p-6 space-y-2">
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านองค์ความรู้", knowledgeOutcomes, section1.section1_knowledge_outcomes, undefined, false)}
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
             
-            {/* **** ส่วนที่แก้ไข - เรียกใช้ฟังก์ชันใหม่ **** */}
+            {/* ส่วนที่แก้ไข - เรียกใช้ฟังก์ชันใหม่ */}
             {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, data)}
 
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
@@ -283,7 +260,10 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
           </CardContent>
         </Card>
 
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล ความรู้ และความร่วมมือระดับประเทศ</CardTitle></CardHeader>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header">
+            <CardTitle>ส่วนที่ 2: การพัฒนาและการใช้ประโยชน์จากข้อมูล ความรู้ และความร่วมมือระดับประเทศ</CardTitle>
+          </CardHeader>
           <CardContent className="p-6 space-y-2">
             {renderCheckboxes("2.1 1) ในการพัฒนาเมือง ได้ใช้ชุดข้อมูลใดบ้างในการพัฒนา", dataTypes, section2.section2_data_types, section2.section2_data_types_other)}
             {renderTextField("2.1 2) ตามที่ท่านระบุในข้อ 1) ชุดข้อมูลที่ใช้นั้นได้ใช้งานจากแหล่งที่มาใด หรือชุดข้อมูลที่ได้จากการสนับสนุนทุนจากโครงการ", section2.section2_data_sources)}
@@ -292,14 +272,79 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderCheckboxes("2.2 ชุดข้อมูลเมืองที่พัฒนาขึ้นสามารถตอบโจทย์และแก้ปัญหาของหน่วยงานของท่านได้ในประเด็นใด", dataBenefits, section2.section2_data_benefits, undefined, false)}
             {renderRatingScale("2.3 ชุดข้อมูลเมืองสามารถตอบโจทย์และแก้ปัญหาของหน่วยงานได้ในระดับใด", section2.section2_data_level, 10, <RatingDescription items={["ระดับ 1 : มีการจัดเก็บเอกสารในรูป Digital แต่ยังไม่ได้ดำเนินการทั้งหมด", "ระดับ 2 : มีระบบจัดเก็บข้อมูลบางส่วนในรูปแบบดิจิทัล แต่ยังไม่มีการเชื่อมโยงหรือใช้จริงในการแก้ปัญหา", "ระดับ 3 : เริ่มมีการใช้ข้อมูลดิจิทัลในการทำงานบางมิติ แต่ยังจำกัดเฉพาะภายในหน่วยงาน", "ระดับ 4 : ข้อมูลถูกจัดเก็บเป็นระบบ และบางส่วนมีการใช้ในการรายงานหรือวิเคราะห์เชิงปฏิบัติการ แต่ยังไม่รองรับการตัดสินใจเชิงนโยบาย", "ระดับ 5 : หน่วยงานสามารถใช้ชุดข้อมูลเพื่อวิเคราะห์ และติดตามปัญหาได้ในระดับปฏิบัติการ เช่น การจัดการขยะ การจัดการภัยพิบัติ", "ระดับ 6 : มีการเชื่อมโยงข้อมูลระหว่างหน่วยงาน เพื่อใช้สนับสนุนการตัดสินใจในระดับโครงการหรือพื้นที่", "ระดับ 7 : ระบบรองรับการทำงานแบบบูรณาการ เช่น มีแดชบอร์ดวิเคราะห์สถานการณ์ร่วม ใช้ร่วมกับภาคประชาชน หรือหน่วยงานเครือข่ายได้", "ระดับ 8 : ชุดข้อมูลสามารถคาดการณ์แนวโน้ม และช่วยออกแบบนโยบายเชิงรุก เช่น การคาดการณ์ภัยพิบัติ", "ระดับ 9 : ชุดข้อมูลมีความสามารถเชิงวิเคราะห์สูง ใช้ปัญญาประดิษฐ์ (Artificial Intelligence : AI) หรือฐานข้อมูลขนาดใหญ่ (Big Data) วิเคราะห์ปัญหาที่ซับซ้อนได้แบบเรียลทา", "ระดับ 10 : ชุดข้อมูลกลายเป็นเครื่องมือหลักในการบริหารเมืองแบบ Smart Governance และขยายผลได้ระดับประเทศ หรือสากล"]}/>)}
             {renderTextField("2.4 ปัจจุบันการพัฒนาชุดข้อมูลเพื่อการพัฒนาเมืองของท่าน ยังได้มีการพัฒนาอย่างต่อเนื่อง หรือ ไม่ หากได้ ข้อมูลใดที่ได้มีการจัดหาเพิ่มเติม หรือข้อมูลใดที่ยังต้องการ แต่ยังไม่มี", section2.section2_continued_development)}
-            <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.5 องค์กรของท่านมีแอปพลิเคชัน (Application) ใด ในการพัฒนาเมืองหรือไม่</h4>{[1, 2].map(num => {const appName = section2.section2_applications?.[`app${num}_name`]; if (!appName || !appName.trim()) return null; const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`]; const methods = [{key:'buy',label:'ซื้อ'},{key:'develop',label:'องค์กรพัฒนาขึ้นเอง'},{key:'transfer',label:'องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้'},{key:'other',label:'อื่น ๆ'}]; return(<div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border print-sub-item"><strong>{num}) ชื่อแอปพลิเคชัน:</strong> {appName}<div className="mt-2"><p className="text-sm font-semibold">• วิธีการได้มา:</p><div className="flex flex-wrap gap-x-4 gap-y-1 ml-4">{methods.map(method => { const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`]; return (<div key={method.key} className="flex items-center space-x-1.5"><div className={`w-4 h-4 border-2 r-m flex items-center justify-center ${isChecked ? 'bg-black' : ''}`} /><span>{method.label}</span></div>);})}{section2.section2_applications?.[`app${num}_method_other`] && otherDetail && (<div className="w-full mt-1 p-2 bg-blue-50 text-sm text-blue-700 rounded"><strong>ระบุ:</strong> {otherDetail}</div>)}</div></div></div>);})}</div>
-            <div className="p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">2.6 ในปัจจุบันองค์กรของท่านได้มีการขยายเครือข่ายความร่วมมือไปยังหน่วยงานใดบ้าง และเป็นความร่วมมือในด้านใด</h4><div className="space-y-2"><div className="grid grid-cols-2 gap-4 font-medium text-center"><div className="p-2 bg-gray-100 rounded">หน่วยงาน</div><div className="p-2 bg-gray-100 rounded">ด้านความร่วมมือ</div></div>{[...Array(5)].map((_, i) => {const org = section2.section2_network_expansion?.[`org${i+1}`]; const coop = section2.section2_network_expansion?.[`cooperation${i+1}`]; if (!org) return null; return (<div key={i} className="grid grid-cols-2 gap-4 text-sm border-b pb-2"><div className="p-2">{org}</div><div className="p-2">{coop || 'N/A'}</div></div>);})}</div></div>
+            <div className="p-4 border rounded-lg bg-white print-item-block">
+              <h4 className="font-semibold mb-3">2.5 องค์กรของท่านมีแอปพลิเคชัน (Application) ใด ในการพัฒนาเมืองหรือไม่</h4>
+              {[1, 2].map(num => {
+                const appName = section2.section2_applications?.[`app${num}_name`]; 
+                if (!appName || !appName.trim()) return null; 
+                const otherDetail = section2.section2_applications?.[`app${num}_method_other_detail`]; 
+                const methods = [{key:'buy',label:'ซื้อ'},{key:'develop',label:'องค์กรพัฒนาขึ้นเอง'},{key:'transfer',label:'องค์กรอื่นได้มาถ่ายทอดเทคโนโลยีให้'},{key:'other',label:'อื่น ๆ'}]; 
+                return(
+                  <div key={num} className="mb-4 p-3 bg-gray-50 rounded-md border print-sub-item">
+                    <strong>{num}) ชื่อแอปพลิเคชัน:</strong> {appName}
+                    <div className="mt-2">
+                      <p className="text-sm font-semibold">• วิธีการได้มา:</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 ml-4">
+                        {methods.map(method => { 
+                          const isChecked = section2.section2_applications?.[`app${num}_method_${method.key}`]; 
+                          return (
+                            <div key={method.key} className="flex items-center space-x-1.5">
+                              <div className={`w-4 h-4 border-2 r-m flex items-center justify-center ${isChecked ? 'bg-black' : ''}`} />
+                              <span>{method.label}</span>
+                            </div>
+                          );
+                        })}
+                        {section2.section2_applications?.[`app${num}_method_other`] && otherDetail && (
+                          <div className="w-full mt-1 p-2 bg-blue-50 text-sm text-blue-700 rounded">
+                            <strong>ระบุ:</strong> {otherDetail}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="p-4 border rounded-lg bg-white print-item-block">
+              <h4 className="font-semibold mb-3">2.6 ในปัจจุบันองค์กรของท่านได้มีการขยายเครือข่ายความร่วมมือไปยังหน่วยงานใดบ้าง และเป็นความร่วมมือในด้านใด</h4>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-4 font-medium text-center">
+                  <div className="p-2 bg-gray-100 rounded">หน่วยงาน</div>
+                  <div className="p-2 bg-gray-100 rounded">ด้านความร่วมมือ</div>
+                </div>
+                {[...Array(5)].map((_, i) => {
+                  const org = section2.section2_network_expansion?.[`org${i+1}`]; 
+                  const coop = section2.section2_network_expansion?.[`cooperation${i+1}`]; 
+                  if (!org) return null; 
+                  return (
+                    <div key={i} className="grid grid-cols-2 gap-4 text-sm border-b pb-2">
+                      <div className="p-2">{org}</div>
+                      <div className="p-2">{coop || 'N/A'}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ส่วนที่ 3: การขับเคลื่อนระบบข้อมูลเมืองหรือโครงการนวัตกรรมต่อยอดสู่การเป็นองค์กร ที่ขับเคลื่อนด้วยข้อมูล (Data Driven Organization)</CardTitle></CardHeader>
+        <Card className="print-section-card">
+          <CardHeader className="print-card-header">
+            <CardTitle>ส่วนที่ 3: การขับเคลื่อนระบบข้อมูลเมืองหรือโครงการนวัตกรรมต่อยอดสู่การเป็นองค์กร ที่ขับเคลื่อนด้วยข้อมูล (Data Driven Organization)</CardTitle>
+          </CardHeader>
           <CardContent className="p-6 space-y-4">
-            {section3Factors.map(cat => (<div key={cat.category} className="print-item-block mb-6"><h3 className="text-lg font-bold mb-2 text-purple-700 print-category-heading">{cat.category}</h3><div className="space-y-3">{cat.items.map(item => (<div key={item.field} className="print-sub-item">{renderRatingScale(item.title, section3[item.field], 5)}</div>))}</div></div>))}
+            {section3Factors.map(cat => (
+              <div key={cat.category} className="print-item-block mb-6">
+                <h3 className="text-lg font-bold mb-2 text-purple-700 print-category-heading">{cat.category}</h3>
+                <div className="space-y-3">
+                  {cat.items.map(item => (
+                    <div key={item.field} className="print-sub-item">
+                      {renderRatingScale(item.title, section3[item.field], 5)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
