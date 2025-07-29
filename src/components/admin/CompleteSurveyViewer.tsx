@@ -25,21 +25,16 @@ const section3Factors = [{ category: "1. ทรัพยากรภายใน
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
-// **** START OF CHANGE ****
-const renderProblemsCheckboxes = (title: string, options: { text: string; hasDetail: boolean }[], allData: any) => {
-    // The root data object `allData` contains nested data for each section.
-    // We need to access everything for section 1 from the `allData.section1` object.
-    const section1Data = allData.section1 || {};
-    const selectedValues = section1Data.section1_problems_before || [];
-
+const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], dataForSection1: any) => {
+    const selectedValues = dataForSection1.section1_problems_before || [];
+    
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
             <div className="space-y-3">
-                {options.map((opt, i) => {
+                {options.map((opt, i) => { 
                     const isChecked = selectedValues.includes(opt.text);
-                    // Correctly read the detail value from the nested section1Data object.
-                    const detailValue = section1Data[`section1_problems_detail_${i}`];
+                    const detailValue = dataForSection1[`section1_problems_detail_${i}`];
                     return (
                         <div key={i} className="print-sub-item">
                             <div className="flex items-start space-x-3">
@@ -62,14 +57,22 @@ const renderProblemsCheckboxes = (title: string, options: { text: string; hasDet
         </div>
     );
 };
-// **** END OF CHANGE ****
 
 const renderTextField = (title: string, value?: string) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="p-4 bg-gray-50 rounded-md border min-h-[60px]"><p className="text-sm whitespace-pre-wrap">{value || <span className="text-gray-400">ไม่ได้ระบุ</span>}</p></div></div>);
 const renderRatingScale = (title: string, value?: number, max = 10, description?: React.ReactNode) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="flex items-center space-x-4 flex-wrap"><div className="flex flex-wrap gap-1">{Array.from({ length: max }, (_, i) => i + 1).map(num => (<div key={num} className={`w-9 h-9 r-m border flex items-center justify-center text-xs font-medium ${value === num ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>{num}</div>))}</div>{value != null && (<Badge variant="secondary">คะแนน: {value}/{max}</Badge>)}</div>{description}</div>);
 
 const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
-  const respondent = data.respondent || {}; const section1 = data.section1 || {}; const section2 = data.section2 || {}; const section3 = data.section3 || {};
+
+  // **** START OF CHANGE ****
+  // This is the main correction.
+  // The 'data' prop contains flat 'section1_...' fields, and nested 'respondent', 'section2', 'section3' objects.
+  // We align our variables to this actual structure.
+  const respondent = data.respondent || {};
+  const section1 = data || {}; // section1 fields are at the root of the 'data' prop.
+  const section2 = data.section2 || {};
+  const section3 = data.section3 || {};
+  // **** END OF CHANGE ****
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -89,7 +92,7 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
-      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6"><h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1><Button onClick={handlePrint} disabled={isPrinting}><Printer className="mr-2 h-4 w-4" />{isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}</Button></div>
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6 no-print"><h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1><Button onClick={handlePrint} disabled={isPrinting}><Printer className="mr-2 h-4 w-4" />{isPrinting ? 'กำลังเตรียมพิมพ์...' : 'พิมพ์เป็น PDF'}</Button></div>
       <div id="printable-area" className="space-y-6">
         <Card className="print-section-card"><CardHeader className="print-card-header"><CardTitle>ข้อมูลผู้ตอบ</CardTitle></CardHeader><CardContent className="p-6"><div className="grid grid-cols-2 gap-4"><div><span className="font-medium">ชื่อ-สกุล:</span> {respondent.name || 'N/A'}</div><div><span className="font-medium">ตำแหน่ง:</span> {respondent.position || 'N/A'}</div><div><span className="font-medium">หน่วยงาน:</span> {respondent.organization || 'N/A'}</div><div><span className="font-medium">วันที่ตอบ:</span> {respondent.survey_date || 'N/A'}</div></div></CardContent></Card>
         
@@ -100,8 +103,8 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
             
             {/* **** START OF CHANGE **** */}
-            {/* Call the function with the full `data` object which contains the nested section1 data */}
-            {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, data)}
+            {/* Now this call correctly passes the `section1` object which holds all needed data */}
+            {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, section1)}
             {/* **** END OF CHANGE **** */}
 
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
