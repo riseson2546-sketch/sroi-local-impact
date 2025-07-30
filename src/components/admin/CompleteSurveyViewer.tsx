@@ -69,31 +69,27 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
 const renderTextField = (title: string, value?: string) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="p-4 bg-gray-50 rounded-md border min-h-[60px]"><p className="text-sm whitespace-pre-wrap">{value || <span className="text-gray-400">ไม่ได้ระบุ</span>}</p></div></div>);
 const renderRatingScale = (title: string, value?: number, max = 10, description?: React.ReactNode) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="flex items-center space-x-4 flex-wrap"><div className="flex flex-wrap gap-1">{Array.from({ length: max }, (_, i) => i + 1).map(num => (<div key={num} className={`w-9 h-9 r-m border flex items-center justify-center text-xs font-medium ${value === num ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>{num}</div>))}</div>{value != null && (<Badge variant="secondary">คะแนน: {value}/{max}</Badge>)}</div>{description}</div>);
 
+
 const CompleteSurveyViewer: React.FC<{ data: any }> = ({ data }) => {
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // --- ส่วนป้องกัน (Guard Clause) ---
-  // ถ้าไม่มี data หรือ data เป็น object ว่าง, ให้แสดงข้อความแล้วจบการทำงานทันที
   if (!data || Object.keys(data).length === 0) {
     return <div className="text-center p-8">กำลังรอข้อมูลแบบสอบถาม...</div>;
   }
 
-  // --- ส่วนดึงข้อมูล (Data Extraction) - ทำให้ตรงไปตรงมา ---
-  // ข้อมูลจาก Supabase query จะมีโครงสร้างตามชื่อตารางที่ join มา
-  const section1 = data; // ข้อมูล Section 1 อยู่ในระดับบนสุด
-  const section2 = data.survey_responses_section2?.[0] || {}; // Section 2 อยู่ใน array, เอาตัวแรก
-  const section3 = data.survey_responses_section3?.[0] || {}; // Section 3 อยู่ใน array, เอาตัวแรก
+  // --- Data Extraction from Supabase query result ---
+  const section1 = data; 
+  const section2 = data.survey_responses_section2?.[0] || {};
+  const section3 = data.survey_responses_section3?.[0] || {};
+  const respondentData = data.survey_users || {};
 
-  // สมมติว่าข้อมูลผู้ตอบอยู่ในตารางหลัก
   const respondent = {
-    name: data.name || 'N/A', // สมมติว่ามี column ชื่อ name
-    position: data.position || 'N/A', // สมมติว่ามี column ชื่อ position
-    organization: data.organization || 'N/A', // สมมติว่ามี column ชื่อ organization
+    name: respondentData.full_name || 'ไม่ระบุ',
+    position: respondentData.position || 'ไม่ระบุ',
+    organization: respondentData.organization || 'ไม่ระบุ',
     survey_date: data.created_at ? new Date(data.created_at).toLocaleDateString('th-TH') : 'N/A'
   };
   
-  // (ส่วนที่เหลือของโค้ดเหมือนเดิมทั้งหมด)
-  // ... handlePrint function and the rest of the JSX ...
   const handlePrint = () => {
     setIsPrinting(true);
     const printableContent = document.getElementById('printable-area')?.outerHTML;
@@ -111,7 +107,7 @@ const CompleteSurveyViewer: React.FC<{ data: any }> = ({ data }) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gray-100">
+    <div className="max-w-6xl mx-auto bg-gray-100">
       <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-6">
         <h1 className="text-2xl font-bold">แสดงผลแบบสอบถามฉบับสมบูรณ์</h1>
         <Button onClick={handlePrint} disabled={isPrinting}>
