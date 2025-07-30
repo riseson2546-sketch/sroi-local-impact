@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, User, Calendar, Building, MessageSquare, BarChart3, Target, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
-// --- โครงสร้างคำถามและตัวเลือกทั้งหมด ---
+// --- โครงสร้างคำถามและตัวเลือกทั้งหมด (คงเดิม) ---
 const knowledgeOutcomes = ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"];
 const applicationOutcomes = ["นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง", "สามารถพัฒนาฐานข้อมูลเมืองของตนได้", "สามารถพัฒนาข้อเสนอโครงงานพัฒนาเมืองและนำไปสู่การนำเสนอไอเดีย (Pitching) ขอทุนได้", "ประสานความร่วมมือกับภาคส่วนต่าง ๆ ในการพัฒนาเมือง"];
 const problemsBefore = [{ text: "มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่", hasDetail: true }, { text: "วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น", hasDetail: true }, { text: "การบริหารจัดการองค์กร", hasDetail: true }, { text: "ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน", hasDetail: true }, { text: "ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น", hasDetail: true }, { text: "ไม่ใช้ข้อมูลเป็นฐานในการวางแผน", hasDetail: true }, { text: "บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด", hasDetail: true }, { text: "ขาดเครือข่ายในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดความรู้ทักษะในการพัฒนาเมือง", hasDetail: true }, { text: "ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง", hasDetail: true }];
@@ -23,28 +23,19 @@ const section3Factors = [{ category: "1. ทรัพยากรภายใน
 
 // Helper Components & Functions
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
-const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
+const renderCheckboxes = (title: string, options: string[], selectedValues: string[] = [], otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${Array.isArray(selectedValues) && selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{Array.isArray(selectedValues) && selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${Array.isArray(selectedValues) && selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className="mt-1 w-5 h-5 r-m border-2 bg-white border-gray-300 shrink-0" /><span className="text-sm text-gray-500">อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
 
-// ฟังก์ชันสำหรับแสดงข้อ 1.3 ที่มีรายละเอียดเพิ่มเติม (ฉบับปรับปรุง)
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    // ดึงข้อมูลที่เลือกจาก root object โดยตรง
     const selectedValues = allData.section1_problems_before || [];
-    
-    // ฟังก์ชันสำหรับหาข้อมูลรายละเอียด
     const findDetailValue = (index: number) => {
         const key = `section1_problems_detail_${index}`;
         let value = allData?.[key];
-
         if (typeof value === 'string') {
-            // จัดการกับข้อมูลที่เป็น string ที่มี quote ซ้อน หรือเป็น "null"
             value = value.replace(/^"(.*)"$/, '$1').replace(/\\"/g, '"');
-            if (value.trim().toLowerCase() === 'null' || value.trim() === '') {
-                return null;
-            }
+            if (value.trim().toLowerCase() === 'null' || value.trim() === '') return null;
         }
-        return value || null; // คืนค่า null หากไม่มีข้อมูล
+        return value || null;
     };
-    
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
             <h4 className="font-semibold mb-3">{title}</h4>
@@ -52,7 +43,6 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                 {options.map((opt, i) => { 
                     const isChecked = Array.isArray(selectedValues) && selectedValues.includes(opt.text);
                     const detailValue = findDetailValue(i);
-                    
                     return (
                         <div key={i} className="print-sub-item">
                             <div className="flex items-start space-x-3">
@@ -64,11 +54,7 @@ const renderProblemsCheckboxes = (title: string, options: { text: string, hasDet
                             {isChecked && opt.hasDetail && (
                                 <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
                                     <p className="text-sm text-blue-800">
-                                        <strong>ระบุ:</strong> {detailValue ? (
-                                            <span className="text-green-700 font-medium">{detailValue}</span>
-                                        ) : (
-                                            <span className="text-gray-400 italic">ไม่ได้ระบุ</span>
-                                        )}
+                                        <strong>ระบุ:</strong> {detailValue ? (<span className="text-green-700 font-medium">{detailValue}</span>) : (<span className="text-gray-400 italic">ไม่ได้ระบุ</span>)}
                                     </p>
                                 </div>
                             )}
@@ -86,37 +72,60 @@ const renderRatingScale = (title: string, value?: number, max = 10, description?
 const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
   const [isPrinting, setIsPrinting] = useState(false);
   
-  // ข้อมูลผู้ตอบอาจถูก join มาในระดับบน
-  const respondent = data.respondent || {}; 
+  // ==================== START: DATA EXTRACTION LOGIC (IMPROVED) ====================
   
-  // Section 1: ข้อมูลอยู่ที่ระดับ root ของ object ที่ได้รับมา
-  const section1 = data || {}; 
+  /**
+   * A robust function to get section data.
+   * It prioritizes the standard Supabase relational query structure (nested array)
+   * and falls back to other possible structures (stringified JSON, direct object).
+   * @param data - The main data object from the prop.
+   * @param relationalKey - The key for the nested relational data (e.g., 'survey_responses_section2').
+   * @param stringKey - The key for the stringified JSON data (e.g., 'section2').
+   * @returns The extracted section data object, or an empty object if not found.
+   */
+  const getSectionData = (data: any, relationalKey: string, stringKey: string): any => {
+    // Priority 1: Check for Supabase relational data (e.g., data.survey_responses_section2)
+    if (Array.isArray(data[relationalKey]) && data[relationalKey].length > 0) {
+      return data[relationalKey][0] || {};
+    }
 
-  // Section 2: ข้อมูลเป็น JSON string ต้องทำการ parse ก่อนใช้งาน
-  const section2 = (() => {
-    if (typeof data.section2 === 'string') {
+    // Priority 2: Fallback to a stringified JSON in a column (e.g., data.section2)
+    if (typeof data[stringKey] === 'string') {
       try {
-        return JSON.parse(data.section2) || {};
+        const parsed = JSON.parse(data[stringKey]);
+        // The string could be a stringified array '[{...}]' or a direct object '{...}'
+        return (Array.isArray(parsed) && parsed.length > 0) ? parsed[0] : parsed || {};
       } catch (e) {
-        console.error("Error parsing section2 JSON string:", data.section2, e);
+        console.error(`Error parsing JSON from key "${stringKey}":`, e);
         return {};
       }
     }
-    return data.section2 || {}; // รองรับกรณีที่ข้อมูลเป็น object อยู่แล้ว
-  })();
 
-  // Section 3: ข้อมูลเป็น JSON string เช่นกัน
-  const section3 = (() => {
-    if (typeof data.section3 === 'string') {
-      try {
-        return JSON.parse(data.section3) || {};
-      } catch (e) {
-        console.error("Error parsing section3 JSON string:", data.section3, e);
-        return {};
-      }
+    // Priority 3: Check if the data is already a direct object
+    if (typeof data[stringKey] === 'object' && data[stringKey] !== null) {
+      return data[stringKey];
     }
-    return data.section3 || {}; // รองรับกรณีที่ข้อมูลเป็น object อยู่แล้ว
-  })();
+    
+    return {};
+  };
+  
+  // Section 1 data is flat at the root level.
+  const section1 = data || {};
+  
+  // Use the robust function to get section 2 and 3 data.
+  // This correctly handles data from Supabase table editor/client.
+  const section2 = getSectionData(data, 'survey_responses_section2', 'section2');
+  const section3 = getSectionData(data, 'survey_responses_section3', 'section3');
+
+  // Respondent info might be nested or at the root. We check both.
+  const respondent = data.respondent || {
+    name: data.name,
+    position: data.position,
+    organization: data.organization,
+    survey_date: data.created_at ? new Date(data.created_at).toLocaleDateString('th-TH') : 'N/A'
+  };
+
+  // ==================== END: DATA EXTRACTION LOGIC ====================
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -168,7 +177,6 @@ const CompleteSurveyViewer: React.FC<{ data?: any }> = ({ data = {} }) => {
             {renderCheckboxes("1.1 ผลลัพธ์: ด้านการประยุกต์ใช้องค์ความรู้", applicationOutcomes, section1.section1_application_outcomes, section1.section1_application_other)}
             {renderTextField("1.2 โปรดอธิบายการเปลี่ยนแปลงที่เกิดขึ้นในพื้นที่ของท่าน จากองค์ความรู้และการประยุกต์ใช้องค์ความรู้ที่ได้จากการอบรมหลักสูตร พมส. ตามที่ท่านระบุไว้ในข้อ 1.1", section1.section1_changes_description)}
             
-            {/* เรียกใช้ฟังก์ชันที่ปรับปรุงแล้ว โดยส่ง data ทั้ง object เข้าไป */}
             {renderProblemsCheckboxes("1.3 ก่อนเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ภาพรวมในพื้นที่ของท่านมีปัญหาอะไร", problemsBefore, data)}
 
             {renderCheckboxes("1.4 องค์ความรู้ของหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) ท่านนำไปใช้ประโยชน์ในการแก้ไขปัญหาตามที่ระบุในข้อ 1.3 อย่างไร", knowledgeSolutions, section1.section1_knowledge_solutions, section1.section1_knowledge_solutions_other)}
