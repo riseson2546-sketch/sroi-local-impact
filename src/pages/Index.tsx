@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Users, Settings, HelpCircle, ChevronDown, ChevronUp, Clock, Save, Shield, BookOpen } from 'lucide-react';
 
 const Index = () => {
-  const navigate = useNavigate();
+  const handleNavigation = (path) => {
+    // In your actual app, replace with: navigate(path)
+    console.log(`Navigating to: ${path}`);
+  };
   const [showInstructions, setShowInstructions] = useState(false);
 
   return (
@@ -161,7 +163,7 @@ const Index = () => {
             <CardContent>
               <Button 
                 className="w-full" 
-                onClick={() => navigate('/login')}
+                onClick={() => handleNavigation('/login')}
               >
                 เริ่มตอบแบบสอบถาม
               </Button>
@@ -180,7 +182,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 className="w-full" 
-                onClick={() => navigate('/admin-login')}
+                onClick={() => handleNavigation('/admin-login')}
               >
                 เข้าสู่ระบบจัดการ
               </Button>
