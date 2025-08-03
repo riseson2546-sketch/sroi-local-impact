@@ -180,10 +180,43 @@ const Survey = () => {
     }
   };
 
+  // ตรวจสอบว่าส่วนไหนเสร็จสิ้นแล้ว
+  const isSectionCompleted = (section: number) => {
+    if (section === 1) {
+      return existingResponse !== null;
+    } else if (section === 2) {
+      return existingResponse && formData.section2 && Object.keys(formData.section2).length > 0;
+    } else if (section === 3) {
+      return existingResponse && formData.section3 && Object.keys(formData.section3).length > 0;
+    }
+    return false;
+  };
+
+  // ตรวจสอบว่าสามารถเข้าถึงส่วนนั้นได้หรือไม่
+  const canAccessSection = (section: number) => {
+    if (section === 1) return true; // section 1 เข้าได้เสมอ
+    if (section === 2) return isSectionCompleted(1); // section 2 ต้องทำ section 1 เสร็จก่อน
+    if (section === 3) return isSectionCompleted(1) && isSectionCompleted(2); // section 3 ต้องทำ section 1,2 เสร็จก่อน
+    return false;
+  };
+
+  const handleSectionChange = (section: number) => {
+    if (!canAccessSection(section)) {
+      toast({
+        title: "ไม่สามารถเข้าถึงส่วนนี้ได้",
+        description: `กรุณาทำส่วนที่ ${section - 1} ให้เสร็จสิ้นก่อน`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setCurrentSection(section);
+  };
+
   const handleSubmitSurvey = async () => {
-    if (!existingResponse) {
+    if (!existingResponse || !isSectionCompleted(2) || !isSectionCompleted(3)) {
       toast({
         title: "กรุณาทำแบบสอบถามให้ครบทุกส่วน",
+        description: "กรุณาตอบแบบสอบถามทุกส่วนให้เสร็จสิ้น",
         variant: "destructive",
       });
       return;
@@ -220,10 +253,20 @@ const Survey = () => {
               <Button
                 key={section}
                 variant={currentSection === section ? "default" : "outline"}
-                onClick={() => setCurrentSection(section)}
-                className="min-w-[100px]"
+                onClick={() => handleSectionChange(section)}
+                disabled={!canAccessSection(section)}
+                className={`min-w-[100px] ${
+                  isSectionCompleted(section) 
+                    ? 'bg-green-50 border-green-200 text-green-700' 
+                    : ''
+                } ${
+                  !canAccessSection(section) 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : ''
+                }`}
               >
                 ส่วนที่ {section}
+                {isSectionCompleted(section) && <span className="ml-1">✓</span>}
               </Button>
             ))}
           </div>
