@@ -131,6 +131,50 @@ const AdminDashboard = () => {
       }
     };
 
+    // แมปชื่อฟิลด์เป็นชื่อข้อคำถาม
+    const fieldNameMap: { [key: string]: string } = {
+      // Section 1
+      'section1_knowledge_outcomes': '1.1 ผลลัพธ์ด้านความรู้',
+      'section1_application_outcomes': '1.2 ผลลัพธ์ด้านการประยุกต์ใช้',
+      'section1_knowledge_before': '1.3 ระดับความรู้ก่อน',
+      'section1_knowledge_after': '1.4 ระดับความรู้หลัง',
+      'section1_overall_change_level': '1.5 ระดับการเปลี่ยนแปลงโดยรวม',
+      'section1_success_factors': '1.6 ปัจจัยความสำเร็จ',
+      'section1_problems_before': '1.7 ปัญหาก่อนเข้าร่วม',
+      'section1_knowledge_solutions': '1.8 วิธีแก้ปัญหาด้านความรู้',
+      'section1_changes_description': '1.9 คำอธิบายการเปลี่ยนแปลง',
+      'section1_success_description': '1.10 คำอธิบายความสำเร็จ',
+      
+      // Section 2
+      'section2_partner_organizations': '2.1 หน่วยงานพันธมิตร',
+      'section2_data_types': '2.2 ประเภทข้อมูล',
+      'section2_data_level': '2.3 ระดับข้อมูล',
+      'section2_data_sources': '2.4 แหล่งข้อมูล',
+      'section2_partner_participation': '2.5 การมีส่วนร่วมของพันธมิตร',
+      'section2_network_expansion': '2.6 การขยายเครือข่าย',
+      'section2_applications': '2.7 การประยุกต์ใช้',
+      'section2_continued_development': '2.8 การพัฒนาต่อเนื่อง',
+      'section2_data_benefits': '2.9 ประโยชน์จากข้อมูล',
+      
+      // Section 3
+      'leadership_importance': '3.1 ความสำคัญของภาวะผู้นำ',
+      'staff_importance': '3.2 ความสำคัญของบุคลากร',
+      'communication_to_users': '3.3 การสื่อสารกับผู้ใช้',
+      'reaching_target_groups': '3.4 การเข้าถึงกลุ่มเป้าหมาย',
+      'budget_system_development': '3.5 งบประมาณพัฒนาระบบ',
+      'budget_knowledge_development': '3.6 งบประมาณพัฒนาความรู้',
+      'cooperation_between_agencies': '3.7 ความร่วมมือระหว่างหน่วยงาน',
+      'innovation_ecosystem': '3.8 ระบบนิเวศนวัตกรรม',
+      'government_digital_support': '3.9 การสนับสนุนดิจิทัลภาครัฐ',
+      'digital_infrastructure': '3.10 โครงสร้างพื้นฐานดิจิทัล',
+      'digital_mindset': '3.11 กรอบความคิดดิจิทัล',
+      'learning_organization': '3.12 องค์กรแห่งการเรียนรู้',
+      'it_skills': '3.13 ทักษะด้าน IT',
+      'internal_communication': '3.14 การสื่อสารภายใน',
+      'policy_continuity': '3.15 ความต่อเนื่องนโยบาย',
+      'policy_stability': '3.16 ความมั่นคงนโยบาย'
+    };
+
     // ตรวจสอบ Section 1
     const requiredSection1Fields = [
       'section1_knowledge_outcomes',
@@ -143,7 +187,7 @@ const AdminDashboard = () => {
 
     requiredSection1Fields.forEach(field => {
       if (!response[field] || (Array.isArray(response[field]) && response[field].length === 0)) {
-        status.section1.missingFields.push(field);
+        status.section1.missingFields.push(fieldNameMap[field] || field);
       }
     });
     status.section1.completed = status.section1.missingFields.length === 0;
@@ -159,12 +203,12 @@ const AdminDashboard = () => {
 
       requiredSection2Fields.forEach(field => {
         if (!section2Data[field] || (Array.isArray(section2Data[field]) && section2Data[field].length === 0)) {
-          status.section2.missingFields.push(field);
+          status.section2.missingFields.push(fieldNameMap[field] || field);
         }
       });
       status.section2.completed = status.section2.missingFields.length === 0;
     } else {
-      status.section2.missingFields = ['ไม่มีข้อมูล Section 2'];
+      status.section2.missingFields = ['ส่วนที่ 2 ทั้งหมด'];
     }
 
     // ตรวจสอบ Section 3
@@ -180,12 +224,12 @@ const AdminDashboard = () => {
 
       requiredSection3Fields.forEach(field => {
         if (!section3Data[field]) {
-          status.section3.missingFields.push(field);
+          status.section3.missingFields.push(fieldNameMap[field] || field);
         }
       });
       status.section3.completed = status.section3.missingFields.length === 0;
     } else {
-      status.section3.missingFields = ['ไม่มีข้อมูล Section 3'];
+      status.section3.missingFields = ['ส่วนที่ 3 ทั้งหมด'];
     }
 
     return status;
@@ -218,17 +262,17 @@ const AdminDashboard = () => {
     const detailedStatus = getDetailedCompletionStatus(response);
     const missingParts = [];
 
-    if (!detailedStatus.section1.completed) {
-      missingParts.push(`ส่วนที่ 1: ${detailedStatus.section1.missingFields.length} ข้อ`);
+    if (!detailedStatus.section1.completed && detailedStatus.section1.missingFields.length > 0) {
+      missingParts.push(`ส่วนที่ 1: ขาด ${detailedStatus.section1.missingFields.join(', ')}`);
     }
-    if (!detailedStatus.section2.completed) {
-      missingParts.push(`ส่วนที่ 2: ${detailedStatus.section2.missingFields.length} ข้อ`);
+    if (!detailedStatus.section2.completed && detailedStatus.section2.missingFields.length > 0) {
+      missingParts.push(`ส่วนที่ 2: ขาด ${detailedStatus.section2.missingFields.join(', ')}`);
     }
-    if (!detailedStatus.section3.completed) {
-      missingParts.push(`ส่วนที่ 3: ${detailedStatus.section3.missingFields.length} ข้อ`);
+    if (!detailedStatus.section3.completed && detailedStatus.section3.missingFields.length > 0) {
+      missingParts.push(`ส่วนที่ 3: ขาด ${detailedStatus.section3.missingFields.join(', ')}`);
     }
 
-    return missingParts.length > 0 ? missingParts.join(', ') : 'ครบถ้วน';
+    return missingParts.length > 0 ? missingParts.join(' | ') : 'ครบถ้วนทุกข้อ';
   };
 
   // Handle ESC key to close modal
@@ -325,8 +369,8 @@ const AdminDashboard = () => {
                     <TableCell>{response.survey_users?.organization}</TableCell>
                     <TableCell>{response.survey_users?.phone}</TableCell>
                     <TableCell><Badge className={getStatusColor(getCompletionStatus(response))}>{getCompletionStatus(response)}</Badge></TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[200px]">
-                      <div className="truncate" title={getMissingFieldsDescription(response)}>
+                    <TableCell className="text-xs text-muted-foreground max-w-[300px]">
+                      <div className="whitespace-normal leading-relaxed" title={getMissingFieldsDescription(response)}>
                         {getMissingFieldsDescription(response)}
                       </div>
                     </TableCell>
