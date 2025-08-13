@@ -114,14 +114,94 @@ const AdminDashboard = () => {
     navigate('/admin-login');
   };
 
+  // ตรวจสอบสถานะการตอบแบบละเอียด
+  const getDetailedCompletionStatus = (response: any) => {
+    const status = {
+      section1: {
+        completed: false,
+        missingFields: [] as string[]
+      },
+      section2: {
+        completed: false,
+        missingFields: [] as string[]
+      },
+      section3: {
+        completed: false,
+        missingFields: [] as string[]
+      }
+    };
+
+    // ตรวจสอบ Section 1
+    const requiredSection1Fields = [
+      'section1_knowledge_outcomes',
+      'section1_application_outcomes', 
+      'section1_knowledge_before',
+      'section1_knowledge_after',
+      'section1_overall_change_level',
+      'section1_success_factors'
+    ];
+
+    requiredSection1Fields.forEach(field => {
+      if (!response[field] || (Array.isArray(response[field]) && response[field].length === 0)) {
+        status.section1.missingFields.push(field);
+      }
+    });
+    status.section1.completed = status.section1.missingFields.length === 0;
+
+    // ตรวจสอบ Section 2
+    if (response.survey_responses_section2 && response.survey_responses_section2.length > 0) {
+      const section2Data = response.survey_responses_section2[0];
+      const requiredSection2Fields = [
+        'section2_partner_organizations',
+        'section2_data_types',
+        'section2_data_level'
+      ];
+
+      requiredSection2Fields.forEach(field => {
+        if (!section2Data[field] || (Array.isArray(section2Data[field]) && section2Data[field].length === 0)) {
+          status.section2.missingFields.push(field);
+        }
+      });
+      status.section2.completed = status.section2.missingFields.length === 0;
+    } else {
+      status.section2.missingFields = ['ไม่มีข้อมูล Section 2'];
+    }
+
+    // ตรวจสอบ Section 3
+    if (response.survey_responses_section3 && response.survey_responses_section3.length > 0) {
+      const section3Data = response.survey_responses_section3[0];
+      const requiredSection3Fields = [
+        'leadership_importance',
+        'staff_importance',
+        'communication_to_users',
+        'reaching_target_groups',
+        'budget_system_development'
+      ];
+
+      requiredSection3Fields.forEach(field => {
+        if (!section3Data[field]) {
+          status.section3.missingFields.push(field);
+        }
+      });
+      status.section3.completed = status.section3.missingFields.length === 0;
+    } else {
+      status.section3.missingFields = ['ไม่มีข้อมูล Section 3'];
+    }
+
+    return status;
+  };
+
   const getCompletionStatus = (response: any) => {
-    const hasSection1 = response.section1_knowledge_outcomes?.length > 0;
-    const hasSection2 = response.survey_responses_section2?.length > 0;
-    const hasSection3 = response.survey_responses_section3?.length > 0;
-    
-    if (hasSection1 && hasSection2 && hasSection3) return 'สมบูรณ์';
-    if (hasSection1 && hasSection2) return 'ส่วนที่ 1-2';
-    if (hasSection1) return 'ส่วนที่ 1';
+    const detailedStatus = getDetailedCompletionStatus(response);
+    const completedSections = [
+      detailedStatus.section1.completed,
+      detailedStatus.section2.completed,
+      detailedStatus.section3.completed
+    ].filter(Boolean).length;
+
+    if (completedSections === 3) return 'สมบูรณ์';
+    if (completedSections === 2) return 'ส่วนที่ 1-2';
+    if (completedSections === 1) return 'ส่วนที่ 1';
     return 'ไม่สมบูรณ์';
   };
 
@@ -132,6 +212,23 @@ const AdminDashboard = () => {
       case 'ส่วนที่ 1': return 'bg-orange-100 text-orange-800';
       default: return 'bg-red-100 text-red-800';
     }
+  };
+
+  const getMissingFieldsDescription = (response: any) => {
+    const detailedStatus = getDetailedCompletionStatus(response);
+    const missingParts = [];
+
+    if (!detailedStatus.section1.completed) {
+      missingParts.push(`ส่วนที่ 1: ${detailedStatus.section1.missingFields.length} ข้อ`);
+    }
+    if (!detailedStatus.section2.completed) {
+      missingParts.push(`ส่วนที่ 2: ${detailedStatus.section2.missingFields.length} ข้อ`);
+    }
+    if (!detailedStatus.section3.completed) {
+      missingParts.push(`ส่วนที่ 3: ${detailedStatus.section3.missingFields.length} ข้อ`);
+    }
+
+    return missingParts.length > 0 ? missingParts.join(', ') : 'ครบถ้วน';
   };
 
   // Handle ESC key to close modal
@@ -215,6 +312,7 @@ const AdminDashboard = () => {
                   <TableHead>หน่วยงาน</TableHead>
                   <TableHead>เบอร์โทร</TableHead>
                   <TableHead>สถานะ</TableHead>
+                  <TableHead>รายละเอียดที่ขาด</TableHead>
                   <TableHead>วันที่ตอบ</TableHead>
                   <TableHead>การดำเนินการ</TableHead>
                 </TableRow>
@@ -227,6 +325,11 @@ const AdminDashboard = () => {
                     <TableCell>{response.survey_users?.organization}</TableCell>
                     <TableCell>{response.survey_users?.phone}</TableCell>
                     <TableCell><Badge className={getStatusColor(getCompletionStatus(response))}>{getCompletionStatus(response)}</Badge></TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px]">
+                      <div className="truncate" title={getMissingFieldsDescription(response)}>
+                        {getMissingFieldsDescription(response)}
+                      </div>
+                    </TableCell>
                     <TableCell>{new Date(response.created_at).toLocaleDateString('th-TH')}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
