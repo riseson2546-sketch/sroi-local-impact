@@ -119,118 +119,139 @@ const AdminDashboard = () => {
     const status = {
       section1: {
         completed: false,
-        missingFields: [] as string[]
+        missingFields: [] as string[],
+        completedFields: [] as string[]
       },
       section2: {
         completed: false,
-        missingFields: [] as string[]
+        missingFields: [] as string[],
+        completedFields: [] as string[]
       },
       section3: {
         completed: false,
-        missingFields: [] as string[]
+        missingFields: [] as string[],
+        completedFields: [] as string[]
       }
     };
 
-    // แมปชื่อฟิลด์เป็นชื่อข้อคำถาม
-    const fieldNameMap: { [key: string]: string } = {
+    // ข้อคำถามทั้งหมดในแต่ละส่วน
+    const allSection1Fields = [
+      '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9', '1.10',
+      '1.11', '1.12', '1.13', '1.14', '1.15', '1.16', '1.17', '1.18', '1.19', '1.20'
+    ];
+
+    const allSection2Fields = [
+      '2.1', '2.2', '2.3', '2.4', '2.5', '2.6', '2.7', '2.8', '2.9'
+    ];
+
+    const allSection3Fields = [
+      '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10',
+      '3.11', '3.12', '3.13', '3.14', '3.15', '3.16'
+    ];
+
+    // แมปฟิลด์ฐานข้อมูลกับเลขข้อ
+    const fieldToQuestionMap: { [key: string]: string } = {
       // Section 1
-      'section1_knowledge_outcomes': '1.1 ผลลัพธ์ด้านความรู้',
-      'section1_application_outcomes': '1.2 ผลลัพธ์ด้านการประยุกต์ใช้',
-      'section1_knowledge_before': '1.3 ระดับความรู้ก่อน',
-      'section1_knowledge_after': '1.4 ระดับความรู้หลัง',
-      'section1_overall_change_level': '1.5 ระดับการเปลี่ยนแปลงโดยรวม',
-      'section1_success_factors': '1.6 ปัจจัยความสำเร็จ',
-      'section1_problems_before': '1.7 ปัญหาก่อนเข้าร่วม',
-      'section1_knowledge_solutions': '1.8 วิธีแก้ปัญหาด้านความรู้',
-      'section1_changes_description': '1.9 คำอธิบายการเปลี่ยนแปลง',
-      'section1_success_description': '1.10 คำอธิบายความสำเร็จ',
+      'section1_knowledge_outcomes': '1.1',
+      'section1_application_outcomes': '1.2', 
+      'section1_knowledge_before': '1.3',
+      'section1_knowledge_after': '1.4',
+      'section1_overall_change_level': '1.5',
+      'section1_success_factors': '1.6',
+      'section1_problems_before': '1.7',
+      'section1_knowledge_solutions': '1.8',
+      'section1_changes_description': '1.9',
+      'section1_success_description': '1.10',
+      'section1_it_level': '1.11',
+      'section1_cooperation_level': '1.12',
+      'section1_funding_level': '1.13',
+      'section1_culture_level': '1.14',
+      'section1_green_level': '1.15',
+      'section1_new_dev_level': '1.16',
+      'section1_it_usage': '1.17',
+      'section1_cooperation_usage': '1.18',
+      'section1_funding_usage': '1.19',
+      'section1_culture_usage': '1.20',
       
       // Section 2
-      'section2_partner_organizations': '2.1 หน่วยงานพันธมิตร',
-      'section2_data_types': '2.2 ประเภทข้อมูล',
-      'section2_data_level': '2.3 ระดับข้อมูล',
-      'section2_data_sources': '2.4 แหล่งข้อมูล',
-      'section2_partner_participation': '2.5 การมีส่วนร่วมของพันธมิตร',
-      'section2_network_expansion': '2.6 การขยายเครือข่าย',
-      'section2_applications': '2.7 การประยุกต์ใช้',
-      'section2_continued_development': '2.8 การพัฒนาต่อเนื่อง',
-      'section2_data_benefits': '2.9 ประโยชน์จากข้อมูล',
+      'section2_partner_organizations': '2.1',
+      'section2_data_types': '2.2',
+      'section2_data_level': '2.3',
+      'section2_data_sources': '2.4',
+      'section2_partner_participation': '2.5',
+      'section2_network_expansion': '2.6',
+      'section2_applications': '2.7',
+      'section2_continued_development': '2.8',
+      'section2_data_benefits': '2.9',
       
       // Section 3
-      'leadership_importance': '3.1 ความสำคัญของภาวะผู้นำ',
-      'staff_importance': '3.2 ความสำคัญของบุคลากร',
-      'communication_to_users': '3.3 การสื่อสารกับผู้ใช้',
-      'reaching_target_groups': '3.4 การเข้าถึงกลุ่มเป้าหมาย',
-      'budget_system_development': '3.5 งบประมาณพัฒนาระบบ',
-      'budget_knowledge_development': '3.6 งบประมาณพัฒนาความรู้',
-      'cooperation_between_agencies': '3.7 ความร่วมมือระหว่างหน่วยงาน',
-      'innovation_ecosystem': '3.8 ระบบนิเวศนวัตกรรม',
-      'government_digital_support': '3.9 การสนับสนุนดิจิทัลภาครัฐ',
-      'digital_infrastructure': '3.10 โครงสร้างพื้นฐานดิจิทัล',
-      'digital_mindset': '3.11 กรอบความคิดดิจิทัล',
-      'learning_organization': '3.12 องค์กรแห่งการเรียนรู้',
-      'it_skills': '3.13 ทักษะด้าน IT',
-      'internal_communication': '3.14 การสื่อสารภายใน',
-      'policy_continuity': '3.15 ความต่อเนื่องนโยบาย',
-      'policy_stability': '3.16 ความมั่นคงนโยบาย'
+      'leadership_importance': '3.1',
+      'staff_importance': '3.2',
+      'communication_to_users': '3.3',
+      'reaching_target_groups': '3.4',
+      'budget_system_development': '3.5',
+      'budget_knowledge_development': '3.6',
+      'cooperation_between_agencies': '3.7',
+      'innovation_ecosystem': '3.8',
+      'government_digital_support': '3.9',
+      'digital_infrastructure': '3.10',
+      'digital_mindset': '3.11',
+      'learning_organization': '3.12',
+      'it_skills': '3.13',
+      'internal_communication': '3.14',
+      'policy_continuity': '3.15',
+      'policy_stability': '3.16'
     };
 
     // ตรวจสอบ Section 1
-    const requiredSection1Fields = [
-      'section1_knowledge_outcomes',
-      'section1_application_outcomes', 
-      'section1_knowledge_before',
-      'section1_knowledge_after',
-      'section1_overall_change_level',
-      'section1_success_factors'
-    ];
-
-    requiredSection1Fields.forEach(field => {
+    const section1Fields = Object.keys(fieldToQuestionMap).filter(field => field.startsWith('section1_'));
+    section1Fields.forEach(field => {
+      const questionNum = fieldToQuestionMap[field];
       if (!response[field] || (Array.isArray(response[field]) && response[field].length === 0)) {
-        status.section1.missingFields.push(fieldNameMap[field] || field);
+        status.section1.missingFields.push(questionNum);
+      } else {
+        status.section1.completedFields.push(questionNum);
       }
     });
-    status.section1.completed = status.section1.missingFields.length === 0;
 
     // ตรวจสอบ Section 2
     if (response.survey_responses_section2 && response.survey_responses_section2.length > 0) {
       const section2Data = response.survey_responses_section2[0];
-      const requiredSection2Fields = [
-        'section2_partner_organizations',
-        'section2_data_types',
-        'section2_data_level'
-      ];
-
-      requiredSection2Fields.forEach(field => {
+      const section2Fields = Object.keys(fieldToQuestionMap).filter(field => field.startsWith('section2_'));
+      
+      section2Fields.forEach(field => {
+        const questionNum = fieldToQuestionMap[field];
         if (!section2Data[field] || (Array.isArray(section2Data[field]) && section2Data[field].length === 0)) {
-          status.section2.missingFields.push(fieldNameMap[field] || field);
+          status.section2.missingFields.push(questionNum);
+        } else {
+          status.section2.completedFields.push(questionNum);
         }
       });
-      status.section2.completed = status.section2.missingFields.length === 0;
     } else {
-      status.section2.missingFields = ['ส่วนที่ 2 ทั้งหมด'];
+      status.section2.missingFields = [...allSection2Fields];
     }
 
     // ตรวจสอบ Section 3
     if (response.survey_responses_section3 && response.survey_responses_section3.length > 0) {
       const section3Data = response.survey_responses_section3[0];
-      const requiredSection3Fields = [
-        'leadership_importance',
-        'staff_importance',
-        'communication_to_users',
-        'reaching_target_groups',
-        'budget_system_development'
-      ];
-
-      requiredSection3Fields.forEach(field => {
+      const section3Fields = Object.keys(fieldToQuestionMap).filter(field => !field.startsWith('section1_') && !field.startsWith('section2_'));
+      
+      section3Fields.forEach(field => {
+        const questionNum = fieldToQuestionMap[field];
         if (!section3Data[field]) {
-          status.section3.missingFields.push(fieldNameMap[field] || field);
+          status.section3.missingFields.push(questionNum);
+        } else {
+          status.section3.completedFields.push(questionNum);
         }
       });
-      status.section3.completed = status.section3.missingFields.length === 0;
     } else {
-      status.section3.missingFields = ['ส่วนที่ 3 ทั้งหมด'];
+      status.section3.missingFields = [...allSection3Fields];
     }
+
+    // กำหนดสถานะความสมบูรณ์
+    status.section1.completed = status.section1.missingFields.length === 0;
+    status.section2.completed = status.section2.missingFields.length === 0;
+    status.section3.completed = status.section3.missingFields.length === 0;
 
     return status;
   };
@@ -260,19 +281,33 @@ const AdminDashboard = () => {
 
   const getMissingFieldsDescription = (response: any) => {
     const detailedStatus = getDetailedCompletionStatus(response);
-    const missingParts = [];
+    const descriptions = [];
 
-    if (!detailedStatus.section1.completed && detailedStatus.section1.missingFields.length > 0) {
-      missingParts.push(`ส่วนที่ 1: ขาด ${detailedStatus.section1.missingFields.join(', ')}`);
-    }
-    if (!detailedStatus.section2.completed && detailedStatus.section2.missingFields.length > 0) {
-      missingParts.push(`ส่วนที่ 2: ขาด ${detailedStatus.section2.missingFields.join(', ')}`);
-    }
-    if (!detailedStatus.section3.completed && detailedStatus.section3.missingFields.length > 0) {
-      missingParts.push(`ส่วนที่ 3: ขาด ${detailedStatus.section3.missingFields.join(', ')}`);
-    }
+    // ฟังก์ชันสำหรับแสดงรายละเอียดแต่ละส่วน
+    const getSectionDescription = (sectionNum: number, missingFields: string[], completedFields: string[], allFields: string[]) => {
+      if (missingFields.length === 0) {
+        return `ส่วนที่ ${sectionNum}: ครบถ้วนทุกข้อ`;
+      } else if (missingFields.length === allFields.length) {
+        return `ส่วนที่ ${sectionNum}: ไม่ได้ตอบเลย`;
+      } else if (missingFields.length > allFields.length / 2) {
+        // ถ้าขาดมากกว่าครึ่ง แสดงข้อที่ตอบแล้ว (ขาดเว้นข้อ...)
+        return `ส่วนที่ ${sectionNum}: ขาดเกือบหมด (ตอบแล้วเพียงข้อ ${completedFields.sort().join(', ')})`;
+      } else {
+        // ถ้าขาดน้อยกว่าครึ่ง แสดงข้อที่ขาด
+        return `ส่วนที่ ${sectionNum}: ขาดข้อ ${missingFields.sort().join(', ')}`;
+      }
+    };
 
-    return missingParts.length > 0 ? missingParts.join(' | ') : 'ครบถ้วนทุกข้อ';
+    // แสดงรายละเอียดแต่ละส่วน
+    const allSection1Fields = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.9', '1.10', '1.11', '1.12', '1.13', '1.14', '1.15', '1.16', '1.17', '1.18', '1.19', '1.20'];
+    const allSection2Fields = ['2.1', '2.2', '2.3', '2.4', '2.5', '2.6', '2.7', '2.8', '2.9'];
+    const allSection3Fields = ['3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14', '3.15', '3.16'];
+
+    descriptions.push(getSectionDescription(1, detailedStatus.section1.missingFields, detailedStatus.section1.completedFields, allSection1Fields));
+    descriptions.push(getSectionDescription(2, detailedStatus.section2.missingFields, detailedStatus.section2.completedFields, allSection2Fields));
+    descriptions.push(getSectionDescription(3, detailedStatus.section3.missingFields, detailedStatus.section3.completedFields, allSection3Fields));
+
+    return descriptions.join(' | ');
   };
 
   // Handle ESC key to close modal
@@ -369,8 +404,8 @@ const AdminDashboard = () => {
                     <TableCell>{response.survey_users?.organization}</TableCell>
                     <TableCell>{response.survey_users?.phone}</TableCell>
                     <TableCell><Badge className={getStatusColor(getCompletionStatus(response))}>{getCompletionStatus(response)}</Badge></TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[300px]">
-                      <div className="whitespace-normal leading-relaxed" title={getMissingFieldsDescription(response)}>
+                    <TableCell className="text-xs text-muted-foreground max-w-[400px]">
+                      <div className="whitespace-normal leading-relaxed text-wrap" title={getMissingFieldsDescription(response)}>
                         {getMissingFieldsDescription(response)}
                       </div>
                     </TableCell>
