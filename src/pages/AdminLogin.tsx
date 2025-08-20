@@ -65,8 +65,11 @@ const AdminLogin = () => {
 
         toast({
           title: "ลงทะเบียนสำเร็จ",
-          description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีของท่าน",
+          description: "คุณสามารถเข้าสู่ระบบได้ทันที",
         });
+        
+        // เปลี่ยนไปหน้าเข้าสู่ระบบ
+        setFormData(prev => ({ ...prev, isLogin: true, password: '' }));
       }
     } catch (error: any) {
       toast({
