@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -45,8 +45,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          section1: Json | null
-          section1_application_other: Json | null
           section1_application_outcomes: string[] | null
           section1_changes_description: string | null
           section1_cooperation_level: number | null
@@ -74,32 +72,16 @@ export type Database = {
           section1_new_dev_usage_other: string | null
           section1_overall_change_level: number | null
           section1_problems_before: string[] | null
-          section1_problems_detail_0: Json | null
-          section1_problems_detail_1: Json | null
-          section1_problems_detail_2: Json | null
-          section1_problems_detail_3: Json | null
-          section1_problems_detail_4: string | null
-          section1_problems_detail_5: string | null
-          section1_problems_detail_6: Json | null
-          section1_problems_detail_7: Json | null
-          section1_problems_detail_8: Json | null
-          section1_problems_detail_9: string | null
           section1_problems_other: string | null
           section1_success_description: string | null
           section1_success_factors: string[] | null
           section1_success_factors_other: string | null
-          section2: Json | null
-          section3: Json | null
-          survey_responses_section2: Json | null
-          survey_responses_section3: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          section1?: Json | null
-          section1_application_other?: Json | null
           section1_application_outcomes?: string[] | null
           section1_changes_description?: string | null
           section1_cooperation_level?: number | null
@@ -127,32 +109,16 @@ export type Database = {
           section1_new_dev_usage_other?: string | null
           section1_overall_change_level?: number | null
           section1_problems_before?: string[] | null
-          section1_problems_detail_0?: Json | null
-          section1_problems_detail_1?: Json | null
-          section1_problems_detail_2?: Json | null
-          section1_problems_detail_3?: Json | null
-          section1_problems_detail_4?: string | null
-          section1_problems_detail_5?: string | null
-          section1_problems_detail_6?: Json | null
-          section1_problems_detail_7?: Json | null
-          section1_problems_detail_8?: Json | null
-          section1_problems_detail_9?: string | null
           section1_problems_other?: string | null
           section1_success_description?: string | null
           section1_success_factors?: string[] | null
           section1_success_factors_other?: string | null
-          section2?: Json | null
-          section3?: Json | null
-          survey_responses_section2?: Json | null
-          survey_responses_section3?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          section1?: Json | null
-          section1_application_other?: Json | null
           section1_application_outcomes?: string[] | null
           section1_changes_description?: string | null
           section1_cooperation_level?: number | null
@@ -180,24 +146,10 @@ export type Database = {
           section1_new_dev_usage_other?: string | null
           section1_overall_change_level?: number | null
           section1_problems_before?: string[] | null
-          section1_problems_detail_0?: Json | null
-          section1_problems_detail_1?: Json | null
-          section1_problems_detail_2?: Json | null
-          section1_problems_detail_3?: Json | null
-          section1_problems_detail_4?: string | null
-          section1_problems_detail_5?: string | null
-          section1_problems_detail_6?: Json | null
-          section1_problems_detail_7?: Json | null
-          section1_problems_detail_8?: Json | null
-          section1_problems_detail_9?: string | null
           section1_problems_other?: string | null
           section1_success_description?: string | null
           section1_success_factors?: string[] | null
           section1_success_factors_other?: string | null
-          section2?: Json | null
-          section3?: Json | null
-          survey_responses_section2?: Json | null
-          survey_responses_section3?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -354,37 +306,31 @@ export type Database = {
         Row: {
           auth_user_id: string | null
           created_at: string
-          email: string | null
           full_name: string
           id: string
           organization: string
           phone: string
           position: string
-          province: string | null
           updated_at: string
         }
         Insert: {
           auth_user_id?: string | null
           created_at?: string
-          email?: string | null
           full_name: string
           id?: string
           organization: string
           phone: string
           position: string
-          province?: string | null
           updated_at?: string
         }
         Update: {
           auth_user_id?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string
           id?: string
           organization?: string
           phone?: string
           position?: string
-          province?: string | null
           updated_at?: string
         }
         Relationships: []
