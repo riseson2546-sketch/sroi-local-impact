@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Trash2, Users, FileText, BarChart3, X } from 'lucide-react';
+import { Eye, Trash2, Users, FileText, BarChart3, X, Download } from 'lucide-react';
 import CompleteSurveyViewer from '@/components/admin/CompleteSurveyViewer';
+import * as XLSX from 'xlsx';
 
 const AdminDashboard = () => {
   const [responses, setResponses] = useState<any[]>([]); // กำหนด type เป็น any[]
@@ -310,6 +311,135 @@ const AdminDashboard = () => {
     return descriptions.join(' | ');
   };
 
+  // Export to Excel function
+  const exportToExcel = () => {
+    const exportData = responses.map((response) => {
+      const user = response.survey_users;
+      const section2 = response.survey_responses_section2?.[0] || {};
+      const section3 = response.survey_responses_section3?.[0] || {};
+
+      // Helper function to format array values
+      const formatArrayValue = (value: any) => {
+        if (Array.isArray(value)) {
+          return value.join(', ');
+        }
+        return value || '';
+      };
+
+      // Helper function to format JSON values
+      const formatJsonValue = (value: any) => {
+        if (typeof value === 'object' && value !== null) {
+          return JSON.stringify(value, null, 2);
+        }
+        return value || '';
+      };
+
+      return {
+        // ข้อมูลผู้ตอบ
+        'ชื่อ-สกุล': user?.full_name || '',
+        'ตำแหน่ง': user?.position || '',
+        'หน่วยงาน': user?.organization || '',
+        'เบอร์โทร': user?.phone || '',
+        'จังหวัด': user?.province || '',
+        'อีเมล': user?.email || '',
+        'วันที่ตอบ': new Date(response.created_at).toLocaleDateString('th-TH'),
+        'สถานะความสมบูรณ์': getCompletionStatus(response),
+        
+        // Section 1 - ผลลัพธ์และการเปลี่ยนแปลง
+        '1.1 ความรู้ที่ได้รับ': formatArrayValue(response.section1_knowledge_outcomes),
+        '1.2 การนำไปประยุกต์ใช้': formatArrayValue(response.section1_application_outcomes),
+        '1.3 ระดับความรู้ก่อนเข้าร่วม (1-10)': response.section1_knowledge_before || '',
+        '1.4 ระดับความรู้หลังเข้าร่วม (1-10)': response.section1_knowledge_after || '',
+        '1.5 ระดับการเปลี่ยนแปลงโดยรวม (1-10)': response.section1_overall_change_level || '',
+        '1.6 ปัจจัยความสำเร็จ': formatArrayValue(response.section1_success_factors),
+        '1.6 ปัจจัยความสำเร็จ (อื่นๆ)': response.section1_success_factors_other || '',
+        '1.7 ปัญหาก่อนเข้าร่วม': formatArrayValue(response.section1_problems_before),
+        '1.7 ปัญหา (อื่นๆ)': response.section1_problems_other || '',
+        '1.8 วิธีแก้ปัญหาด้วยความรู้': formatArrayValue(response.section1_knowledge_solutions),
+        '1.8 วิธีแก้ปัญหา (อื่นๆ)': response.section1_knowledge_solutions_other || '',
+        '1.9 รายละเอียดการเปลี่ยนแปลง': response.section1_changes_description || '',
+        '1.10 รายละเอียดความสำเร็จ': response.section1_success_description || '',
+        
+        // Section 1 - การประเมินด้านต่างๆ
+        '1.11 ระดับเทคโนโลยีสารสนเทศ (1-10)': response.section1_it_level || '',
+        '1.12 ระดับความร่วมมือ (1-10)': response.section1_cooperation_level || '',
+        '1.13 ระดับการสนับสนุนงบประมาณ (1-10)': response.section1_funding_level || '',
+        '1.14 ระดับวัฒนธรรมองค์กร (1-10)': response.section1_culture_level || '',
+        '1.15 ระดับเศรษฐกิจสีเขียว (1-10)': response.section1_green_level || '',
+        '1.16 ระดับการพัฒนานวัตกรรม (1-10)': response.section1_new_dev_level || '',
+        
+        // Section 1 - การนำไปใช้ในแต่ละด้าน
+        '1.17 การใช้เทคโนโลยีสารสนเทศ': formatArrayValue(response.section1_it_usage),
+        '1.17 การใช้เทคโนโลยี (อื่นๆ)': response.section1_it_usage_other || '',
+        '1.18 การใช้ความร่วมมือ': formatArrayValue(response.section1_cooperation_usage),
+        '1.18 การใช้ความร่วมมือ (อื่นๆ)': response.section1_cooperation_usage_other || '',
+        '1.19 การใช้งบประมาณ': formatArrayValue(response.section1_funding_usage),
+        '1.19 การใช้งบประมาณ (อื่นๆ)': response.section1_funding_usage_other || '',
+        '1.20 การใช้วัฒนธรรม': formatArrayValue(response.section1_culture_usage),
+        '1.20 การใช้วัฒนธรรม (อื่นๆ)': response.section1_culture_usage_other || '',
+        
+        // Section 2 - ข้อมูลและเครือข่าย
+        '2.1 องค์กรที่ร่วมมือ': formatArrayValue(section2.section2_partner_organizations),
+        '2.1 องค์กรที่ร่วมมือ (อื่นๆ)': section2.section2_partner_organizations_other || '',
+        '2.2 ประเภทข้อมูล': formatArrayValue(section2.section2_data_types),
+        '2.2 ประเภทข้อมูล (อื่นๆ)': section2.section2_data_types_other || '',
+        '2.3 ระดับความสำคัญของข้อมูล (1-10)': section2.section2_data_level || '',
+        '2.4 แหล่งข้อมูล': section2.section2_data_sources || '',
+        '2.5 การมีส่วนร่วมของพันธมิตร': section2.section2_partner_participation || '',
+        '2.6 การขยายเครือข่าย': formatJsonValue(section2.section2_network_expansion),
+        '2.7 การประยุกต์ใช้': formatJsonValue(section2.section2_applications),
+        '2.8 การพัฒนาต่อเนื่อง': section2.section2_continued_development || '',
+        '2.9 ประโยชน์จากข้อมูล': formatArrayValue(section2.section2_data_benefits),
+        
+        // Section 3 - ปัจจัยสำคัญ
+        '3.1 ความสำคัญของผู้นำ (1-5)': section3.leadership_importance || '',
+        '3.2 ความสำคัญของบุคลากร (1-5)': section3.staff_importance || '',
+        '3.3 การสื่อสารกับผู้ใช้ (1-5)': section3.communication_to_users || '',
+        '3.4 การเข้าถึงกลุ่มเป้าหมาย (1-5)': section3.reaching_target_groups || '',
+        '3.5 งบประมาณพัฒนาระบบ (1-5)': section3.budget_system_development || '',
+        '3.6 งบประมาณพัฒนาความรู้ (1-5)': section3.budget_knowledge_development || '',
+        '3.7 ความร่วมมือระหว่างหน่วยงาน (1-5)': section3.cooperation_between_agencies || '',
+        '3.8 ระบบนิเวศนวัตกรรม (1-5)': section3.innovation_ecosystem || '',
+        '3.9 การสนับสนุนดิจิทัลจากรัฐ (1-5)': section3.government_digital_support || '',
+        '3.10 โครงสร้างพื้นฐานดิจิทัล (1-5)': section3.digital_infrastructure || '',
+        '3.11 ความคิดเชิงดิจิทัล (1-5)': section3.digital_mindset || '',
+        '3.12 องค์กรแห่งการเรียนรู้ (1-5)': section3.learning_organization || '',
+        '3.13 ทักษะไอที (1-5)': section3.it_skills || '',
+        '3.14 การสื่อสารภายใน (1-5)': section3.internal_communication || '',
+        '3.15 ความต่อเนื่องของนโยบาย (1-5)': section3.policy_continuity || '',
+        '3.16 ความมั่นคงของนโยบาย (1-5)': section3.policy_stability || ''
+      };
+    });
+
+    // สร้าง workbook และ worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // ปรับขนาดคอลัมน์
+    ws['!cols'] = [
+      { width: 20 }, // ชื่อ-สกุล
+      { width: 25 }, // ตำแหน่ง
+      { width: 30 }, // หน่วยงาน
+      { width: 15 }, // เบอร์โทร
+      { width: 15 }, // จังหวัด
+      { width: 25 }, // อีเมล
+      { width: 15 }, // วันที่ตอบ
+      { width: 15 }, // สถานะ
+      ...Array(70).fill({ width: 20 }) // คอลัมน์คำถามอื่นๆ
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'คำตอบแบบสอบถาม SROI');
+
+    // ส่งออกไฟล์
+    const fileName = `คำตอบแบบสอบถาม_SROI_${new Date().toLocaleDateString('th-TH').replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    toast({
+      title: "ส่งออกสำเร็จ",
+      description: `ส่งออกข้อมูล ${responses.length} รายการเป็น Excel แล้ว`,
+    });
+  };
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -344,6 +474,14 @@ const AdminDashboard = () => {
           </div>
           <Button variant="outline" onClick={handleLogout}>
             ออกจากระบบ
+          </Button>
+        </div>
+
+        {/* Export Button */}
+        <div className="mb-6">
+          <Button onClick={exportToExcel} className="bg-green-600 hover:bg-green-700">
+            <Download className="h-4 w-4 mr-2" />
+            ส่งออก Excel
           </Button>
         </div>
 
