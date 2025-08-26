@@ -15,7 +15,7 @@ type SurveyUser = {
   id: string;                // UUID
   email: string | null;
   full_name?: string | null;
-  position?: string | null;  // DB เป็น "position" (ใส่เครื่องหมายคำพูดใน SQL แล้ว)
+  position?: string | null;  // หมายเหตุ: คอลัมน์ DB คือ "position" (ใส่ "" ใน SQL RPC แล้ว)
   organization?: string | null;
   phone?: string | null;
   province?: string | null;
@@ -44,31 +44,109 @@ const Survey: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const uid = useMemo(() => localStorage.getItem("survey_user_id") || "", []);
-  const uemail = useMemo(() => localStorage.getItem("survey_email") || "", []);
+  const uidLS = useMemo(() => (localStorage.getItem("survey_user_id") || "").trim(), []);
+  const emailLS = useMemo(() => (localStorage.getItem("survey_email") || "").trim().toLowerCase(), []);
 
   const autosaveTimer = useRef<number | null>(null);
   const dirtyRef = useRef(false);
 
   // ---------- Guards ----------
   useEffect(() => {
-    if (!uid) {
+    if (!uidLS && !emailLS) {
       navigate("/login");
     }
-  }, [uid, navigate]);
+  }, [uidLS, emailLS, navigate]);
 
-  // ---------- Bootstrap: load profile (RPC) + draft ----------
+  // ---------- Core loaders ----------
+  const loadProfileById = async (uid: string): Promise<SurveyUser | null> => {
+    const { data, error } = await supabase.rpc("get_survey_user", { p_id: uid });
+    if (error) throw error;
+    return (data && data[0]) || null;
+  };
+
+  const loadProfileByEmail = async (email: string): Promise<SurveyUser | null> => {
+    const { data, error } = await supabase.rpc("get_survey_user_by_email", { p_email: email });
+    if (error) throw error;
+    return (data && data[0]) || null;
+  };
+
+  const loadOrCreateDraft = async (uid: string) => {
+    const { data: existing, error: exErr } = await supabase
+      .from("survey_responses")
+      .select("id,user_id,status,answers,created_at,updated_at,submitted_at")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (exErr) throw exErr;
+
+    if (existing) {
+      setResp(existing as SurveyResponse);
+      setAnswers((existing as SurveyResponse).answers ?? {});
+      return;
+    }
+
+    // create new draft
+    const payload = {
+      user_id: uid,
+      status: "draft" as const,
+      answers: {},
+      created_at: nowISO(),
+      updated_at: nowISO(),
+    };
+    const { data: created, error: insErr } = await supabase
+      .from("survey_responses")
+      .insert([payload])
+      .select("id,user_id,status,answers,created_at,updated_at,submitted_at")
+      .single();
+    if (insErr) throw insErr;
+    setResp(created as SurveyResponse);
+    setAnswers({});
+  };
+
+  // ---------- Bootstrap with self-heal logic ----------
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        if (!uid) return;
+        if (!uidLS && !emailLS) return;
 
-        // 1) โหลดโปรไฟล์ผู้ตอบผ่าน RPC (ข้าม RLS)
-        const { data: suRows, error: suErr } = await supabase.rpc("get_survey_user", { p_id: uid });
-        if (suErr) throw suErr;
+        // 1) พยายามโหลดโปรไฟล์จาก id ใน localStorage ก่อน
+        let effectiveUid = uidLS;
+        let profile: SurveyUser | null = null;
 
-        const su = suRows?.[0] ?? null;
-        if (!su) {
+        if (effectiveUid) {
+          profile = await loadProfileById(effectiveUid);
+        }
+
+        // 2) ถ้าไม่เจอด้วย id → ลองจากอีเมลใน localStorage
+        if (!profile && emailLS) {
+          const byEmail = await loadProfileByEmail(emailLS);
+          if (byEmail) {
+            effectiveUid = byEmail.id;
+            localStorage.setItem("survey_user_id", byEmail.id);
+            if (!localStorage.getItem("survey_email")) {
+              localStorage.setItem("survey_email", (byEmail.email || emailLS));
+            }
+            profile = byEmail;
+          }
+        }
+
+        // 3) ถ้ายังไม่เจอ → sync (กรณี auth/users มีแต่ survey_users ไม่มี) แล้วดึงใหม่
+        if (!profile && emailLS) {
+          const { data: syncRows, error: syncErr } = await supabase.rpc("email_only_login_sync", { p_email: emailLS });
+          if (syncErr) throw syncErr;
+
+          const row = syncRows?.[0];
+          if (row?.survey_user_id) {
+            effectiveUid = String(row.survey_user_id);
+            localStorage.setItem("survey_user_id", effectiveUid);
+            localStorage.setItem("survey_email", row.email || emailLS);
+
+            profile = await loadProfileById(effectiveUid);
+          }
+        }
+
+        if (!profile || !effectiveUid) {
           toast({
             title: "ไม่พบโปรไฟล์ผู้ใช้",
             description: "โปรดเข้าสู่ระบบใหม่",
@@ -77,39 +155,11 @@ const Survey: React.FC = () => {
           navigate("/login");
           return;
         }
-        setUser(su as SurveyUser);
 
-        // 2) โหลด draft ของผู้ใช้ (ถ้ายังไม่มีจะสร้าง)
-        const { data: existing, error: exErr } = await supabase
-          .from("survey_responses")
-          .select("id,user_id,status,answers,created_at,updated_at,submitted_at")
-          .eq("user_id", uid)
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
+        setUser(profile);
 
-        if (exErr) throw exErr;
-
-        if (existing) {
-          setResp(existing as SurveyResponse);
-          setAnswers((existing as SurveyResponse).answers ?? {});
-        } else {
-          const payload = {
-            user_id: uid,
-            status: "draft" as const,
-            answers: {},
-            created_at: nowISO(),
-            updated_at: nowISO(),
-          };
-          const { data: created, error: insErr } = await supabase
-            .from("survey_responses")
-            .insert([payload])
-            .select("id,user_id,status,answers,created_at,updated_at,submitted_at")
-            .single();
-          if (insErr) throw insErr;
-          setResp(created as SurveyResponse);
-          setAnswers({});
-        }
+        // 4) โหลด/สร้าง draft ตาม user id ล่าสุด (effectiveUid)
+        await loadOrCreateDraft(effectiveUid);
       } catch (err: any) {
         toast({
           title: "เกิดข้อผิดพลาดในการโหลดแบบสอบถาม",
@@ -123,15 +173,14 @@ const Survey: React.FC = () => {
 
     bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid]);
+  }, [uidLS, emailLS]);
 
-  // ---------- Helpers ----------
+  // ---------- Answer handlers ----------
   const requestSave = () => {
     dirtyRef.current = true;
     if (autosaveTimer.current) {
       window.clearTimeout(autosaveTimer.current);
     }
-    // autosave เมื่อหยุดพิมพ์ 800ms
     autosaveTimer.current = window.setTimeout(() => {
       handleSave(true);
     }, 800) as unknown as number;
@@ -144,7 +193,7 @@ const Survey: React.FC = () => {
 
   const handleSave = async (silent = false) => {
     if (!resp?.id) return;
-    if (!dirtyRef.current && silent) return; // ไม่มีอะไรเปลี่ยน ไม่ต้องเซฟ
+    if (!dirtyRef.current && silent) return;
     setSaving(true);
     try {
       const { data, error } = await supabase
@@ -180,7 +229,7 @@ const Survey: React.FC = () => {
     setSubmitting(true);
     try {
       if (dirtyRef.current) {
-        await handleSave(true); // เซฟครั้งสุดท้าย
+        await handleSave(true);
       }
       const { data, error } = await supabase
         .from("survey_responses")
@@ -254,7 +303,7 @@ const Survey: React.FC = () => {
             <h1 className="text-2xl font-semibold">แบบสอบถาม SROI</h1>
             <p className="text-sm text-muted-foreground">
               ผู้ตอบ: <span className="font-medium">{user.full_name || "-"}</span>{" "}
-              <span className="text-muted-foreground">({user.email || uemail || "-"})</span>
+              <span className="text-muted-foreground">({user.email || emailLS || "-"})</span>
             </p>
             {resp.status === "submitted" ? (
               <Badge variant="secondary" className="mt-2">ส่งแล้ว</Badge>
@@ -288,7 +337,7 @@ const Survey: React.FC = () => {
             </div>
             <div>
               <Label>อีเมล</Label>
-              <Input value={user.email || uemail || ""} readOnly />
+              <Input value={user.email || emailLS || ""} readOnly />
             </div>
             <div>
               <Label>ตำแหน่ง</Label>
