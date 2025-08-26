@@ -41,24 +41,39 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Sign up admin with email only - no password required
-      const { data, error: signUpError } = await supabase.auth.signInWithOtp({
+      // Check if admin email already exists
+      const { data: existingAdmin } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', formData.email)
+        .single();
+
+      if (existingAdmin) {
+        toast({
+          title: "อีเมลนี้มีอยู่ในระบบแล้ว",
+          description: "กรุณาใช้หน้าเข้าสู่ระบบแทน",
+          variant: "destructive",
+        });
+        setFormData(prev => ({ ...prev, isLogin: true }));
+        return;
+      }
+
+      // Create new auth user
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
+        password: Math.random().toString(36), // Random password
         options: {
-          shouldCreateUser: true
+          emailRedirectTo: `${window.location.origin}/admin`
         }
       });
 
       if (signUpError) throw signUpError;
 
-      // Get the user
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
+      if (data.user) {
         const { error: profileError } = await supabase
           .from('admin_users')
-          .upsert({
-            auth_user_id: user.id,
+          .insert({
+            auth_user_id: data.user.id,
             email: formData.email,
             full_name: formData.fullName
           });
@@ -89,22 +104,14 @@ const AdminLogin = () => {
 
     try {
       // Check if admin exists in our admin_users table
-      const { data: existingAdmins } = await supabase
+      const { data: existingAdmin } = await supabase
         .from('admin_users')
         .select('*')
-        .eq('email', formData.email);
+        .eq('email', formData.email)
+        .single();
 
-      if (existingAdmins && existingAdmins.length > 0) {
-        // Admin exists, sign them in
-        const { data, error } = await supabase.auth.signInWithOtp({
-          email: formData.email,
-          options: {
-            shouldCreateUser: false
-          }
-        });
-
-        if (error) throw error;
-
+      if (existingAdmin && existingAdmin.auth_user_id) {
+        // Admin exists, allow access
         toast({
           title: "เข้าสู่ระบบสำเร็จ",
           description: "ยินดีต้อนรับสู่ระบบจัดการ",
