@@ -8,154 +8,177 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
+type FormData = {
+  email: string;
+  fullName: string;
+  position: string;
+  organization: string;
+  phone: string;
+};
+
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('signin');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     email: '',
     fullName: '',
     position: '',
     organization: '',
-    phone: ''
+    phone: '',
   });
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // ====== เคสผู้ใช้ที่ "เคยล็อกอิน" ด้วย Supabase Auth มาก่อน ======
+  // ยังให้เข้าระบบได้ด้วยเมลเดิมทันที (ไม่ต้องยืนยันอะไร)
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthOrLocal = async () => {
+      // 1) ถ้ามี session เก่าอยู่ ให้พาไปตามสิทธิ์เดิม (survey/admin)
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Check if user exists in survey_users table
-        const { data: surveyUser } = await supabase
+
+      if (session?.user) {
+        const uid = session.user.id;
+        const email = session.user.email ?? '';
+
+        // ลองหาผ่าน auth_user_id เดิมก่อน
+        const { data: suByAuth } = await supabase
           .from('survey_users')
           .select('*')
-          .eq('auth_user_id', session.user.id)
+          .eq('auth_user_id', uid)
           .single();
-        
-        if (surveyUser) {
+
+        if (suByAuth) {
+          // บันทึกอีเมลแบบ pseudo-session ไว้ใช้รอบต่อไป (กรณีเลิกใช้ Auth แล้ว)
+          localStorage.setItem('survey_email', suByAuth.email || email || '');
           navigate('/survey');
-        } else {
-          // Check if admin
-          const { data: adminUser } = await supabase
-            .from('admin_users')
+          return;
+        }
+
+        // ถ้าไม่มีแถวที่ผูก uid เดิม ให้ลองแมตช์ด้วย email (รองรับผู้ใช้ย้ายไปใช้ email-only)
+        if (email) {
+          const { data: suByEmail } = await supabase
+            .from('survey_users')
             .select('*')
-            .eq('auth_user_id', session.user.id)
+            .eq('email', email)
             .single();
-          
-          if (adminUser) {
-            navigate('/admin');
+
+          if (suByEmail) {
+            localStorage.setItem('survey_email', suByEmail.email);
+            navigate('/survey');
+            return;
           }
+        }
+
+        // สุดท้ายลองตรวจ admin เดิม
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('auth_user_id', uid)
+          .single();
+
+        if (adminUser) {
+          // เก็บอีเมลไว้เป็นตัวตนแบบใหม่
+          if (session.user.email) {
+            localStorage.setItem('survey_email', session.user.email);
+          }
+          navigate('/admin');
+          return;
+        }
+      }
+
+      // 2) ถ้าไม่มี session เดิม ให้ดู pseudo-session จากอีเมลที่เคยใช้เข้า
+      const savedEmail = localStorage.getItem('survey_email');
+      if (savedEmail) {
+        const { data: su } = await supabase
+          .from('survey_users')
+          .select('id,email')
+          .eq('email', savedEmail)
+          .single();
+
+        if (su) {
+          navigate('/survey');
         }
       }
     };
-    
-    checkAuth();
+
+    checkAuthOrLocal();
   }, [navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  // ====== สมัครด้วย "อีเมลอย่างเดียว" (สร้างหรืออัปเดตโปรไฟล์ แล้วเข้าได้เลย) ======
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Sign up user with no password required - using email as identifier only
-      const { data, error: signUpError } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          shouldCreateUser: true
-        }
-      });
-
-      if (signUpError) throw signUpError;
-
-      // Create a temporary session for immediate login
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          shouldCreateUser: false
-        }
-      });
-
-      if (signInError) throw signInError;
-
-      // Get or create the user ID from auth
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Create profile in survey_users table
-        const { error: profileError } = await supabase
-          .from('survey_users')
-          .upsert({
-            auth_user_id: user.id,
-            email: formData.email,
+      // อัปเสิร์ตผู้ใช้ด้วยอีเมลเป็น unique key
+      const { data, error } = await supabase
+        .from('survey_users')
+        .upsert(
+          {
+            email: formData.email.trim().toLowerCase(),
             full_name: formData.fullName,
             position: formData.position,
             organization: formData.organization,
-            phone: formData.phone
-          });
+            phone: formData.phone,
+          },
+          { onConflict: 'email' } // ต้องมี unique constraint บนอีเมล
+        )
+        .select('id,email')
+        .single();
 
-        if (profileError) throw profileError;
+      if (error) throw error;
 
-        toast({
-          title: "ลงทะเบียนสำเร็จ",
-          description: "สามารถเข้าทำแบบสอบถามได้เลย",
-        });
-        
-        navigate('/survey');
-      }
-    } catch (error: any) {
+      // เก็บ pseudo-session ด้วยอีเมล แล้วพาไปทำแบบสอบถามทันที
+      localStorage.setItem('survey_email', data.email);
+      toast({ title: 'สำเร็จ', description: 'เข้าสู่ระบบด้วยอีเมลแล้ว' });
+      navigate('/survey');
+    } catch (err: any) {
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message,
-        variant: "destructive",
+        title: 'เกิดข้อผิดพลาด',
+        description: err.message ?? 'ไม่สามารถสมัครได้',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  // ====== ล็อกอินด้วย "อีเมลอย่างเดียว" ======
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // First check if user already exists in our survey_users table
-      const { data: existingUsers } = await supabase
+      const email = formData.email.trim().toLowerCase();
+
+      // ถ้าพบอยู่แล้ว -> เข้าได้เลย
+      const { data: existing } = await supabase
         .from('survey_users')
-        .select('*')
-        .eq('email', formData.email);
+        .select('id,email')
+        .eq('email', email)
+        .single();
 
-      if (existingUsers && existingUsers.length > 0) {
-        // User exists, try to sign them in
-        const { data, error } = await supabase.auth.signInWithOtp({
-          email: formData.email,
-          options: {
-            shouldCreateUser: false
-          }
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "เข้าสู่ระบบสำเร็จ",
-          description: "ยินดีต้อนรับกลับ",
-        });
-        
+      if (existing) {
+        localStorage.setItem('survey_email', email);
         navigate('/survey');
-      } else {
-        // User doesn't exist, create new account automatically
-        toast({
-          title: "ไม่พบบัญชีผู้ใช้",
-          description: "กรุณากรอกข้อมูลเพิ่มเติมเพื่อสร้างบัญชีใหม่",
-        });
-        
-        // Switch to signup tab
-        setActiveTab('signup');
+        return;
       }
-    } catch (error: any) {
+
+      // ถ้าไม่พบ -> สร้างอัตโนมัติ แล้วเข้าได้เลย
+      const { data: created, error: createErr } = await supabase
+        .from('survey_users')
+        .insert({ email })
+        .select('id,email')
+        .single();
+
+      if (createErr) throw createErr;
+
+      localStorage.setItem('survey_email', created.email);
+      navigate('/survey');
+    } catch (err: any) {
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message,
-        variant: "destructive",
+        title: 'เกิดข้อผิดพลาด',
+        description: err.message ?? 'ไม่สามารถเข้าสู่ระบบได้',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -172,53 +195,44 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">เข้าสู่ระบบ</TabsTrigger>
               <TabsTrigger value="signup">ลงทะเบียน</TabsTrigger>
             </TabsList>
-            
+
+            {/* ===== เข้าสู่ระบบด้วยอีเมลอย่างเดียว ===== */}
             <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
+              <form onSubmit={handleEmailSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">อีเมล</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, email: e.target.value }))
+                    }
                     required
-                    placeholder="กรอกอีเมลของท่าน"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "กำลังตรวจสอบ..." : "เข้าสู่ระบบ"}
+                  {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                 </Button>
-                <div className="text-sm text-muted-foreground text-center">
-                  หากไม่พบบัญชี ระบบจะนำท่านไปลงทะเบียนใหม่อัตโนมัติ
-                </div>
               </form>
             </TabsContent>
-            
+
+            {/* ===== ลงทะเบียนด้วยอีเมลอย่างเดียว (เก็บโปรไฟล์) ===== */}
             <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-signup">อีเมล</Label>
-                  <Input
-                    id="email-signup"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                    placeholder="กรอกอีเมลของท่าน"
-                  />
-                </div>
+              <form onSubmit={handleEmailSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">ชื่อ-สกุลผู้ให้ข้อมูล</Label>
                   <Input
                     id="fullName"
                     value={formData.fullName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, fullName: e.target.value }))
+                    }
                     required
                   />
                 </div>
@@ -227,7 +241,9 @@ const Login = () => {
                   <Input
                     id="position"
                     value={formData.position}
-                    onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, position: e.target.value }))
+                    }
                     required
                   />
                 </div>
@@ -236,7 +252,9 @@ const Login = () => {
                   <Input
                     id="organization"
                     value={formData.organization}
-                    onChange={(e) => setFormData(prev => ({ ...prev, organization: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, organization: e.target.value }))
+                    }
                     required
                   />
                 </div>
@@ -245,16 +263,28 @@ const Login = () => {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                    }
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "กำลังสร้างบัญชี..." : "สร้างบัญชีและเข้าทำแบบสอบถาม"}
-                </Button>
-                <div className="text-sm text-muted-foreground text-center">
-                  สร้างบัญชีแล้วเข้าทำแบบสอบถามได้ทันที ไม่ต้องยืนยันอีเมล
+                <div className="space-y-2">
+                  <Label htmlFor="email-signup">อีเมล</Label>
+                  <Input
+                    id="email-signup"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                    required
+                  />
                 </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'กำลังลงทะเบียน...' : 'ลงทะเบียน'}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
