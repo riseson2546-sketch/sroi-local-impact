@@ -1,49 +1,195 @@
-// ---------- เข้าระบบ: อีเมลเท่านั้น (เช็ค auth ก่อน + ซิงก์ survey_users ผ่าน RPC) ----------
-const handleEmailOnly = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  try {
-    const email = emailOnly.trim().toLowerCase();
-    if (!email) return;
+// src/pages/Login.tsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 
-    // เรียก RPC: จะเช็ค auth.users ให้ และ upsert survey_users ให้ด้วย
-    const { data, error } = await supabase.rpc('email_only_login_sync', { p_email: email });
+const Login = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-    if (error) {
-      // กรณีไม่มีใน auth.users จะได้ error 'NO_AUTH'
-      const msg = (error as any)?.message || '';
-      if (msg.includes('NO_AUTH')) {
-        toast({
-          title: 'ยังไม่มีบัญชีอีเมลนี้ในระบบผู้ใช้ (auth)',
-          description: 'โปรดลงทะเบียนก่อน จึงจะเข้าทำแบบสอบถามได้',
-          variant: 'destructive',
-        });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ฟอร์มเข้าอีเมลอย่างเดียว
+  const [emailOnly, setEmailOnly] = useState("");
+
+  // ฟอร์มลงทะเบียน (ไร้รหัสผ่าน)
+  const [regFullName, setRegFullName] = useState("");
+  const [regPosition, setRegPosition] = useState("");
+  const [regOrg, setRegOrg] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+
+  // เข้าระบบ: อีเมลเท่านั้น (เช็คว่ามีใน auth ก่อน + ซิงก์ survey_users ผ่าน RPC)
+  const handleEmailOnly = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const email = emailOnly.trim().toLowerCase();
+      if (!email) return;
+
+      const { data, error } = await supabase.rpc("email_only_login_sync", { p_email: email });
+
+      if (error) {
+        const msg = (error as any)?.message || "";
+        if (msg.includes("NO_AUTH")) {
+          toast({
+            title: "ยังไม่มีอีเมลนี้ในระบบผู้ใช้ (auth)",
+            description: "โปรดลงทะเบียนก่อนจึงจะเข้าทำแบบสอบถามได้",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      const row = data?.[0];
+      if (!row?.survey_user_id) {
+        toast({ title: "ซิงก์โปรไฟล์ไม่สำเร็จ", description: "ติดต่อผู้ดูแลระบบ", variant: "destructive" });
         return;
       }
-      throw error;
-    }
 
-    const row = data?.[0];
-    if (!row?.survey_user_id) {
+      localStorage.setItem("survey_email", row.email);
+      localStorage.setItem("survey_user_id", String(row.survey_user_id));
+      navigate("/survey");
+    } catch (err: any) {
       toast({
-        title: 'ไม่สามารถซิงก์โปรไฟล์ได้',
-        description: 'ติดต่อผู้ดูแลระบบ',
-        variant: 'destructive',
+        title: "เกิดข้อผิดพลาด",
+        description: err?.message || "ไม่สามารถเข้าแบบสอบถามได้",
+        variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    localStorage.setItem('survey_email', row.email);
-    localStorage.setItem('survey_user_id', String(row.survey_user_id));
-    // หมายเหตุ: เราไม่ได้สร้าง session (ยังคง “อีเมลอย่างเดียว”)
-    navigate('/survey');
-  } catch (err: any) {
-    toast({
-      title: 'เกิดข้อผิดพลาด',
-      description: err?.message || 'ไม่สามารถเข้าแบบสอบถามได้',
-      variant: 'destructive',
-    });
-  } finally {
-    setIsLoading(false);
-  }
+  // ลงทะเบียน: ไม่มีรหัสผ่าน (สร้าง auth user ผ่าน Edge Function แล้ว upsert survey_users)
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const payload = {
+        email: regEmail.trim().toLowerCase(),
+        full_name: regFullName || null,
+        position: regPosition || null,
+        organization: regOrg || null,
+        phone: regPhone || null,
+      };
+      if (!payload.email) {
+        toast({ title: "กรอกอีเมล", description: "กรุณากรอกอีเมลให้ถูกต้อง", variant: "destructive" });
+        return;
+      }
+
+      // เรียก Edge Function
+      const { data, error } = await supabase.functions.invoke("register_email_only", { body: payload });
+      if (error) throw error;
+
+      localStorage.setItem("survey_email", data.email);
+      localStorage.setItem("survey_user_id", String(data.survey_user_id));
+
+      toast({ title: "ลงทะเบียนสำเร็จ", description: "เข้าสู่แบบสอบถามได้เลย" });
+      navigate("/survey");
+    } catch (err: any) {
+      toast({
+        title: "ลงทะเบียนไม่สำเร็จ",
+        description: err?.message || "กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">แบบสอบถาม SROI</CardTitle>
+          <CardDescription>เข้าสู่ระบบด้วยอีเมล หรือ ลงทะเบียนแบบไม่ใช้รหัสผ่าน</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <Tabs defaultValue="email" className="w-full">
+            <TabsList className="grid grid-cols-2">
+              <TabsTrigger value="email">เข้าสู่ระบบ</TabsTrigger>
+              <TabsTrigger value="register">ลงทะเบียน</TabsTrigger>
+            </TabsList>
+
+            {/* เข้าสู่ระบบ: อีเมลอย่างเดียว */}
+            <TabsContent value="email" className="space-y-4">
+              <form onSubmit={handleEmailOnly} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email_only">อีเมล</Label>
+                  <Input
+                    id="email_only"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={emailOnly}
+                    onChange={(e) => setEmailOnly(e.target.value)}
+                    autoFocus
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    ระบบจะตรวจว่ามีอีเมลนี้ใน <b>auth.users</b> และซิงก์เข้า <b>survey_users</b> ให้โดยอัตโนมัติ
+                  </p>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "กำลังตรวจสอบ..." : "เข้าทำแบบสอบถาม"}
+                </Button>
+              </form>
+
+              <div className="text-center text-sm text-muted-foreground">
+                ผู้ดูแลระบบ?{" "}
+                <a className="underline cursor-pointer" onClick={() => navigate("/admin-login")}>
+                  ไปยังระบบผู้ดูแล
+                </a>
+              </div>
+            </TabsContent>
+
+            {/* ลงทะเบียน: ไม่มีรหัสผ่าน */}
+            <TabsContent value="register">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reg_fullname">ชื่อ-นามสกุล</Label>
+                  <Input id="reg_fullname" value={regFullName} onChange={(e) => setRegFullName(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg_position">ตำแหน่ง</Label>
+                  <Input id="reg_position" value={regPosition} onChange={(e) => setRegPosition(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg_org">หน่วยงาน/องค์กร</Label>
+                  <Input id="reg_org" value={regOrg} onChange={(e) => setRegOrg(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg_phone">เบอร์โทร</Label>
+                  <Input id="reg_phone" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg_email">อีเมล</Label>
+                  <Input id="reg_email" type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required />
+                </div>
+
+                <p className="text-xs text-muted-foreground -mt-1">
+                  ระบบจะสร้างบัญชีใน <b>auth.users</b> ให้อัตโนมัติ (ไม่ต้องตั้งรหัสผ่าน) และบันทึกโปรไฟล์ใน <b>survey_users</b>
+                </p>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "กำลังลงทะเบียน..." : "ลงทะเบียนและเริ่มตอบแบบสอบถาม"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
+
+export default Login;
