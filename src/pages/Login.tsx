@@ -25,7 +25,7 @@ const StartSurvey = () => {
     try {
       const cleanEmail = formData.email.trim().toLowerCase();
 
-      // ค้นผู้ใช้เดิมด้วยอีเมล (ไม่สนตัวพิมพ์เล็กใหญ่)
+      // Try to find existing user by email (case-insensitive)
       const { data: existingUser, error: findErr } = await supabase
         .from('survey_users')
         .select('*')
@@ -34,7 +34,7 @@ const StartSurvey = () => {
       if (findErr) throw findErr;
 
       if (existingUser) {
-        // อัปเดตโปรไฟล์
+        // Update profile fields (keep same id)
         const { error: upErr } = await supabase
           .from('survey_users')
           .update({
@@ -47,7 +47,7 @@ const StartSurvey = () => {
           .eq('id', existingUser.id);
         if (upErr) throw upErr;
       } else {
-        // สร้างผู้ใช้ใหม่
+        // Insert new respondent
         const { error: insErr } = await supabase
           .from('survey_users')
           .insert({
@@ -60,7 +60,7 @@ const StartSurvey = () => {
         if (insErr) throw insErr;
       }
 
-      // เก็บอีเมลไว้ใช้ดึงข้อมูลที่หน้า Survey
+      // Store email token for later lookup and go to survey
       localStorage.setItem('survey_email', cleanEmail);
       toast({ title: 'เริ่มทำแบบสอบถาม', description: 'กำลังพาคุณไปยังหน้าแบบสอบถาม' });
       navigate('/survey');
