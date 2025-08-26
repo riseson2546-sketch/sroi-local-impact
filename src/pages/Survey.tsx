@@ -1,318 +1,295 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+
+// ถ้ามีคอมโพเนนต์เหล่านี้อยู่แล้วในโปรเจกต์
 import SurveyHeader from '@/components/survey/SurveyHeader';
 import Section1 from '@/components/survey/Section1';
 import Section2 from '@/components/survey/Section2';
 import Section3 from '@/components/survey/Section3';
 
-const Survey = () => {
-  const [currentSection, setCurrentSection] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
-  const [existingResponse, setExistingResponse] = useState<any>(null);
-  const [formData, setFormData] = useState<any>({});
+type AnyObj = Record<string, any>;
+
+const Survey: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // หน้า/ตอนปัจจุบันของแบบสอบถาม
+  const [currentSection, setCurrentSection] = useState<number>(1);
+
+  // สถานะโหลด/บันทึก
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // ข้อมูลผู้ตอบ (จากตาราง survey_users)
+  const [userData, setUserData] = useState<AnyObj | null>(null);
+
+  // คำตอบเดิม (ถ้ามี) จากตาราง survey_responses (+section2/+section3)
+  const [existingResponse, setExistingResponse] = useState<AnyObj | null>(null);
+
+  // ฟอร์มคำตอบในหน้านี้ (เก็บรวม ๆ ให้ส่งลงฐานข้อมูล)
+  const [formData, setFormData] = useState<AnyObj>({
+    section1: {},
+    section2: {},
+    section3: {},
+  });
+
+  // โหลดผู้ใช้ด้วย email ใน localStorage และ preload คำตอบเดิม (ถ้ามี)
   useEffect(() => {
     const checkAuth = async () => {
-      const savedEmail = localStorage.getItem('survey_email');
-      if (!savedEmail) {
-        navigate('/login');
-        return;
-      }
-      // Find respondent by email (case-insensitive)
-      const { data: surveyUser, error: findErr } = await supabase
-        .from('survey_users')
-        .select('*')
-        .eq('email', savedEmail)
-        .maybeSingle();
-      if (findErr || !surveyUser) {
-        navigate('/login');
-        return;
-      }
+      try {
+        const savedEmail = localStorage.getItem('survey_email');
+        if (!savedEmail) {
+          navigate('/login');
+          return;
+        }
 
-      setUserData(surveyUser);
+        // ค้นผู้ใช้จากอีเมล (แนะนำเก็บเป็น lower-case เสมอ)
+        const { data: surveyUser, error: findErr } = await supabase
+          .from('survey_users')
+          .select('*')
+          .eq('email', savedEmail)
+          .maybeSingle();
 
-      // Check for existing responses
-      const { data: response } = await supabase
-        .from('survey_responses')
-        .select(`
-          *,
-          survey_responses_section2(*),
-          survey_responses_section3(*)
-        `)
-        .eq('user_id', surveyUser.id)
-        .maybeSingle();
+        if (findErr || !surveyUser) {
+          navigate('/login');
+          return;
+        }
 
-      if (response) {
-        setExistingResponse(response);
-        // Pre-populate form with existing data
-        setFormData({
-          ...response,
-          section2: response.survey_responses_section2?.[0] || {},
-          section3: response.survey_responses_section3?.[0] || {}
+        setUserData(surveyUser);
+
+        // ดึงคำตอบเดิม (ถ้ามี)
+        // หมายเหตุ: ปรับชื่อ relation ให้ตรงกับสคีม่าจริงในโปรเจกต์ของคุณ
+        const { data: response, error: respErr } = await supabase
+          .from('survey_responses')
+          .select(`
+            *,
+            survey_responses_section2(*),
+            survey_responses_section3(*)
+          `)
+          .eq('user_id', surveyUser.id)
+          .maybeSingle();
+
+        if (respErr) {
+          console.error(respErr);
+        }
+
+        if (response) {
+          setExistingResponse(response);
+          setFormData({
+            section1: response.section1 ?? {},
+            section2: response.survey_responses_section2?.[0] ?? {},
+            section3: response.survey_responses_section3?.[0] ?? {},
+          });
+        } else {
+          // ไม่มีคำตอบเดิม
+          setExistingResponse(null);
+          setFormData({
+            section1: {},
+            section2: {},
+            section3: {},
+          });
+        }
+      } catch (e: any) {
+        console.error(e);
+        toast({
+          title: 'เกิดข้อผิดพลาด',
+          description: e?.message ?? 'ไม่สามารถโหลดข้อมูลแบบสอบถามได้',
+          variant: 'destructive',
         });
+        navigate('/login');
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
+  // ออกจากระบบ: ล้าง email ใน localStorage แล้วกลับหน้าเริ่มต้น
   const handleLogout = async () => {
     try {
       localStorage.removeItem('survey_email');
-    } finally {navigate('/login');
+    } finally {
+      navigate('/login');
+    }
   };
 
-  const handleSaveSection = async (sectionData: any, section: number) => {
-    if (!userData) return;
+  // เปลี่ยนตอน (ถัดไป/ย้อนกลับ)
+  const goNext = () => setCurrentSection((s) => Math.min(3, s + 1));
+  const goPrev = () => setCurrentSection((s) => Math.max(1, s - 1));
 
+  // บันทึกคำตอบของตอนปัจจุบันลง DB
+  const handleSave = async () => {
+    if (!userData?.id) return;
     setIsLoading(true);
     try {
-      if (section === 1) {
-        if (existingResponse) {
-          // Update existing response
-          const { error } = await supabase
-            .from('survey_responses')
-            .update(sectionData)
-            .eq('id', existingResponse.id);
-          if (error) throw error;
-        } else {
-          // Create new response
-          const { data, error } = await supabase
-            .from('survey_responses')
-            .insert({
-              user_id: userData.id,
-              ...sectionData
-            })
-            .select()
-            .single();
-          if (error) throw error;
-          setExistingResponse(data);
-        }
-      } else if (section === 2) {
-        if (!existingResponse) {
-          toast({
-            title: "กรุณาทำส่วนที่ 1 ก่อน",
-            variant: "destructive",
-          });
-          return;
-        }
+      // 1) อัปเดต/สร้างแถวใน survey_responses (อย่างน้อยเก็บ section1 เป็น JSON)
+      let responseId = existingResponse?.id as string | undefined;
 
-        const { data: existing } = await supabase
+      if (!responseId) {
+        // ยังไม่มี response → สร้างใหม่
+        const { data: insertResp, error: insRespErr } = await supabase
+          .from('survey_responses')
+          .insert({
+            user_id: userData.id,
+            section1: formData.section1 ?? {},
+          })
+          .select('*')
+          .single();
+
+        if (insRespErr) throw insRespErr;
+        responseId = insertResp.id;
+        setExistingResponse(insertResp);
+      } else {
+        // มี response แล้ว → อัปเดต (เฉพาะ section1; ส่วน section2/3 แยกตาราง)
+        const { error: updRespErr } = await supabase
+          .from('survey_responses')
+          .update({
+            section1: formData.section1 ?? {},
+          })
+          .eq('id', responseId);
+
+        if (updRespErr) throw updRespErr;
+      }
+
+      // 2) อัปเดต/สร้างคำตอบของ section2 (ถ้าโปรเจกต์แยกไว้ที่ตาราง survey_responses_section2)
+      if (formData.section2 && Object.keys(formData.section2).length > 0) {
+        // ตรวจว่ามีแถว section2 อยู่แล้วไหม (ตาม user_id)
+        const { data: s2Row, error: s2FindErr } = await supabase
           .from('survey_responses_section2')
           .select('*')
-          .eq('response_id', existingResponse.id)
-          .single();
+          .eq('user_id', userData.id)
+          .maybeSingle();
 
-        if (existing) {
-          const { error } = await supabase
+        if (s2FindErr) throw s2FindErr;
+
+        if (s2Row) {
+          const { error: s2UpdErr } = await supabase
             .from('survey_responses_section2')
-            .update(sectionData)
-            .eq('id', existing.id);
-          if (error) throw error;
+            .update(formData.section2)
+            .eq('id', s2Row.id);
+          if (s2UpdErr) throw s2UpdErr;
         } else {
-          const { error } = await supabase
+          const { error: s2InsErr } = await supabase
             .from('survey_responses_section2')
-            .insert({
-              response_id: existingResponse.id,
-              ...sectionData
-            });
-          if (error) throw error;
-        }
-      } else if (section === 3) {
-        if (!existingResponse) {
-          toast({
-            title: "กรุณาทำส่วนที่ 1 ก่อน",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const { data: existing } = await supabase
-          .from('survey_responses_section3')
-          .select('*')
-          .eq('response_id', existingResponse.id)
-          .single();
-
-        if (existing) {
-          const { error } = await supabase
-            .from('survey_responses_section3')
-            .update(sectionData)
-            .eq('id', existing.id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from('survey_responses_section3')
-            .insert({
-              response_id: existingResponse.id,
-              ...sectionData
-            });
-          if (error) throw error;
+            .insert({ user_id: userData.id, ...formData.section2 });
+          if (s2InsErr) throw s2InsErr;
         }
       }
 
-      // อัปเดต formData ทันทีหลังบันทึกสำเร็จ
-      setFormData(prev => ({
-        ...prev,
-        [`section${section}`]: sectionData
-      }));
+      // 3) อัปเดต/สร้างคำตอบของ section3
+      if (formData.section3 && Object.keys(formData.section3).length > 0) {
+        const { data: s3Row, error: s3FindErr } = await supabase
+          .from('survey_responses_section3')
+          .select('*')
+          .eq('user_id', userData.id)
+          .maybeSingle();
 
-      toast({
-        title: "บันทึกข้อมูลสำเร็จ",
-        description: `ส่วนที่ ${section} ได้รับการบันทึกแล้ว`,
-      });
+        if (s3FindErr) throw s3FindErr;
 
-    } catch (error: any) {
+        if (s3Row) {
+          const { error: s3UpdErr } = await supabase
+            .from('survey_responses_section3')
+            .update(formData.section3)
+            .eq('id', s3Row.id);
+          if (s3UpdErr) throw s3UpdErr;
+        } else {
+          const { error: s3InsErr } = await supabase
+            .from('survey_responses_section3')
+            .insert({ user_id: userData.id, ...formData.section3 });
+          if (s3InsErr) throw s3InsErr;
+        }
+      }
+
+      toast({ title: 'บันทึกสำเร็จ', description: 'บันทึกคำตอบเรียบร้อยแล้ว' });
+    } catch (e: any) {
+      console.error(e);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message,
-        variant: "destructive",
+        title: 'บันทึกไม่สำเร็จ',
+        description: e?.message ?? 'กรุณาลองใหม่อีกครั้ง',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ตรวจสอบว่าส่วนไหนเสร็จสิ้นแล้ว
-  const isSectionCompleted = (section: number) => {
-    if (section === 1) {
-      return existingResponse !== null;
-    } else if (section === 2) {
-      return existingResponse && formData.section2 && Object.keys(formData.section2).length > 0;
-    } else if (section === 3) {
-      return existingResponse && formData.section3 && Object.keys(formData.section3).length > 0;
+  // เรนเดอร์ส่วนของแต่ละตอน
+  const renderSection = () => {
+    if (currentSection === 1) {
+      return (
+        <Section1
+          value={formData.section1}
+          onChange={(next: AnyObj) => setFormData((prev: AnyObj) => ({ ...prev, section1: next }))}
+          userData={userData}
+        />
+      );
     }
-    return false;
-  };
-
-  // ตรวจสอบว่าสามารถเข้าถึงส่วนนั้นได้หรือไม่
-  const canAccessSection = (section: number) => {
-    if (section === 1) return true; // section 1 เข้าได้เสมอ
-    if (section === 2) return isSectionCompleted(1); // section 2 ต้องทำ section 1 เสร็จก่อน
-    if (section === 3) return isSectionCompleted(1) && isSectionCompleted(2); // section 3 ต้องทำ section 1,2 เสร็จก่อน
-    return false;
-  };
-
-  const handleSectionChange = (section: number) => {
-    if (!canAccessSection(section)) {
-      toast({
-        title: "ไม่สามารถเข้าถึงส่วนนี้ได้",
-        description: `กรุณาทำส่วนที่ ${section - 1} ให้เสร็จสิ้นก่อน`,
-        variant: "destructive",
-      });
-      return;
+    if (currentSection === 2) {
+      return (
+        <Section2
+          value={formData.section2}
+          onChange={(next: AnyObj) => setFormData((prev: AnyObj) => ({ ...prev, section2: next }))}
+          userData={userData}
+        />
+      );
     }
-    setCurrentSection(section);
+    return (
+      <Section3
+        value={formData.section3}
+        onChange={(next: AnyObj) => setFormData((prev: AnyObj) => ({ ...prev, section3: next }))}
+        userData={userData}
+      />
+    );
   };
-
-  const handleSubmitSurvey = async () => {
-    if (!existingResponse || !isSectionCompleted(2) || !isSectionCompleted(3)) {
-      toast({
-        title: "กรุณาทำแบบสอบถามให้ครบทุกส่วน",
-        description: "กรุณาตอบแบบสอบถามทุกส่วนให้เสร็จสิ้น",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "ส่งแบบสอบถามสำเร็จ",
-      description: "ขอบคุณสำหรับการตอบแบบสอบถาม",
-    });
-  };
-
-  if (!userData) {
-    return <div>Loading...</div>;
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
-      <div className="container mx-auto p-4 max-w-4xl">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-xl font-semibold">สวัสดี คุณ{userData.full_name}</h1>
-            <p className="text-muted-foreground">{userData.position}, {userData.organization}</p>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            ออกจากระบบ
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+      <div className="max-w-5xl mx-auto space-y-4">
+        <SurveyHeader
+          respondentName={userData?.full_name ?? ''}
+          onLogout={handleLogout}
+        />
 
-        <SurveyHeader />
+        <Card>
+          <CardContent className="p-4 md:p-6 space-y-4">
+            {/* หัวข้อ Section */}
+            <div className="flex items-center justify-between">
+              <div className="text-lg font-semibold">
+                {currentSection === 1 && 'ส่วนที่ 1: ข้อมูลโครงการ / บริบท'}
+                {currentSection === 2 && 'ส่วนที่ 2: กระบวนการ / ผลลัพธ์ระยะสั้น'}
+                {currentSection === 3 && 'ส่วนที่ 3: ผลลัพธ์ทางสังคม / SROI'}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                หน้า {currentSection} / 3
+              </div>
+            </div>
 
-        <div className="flex justify-center mb-6">
-          <div className="flex space-x-4">
-            {[1, 2, 3].map((section) => (
-              <Button
-                key={section}
-                variant={currentSection === section ? "default" : "outline"}
-                onClick={() => handleSectionChange(section)}
-                disabled={!canAccessSection(section)}
-                className={`min-w-[100px] ${
-                  isSectionCompleted(section) 
-                    ? 'bg-green-50 border-green-200 text-green-700' 
-                    : ''
-                } ${
-                  !canAccessSection(section) 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : ''
-                }`}
-              >
-                ส่วนที่ {section}
-                {isSectionCompleted(section) && <span className="ml-1">✓</span>}
-              </Button>
-            ))}
-          </div>
-        </div>
+            {/* เนื้อหา Section */}
+            <div>{renderSection()}</div>
 
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            {currentSection === 1 && (
-              <Section1
-                data={formData.section1 || formData}
-                onSave={(data) => handleSaveSection(data, 1)}
-                isLoading={isLoading}
-                onNextSection={() => setCurrentSection(2)}
-                onPrevSection={() => setCurrentSection(1)}
-                isFirstSection={true}
-                isLastSection={false}
-              />
-            )}
-            {currentSection === 2 && (
-              <Section2
-                data={formData.section2 || {}}
-                onSave={(data) => handleSaveSection(data, 2)}
-                isLoading={isLoading}
-                onNextSection={() => setCurrentSection(3)}
-                onPrevSection={() => setCurrentSection(1)}
-                isFirstSection={false}
-                isLastSection={false}
-              />
-            )}
-            {currentSection === 3 && (
-              <Section3
-                data={formData.section3 || {}}
-                onSave={(data) => handleSaveSection(data, 3)}
-                isLoading={isLoading}
-                onNextSection={handleSubmitSurvey}
-                onPrevSection={() => setCurrentSection(2)}
-                isFirstSection={false}
-                isLastSection={true}
-              />
-            )}
+            {/* ปุ่มควบคุม */}
+            <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-between pt-2">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={goPrev} disabled={currentSection === 1 || isLoading}>
+                  ย้อนกลับ
+                </Button>
+                <Button variant="secondary" onClick={goNext} disabled={currentSection === 3 || isLoading}>
+                  ถัดไป
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleSave} disabled={isLoading}>
+                  {isLoading ? 'กำลังบันทึก...' : 'บันทึกคำตอบ'}
+                </Button>
+                <Button variant="outline" onClick={handleLogout}>
+                  ออกจากระบบ
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          ขอขอบพระคุณในการตอบแบบสอบถาม
-        </div>
       </div>
     </div>
   );
