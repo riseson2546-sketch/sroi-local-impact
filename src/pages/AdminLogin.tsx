@@ -11,6 +11,7 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
     fullName: '',
     isLogin: true
   });
@@ -41,27 +42,9 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Check if admin email already exists
-      const { data: existingAdmin } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', formData.email)
-        .single();
-
-      if (existingAdmin) {
-        toast({
-          title: "อีเมลนี้มีอยู่ในระบบแล้ว",
-          description: "กรุณาใช้หน้าเข้าสู่ระบบแทน",
-          variant: "destructive",
-        });
-        setFormData(prev => ({ ...prev, isLogin: true }));
-        return;
-      }
-
-      // Create new auth user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: Math.random().toString(36), // Random password
+        password: formData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/admin`
         }
@@ -82,10 +65,8 @@ const AdminLogin = () => {
 
         toast({
           title: "ลงทะเบียนสำเร็จ",
-          description: "สามารถเข้าระบบจัดการได้เลย",
+          description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีของท่าน",
         });
-        
-        navigate('/admin');
       }
     } catch (error: any) {
       toast({
@@ -103,29 +84,29 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Check if admin exists in our admin_users table
-      const { data: existingAdmin } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', formData.email)
-        .single();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      if (existingAdmin && existingAdmin.auth_user_id) {
-        // Admin exists, allow access
-        toast({
-          title: "เข้าสู่ระบบสำเร็จ",
-          description: "ยินดีต้อนรับสู่ระบบจัดการ",
-        });
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('auth_user_id', data.user.id)
+          .single();
         
-        navigate('/admin');
-      } else {
-        toast({
-          title: "ไม่พบบัญชีผู้ดูแลระบบ",
-          description: "กรุณาลงทะเบียนเป็นผู้ดูแลระบบก่อน",
-          variant: "destructive",
-        });
-        
-        setFormData(prev => ({ ...prev, isLogin: false }));
+        if (adminUser) {
+          navigate('/admin');
+        } else {
+          toast({
+            title: "ไม่พบสิทธิ์ผู้ดูแลระบบ",
+            description: "บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบจัดการ",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
       toast({
@@ -187,7 +168,16 @@ const AdminLogin = () => {
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 required
-                placeholder="กรอกอีเมลของท่าน"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">รหัสผ่าน</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                required
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

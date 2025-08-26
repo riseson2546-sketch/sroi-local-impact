@@ -10,9 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('signin');
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
     fullName: '',
     position: '',
     organization: '',
@@ -57,27 +57,10 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Check if email already exists
-      const { data: existingUser } = await supabase
-        .from('survey_users')
-        .select('*')
-        .eq('email', formData.email)
-        .single();
-
-      if (existingUser) {
-        toast({
-          title: "อีเมลนี้มีอยู่ในระบบแล้ว",
-          description: "กรุณาใช้หน้าเข้าสู่ระบบแทน",
-          variant: "destructive",
-        });
-        setActiveTab('signin');
-        return;
-      }
-
-      // Create new auth user without password
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // Sign up user
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: Math.random().toString(36), // Random password - won't be used
+        password: formData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/survey`
         }
@@ -85,13 +68,12 @@ const Login = () => {
 
       if (signUpError) throw signUpError;
 
-      if (authData.user) {
+      if (data.user) {
         // Create profile in survey_users table
         const { error: profileError } = await supabase
           .from('survey_users')
           .insert({
-            auth_user_id: authData.user.id,
-            email: formData.email,
+            auth_user_id: data.user.id,
             full_name: formData.fullName,
             position: formData.position,
             organization: formData.organization,
@@ -102,10 +84,8 @@ const Login = () => {
 
         toast({
           title: "ลงทะเบียนสำเร็จ",
-          description: "สามารถเข้าทำแบบสอบถามได้เลย",
+          description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีของท่าน",
         });
-        
-        navigate('/survey');
       }
     } catch (error: any) {
       toast({
@@ -123,68 +103,41 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Check if user exists in our survey_users table
-      const { data: existingUser } = await supabase
-        .from('survey_users')
-        .select('*')
-        .eq('email', formData.email)
-        .single();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      if (existingUser && existingUser.auth_user_id) {
-        // User exists with auth_user_id, try to create a session
-        try {
-          // Create a temporary password and sign in
-          const tempPassword = Math.random().toString(36);
-          
-          // First try to sign in with existing credentials
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: tempPassword
-          });
+      if (error) throw error;
 
-          // If sign in fails, create new auth user and update the record
-          if (signInError) {
-            const { data: newAuthData, error: newAuthError } = await supabase.auth.signUp({
-              email: formData.email,
-              password: tempPassword
-            });
-
-            if (newAuthError) throw newAuthError;
-
-            if (newAuthData.user) {
-              // Update existing survey_users record with new auth_user_id
-              const { error: updateError } = await supabase
-                .from('survey_users')
-                .update({ auth_user_id: newAuthData.user.id })
-                .eq('email', formData.email);
-
-              if (updateError) throw updateError;
-            }
-          }
-
-          toast({
-            title: "เข้าสู่ระบบสำเร็จ",
-            description: "ยินดีต้อนรับกลับ",
-          });
-          
-          navigate('/survey');
-        } catch (authError: any) {
-          // If auth fails, still allow access since user exists in our database
-          toast({
-            title: "เข้าสู่ระบบสำเร็จ",
-            description: "ยินดีต้อนรับกลับ",
-          });
-          navigate('/survey');
-        }
-      } else {
-        // User doesn't exist, create new account automatically
-        toast({
-          title: "ไม่พบบัญชีผู้ใช้",
-          description: "กรุณากรอกข้อมูลเพิ่มเติมเพื่อสร้างบัญชีใหม่",
-        });
+      if (data.user) {
+        // Check if user exists in survey_users table
+        const { data: surveyUser } = await supabase
+          .from('survey_users')
+          .select('*')
+          .eq('auth_user_id', data.user.id)
+          .single();
         
-        // Switch to signup tab
-        setActiveTab('signup');
+        if (surveyUser) {
+          navigate('/survey');
+        } else {
+          // Check if admin
+          const { data: adminUser } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('auth_user_id', data.user.id)
+            .single();
+          
+          if (adminUser) {
+            navigate('/admin');
+          } else {
+            toast({
+              title: "ไม่พบข้อมูลผู้ใช้",
+              description: "กรุณาลงทะเบียนก่อนเข้าใช้งาน",
+              variant: "destructive",
+            });
+          }
+        }
       }
     } catch (error: any) {
       toast({
@@ -207,7 +160,7 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">เข้าสู่ระบบ</TabsTrigger>
               <TabsTrigger value="signup">ลงทะเบียน</TabsTrigger>
@@ -223,31 +176,26 @@ const Login = () => {
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     required
-                    placeholder="กรอกอีเมลของท่าน"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">รหัสผ่าน</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "กำลังตรวจสอบ..." : "เข้าสู่ระบบ"}
+                  {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
                 </Button>
-                <div className="text-sm text-muted-foreground text-center">
-                  หากไม่พบบัญชี ระบบจะนำท่านไปลงทะเบียนใหม่อัตโนมัติ
-                </div>
               </form>
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-signup">อีเมล</Label>
-                  <Input
-                    id="email-signup"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                    placeholder="กรอกอีเมลของท่าน"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="fullName">ชื่อ-สกุลผู้ให้ข้อมูล</Label>
                   <Input
@@ -284,12 +232,29 @@ const Login = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "กำลังสร้างบัญชี..." : "สร้างบัญชีและเข้าทำแบบสอบถาม"}
-                </Button>
-                <div className="text-sm text-muted-foreground text-center">
-                  สร้างบัญชีแล้วเข้าทำแบบสอบถามได้ทันที ไม่ต้องยืนยันอีเมล
+                <div className="space-y-2">
+                  <Label htmlFor="email-signup">อีเมล</Label>
+                  <Input
+                    id="email-signup"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    required
+                  />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password-signup">รหัสผ่าน</Label>
+                  <Input
+                    id="password-signup"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "กำลังลงทะเบียน..." : "ลงทะเบียน"}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
