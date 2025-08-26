@@ -20,20 +20,18 @@ const Survey = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const savedEmail = localStorage.getItem('survey_email');
+      if (!savedEmail) {
         navigate('/login');
         return;
       }
-
-      // Get user data
-      const { data: surveyUser } = await supabase
+      // Find respondent by email (case-insensitive)
+      const { data: surveyUser, error: findErr } = await supabase
         .from('survey_users')
         .select('*')
-        .eq('auth_user_id', session.user.id)
-        .single();
-
-      if (!surveyUser) {
+        .ilike('email', savedEmail)
+        .maybeSingle();
+      if (findErr || !surveyUser) {
         navigate('/login');
         return;
       }
@@ -49,7 +47,7 @@ const Survey = () => {
           survey_responses_section3(*)
         `)
         .eq('user_id', surveyUser.id)
-        .single();
+        .maybeSingle();
 
       if (response) {
         setExistingResponse(response);
@@ -66,8 +64,9 @@ const Survey = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      localStorage.removeItem('survey_email');
+    } finally {navigate('/login');
   };
 
   const handleSaveSection = async (sectionData: any, section: number) => {
