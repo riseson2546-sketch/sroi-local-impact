@@ -1,350 +1,416 @@
 // src/pages/Survey.tsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-
-// ฟอร์ม/ส่วนประกอบเดิมของคุณ
-import SurveyHeader from '@/components/survey/SurveyHeader';
-import Section1 from '@/components/survey/Section1';
-import Section2 from '@/components/survey/Section2';
-import Section3 from '@/components/survey/Section3';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 type SurveyUser = {
-  id: number;
-  email: string;
-  auth_user_id?: string | null;
+  id: string;                // UUID (สำคัญ: เป็น string)
+  email: string | null;
   full_name?: string | null;
+  position?: string | null;
+  organization?: string | null;
+  phone?: string | null;
+  province?: string | null;
 };
 
 type SurveyResponse = {
-  id?: number;
-  user_id: number;
-  status?: 'draft' | 'submitted';
-  created_at?: string;
-  updated_at?: string;
+  id: string;                // UUID
+  user_id: string;           // UUID อ้างถึง survey_users.id
+  status: "draft" | "submitted";
+  answers: Record<string, any> | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   submitted_at?: string | null;
-  // หมายเหตุ: ไม่ระบุทุกฟิลด์ เพื่อให้ยืดหยุ่นกับฟอร์มของคุณ
-  // ส่วนที่เหลือจะมาจาก formData (Section1/2/3 เซ็ตคีย์อะไร ก็จะ upsert คีย์นั้น)
-  [k: string]: any;
 };
 
-const Survey = () => {
+const nowISO = () => new Date().toISOString();
+
+const Survey: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // การนำทางระหว่างส่วนของฟอร์ม
-  const [currentSection, setCurrentSection] = useState<number>(1);
+  const [user, setUser] = useState<SurveyUser | null>(null);
+  const [resp, setResp] = useState<SurveyResponse | null>(null);
+  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // สถานะทั่วไป
-  const [isBootstrapping, setIsBootstrapping] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const uid = useMemo(() => localStorage.getItem("survey_user_id") || "", []);
+  const uemail = useMemo(() => localStorage.getItem("survey_email") || "", []);
 
-  // ผู้ใช้แบบสอบถาม (อิงตาราง survey_users)
-  const [userData, setUserData] = useState<SurveyUser | null>(null);
+  const autosaveTimer = useRef<number | null>(null);
+  const dirtyRef = useRef(false);
 
-  // คำตอบที่มีอยู่เดิม (ถ้ามี)
-  const [existingResponse, setExistingResponse] = useState<SurveyResponse | null>(null);
+  // ---------- Guards ----------
+  useEffect(() => {
+    if (!uid) {
+      navigate("/login");
+    }
+  }, [uid, navigate]);
 
-  // สต็ทสำหรับข้อมูลฟอร์มทั้งหมด (Section1/2/3 จะเติมคีย์ลงใน object นี้)
-  const [formData, setFormData] = useState<Record<string, any>>({});
-
-  // --------------------------
-  // 1) Bootstrap: ตรวจสิทธิ์แบบ "อีเมลอย่างเดียว" + รองรับกรณีมี session
-  // --------------------------
+  // ---------- Bootstrap: load profile + draft ----------
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        // 1. กรณีมี session (ผู้ใช้เดิมที่เคยล็อกอินด้วยรหัสผ่าน/แอดมิน)
-        const { data: sessionData } = await supabase.auth.getSession();
-        const session = sessionData?.session ?? null;
+        if (!uid) return;
 
-        let surveyUser: SurveyUser | null = null;
+        // 1) โหลดโปรไฟล์ผู้ตอบจาก survey_users
+        const { data: su, error: suErr } = await supabase
+          .from("survey_users")
+          .select("id,email,full_name,position,organization,phone,province")
+          .eq("id", uid)
+          .maybeSingle();
 
-        if (session?.user?.id) {
-          // ลองหาโปรไฟล์ผู้ตอบด้วย auth_user_id
-          const { data, error } = await supabase
-            .from('survey_users')
-            .select('*')
-            .eq('auth_user_id', session.user.id)
-            .maybeSingle();
-
-          if (error) {
-            // ไม่บล็อคโฟลว์ — ตกไปลองโหมดอีเมลอย่างเดียว
-            console.warn('auth_user_id lookup error:', error.message);
-          } else if (data) {
-            surveyUser = data as SurveyUser;
-          }
+        if (suErr) throw suErr;
+        if (!su) {
+          toast({
+            title: "ไม่พบโปรไฟล์ผู้ใช้",
+            description: "โปรดเข้าสู่ระบบใหม่",
+            variant: "destructive",
+          });
+          navigate("/login");
+          return;
         }
+        setUser(su as SurveyUser);
 
-        // 2. ถ้ายังไม่เจอ → โหมดอีเมลอย่างเดียว (อีเมลต้องถูกเก็บไว้ใน localStorage จากหน้าล็อกอิน)
-        if (!surveyUser) {
-          const storedEmail = (localStorage.getItem('survey_email') || '').trim().toLowerCase();
-          if (!storedEmail) {
-            navigate('/login');
-            return;
-          }
+        // 2) โหลด draft ของผู้ใช้ (ถ้ายังไม่มีจะสร้าง)
+        const { data: existing, error: exErr } = await supabase
+          .from("survey_responses")
+          .select("id,user_id,status,answers,created_at,updated_at,submitted_at")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
 
-          const { data, error } = await supabase
-            .from('survey_users')
-            .select('*')
-            .eq('email', storedEmail)
-            .maybeSingle();
+        if (exErr) throw exErr;
 
-          if (error || !data) {
-            // อีเมลไม่พบในระบบ → เคลียร์และย้อนกลับไปล็อกอิน
-            localStorage.removeItem('survey_email');
-            localStorage.removeItem('survey_user_id');
-            navigate('/login');
-            return;
-          }
-
-          surveyUser = data as SurveyUser;
+        if (existing) {
+          setResp(existing as SurveyResponse);
+          setAnswers((existing as SurveyResponse).answers ?? {});
+        } else {
+          // สร้าง draft เปล่า
+          const payload = {
+            user_id: uid,
+            status: "draft",
+            answers: {},
+            created_at: nowISO(),
+            updated_at: nowISO(),
+          };
+          const { data: created, error: insErr } = await supabase
+            .from("survey_responses")
+            .insert([payload])
+            .select("id,user_id,status,answers,created_at,updated_at,submitted_at")
+            .single();
+          if (insErr) throw insErr;
+          setResp(created as SurveyResponse);
+          setAnswers({});
         }
-
-        // 3. เก็บผู้ใช้ลง state + เผื่อไว้ใน localStorage
-        setUserData(surveyUser);
-        localStorage.setItem('survey_email', surveyUser.email);
-        localStorage.setItem('survey_user_id', String(surveyUser.id));
-
-        // 4. โหลดคำตอบเดิม (ถ้ามี)
-        await loadExistingResponse(surveyUser.id);
       } catch (err: any) {
-        console.error(err);
         toast({
-          title: 'เกิดข้อผิดพลาด',
-          description: err?.message || 'ไม่สามารถเริ่มต้นแบบสอบถามได้',
-          variant: 'destructive',
+          title: "เกิดข้อผิดพลาดในการโหลดแบบสอบถาม",
+          description: err?.message || "กรุณาลองใหม่อีกครั้ง",
+          variant: "destructive",
         });
-        navigate('/login');
       } finally {
-        setIsBootstrapping(false);
+        setLoading(false);
       }
     };
 
     bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [uid]);
 
-  // โหลดคำตอบเดิมของผู้ใช้
-  const loadExistingResponse = async (userId: number) => {
-    const { data, error } = await supabase
-      .from('survey_responses')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.warn('loadExistingResponse error:', error.message);
-      return;
+  // ---------- Helpers ----------
+  const requestSave = () => {
+    dirtyRef.current = true;
+    if (autosaveTimer.current) {
+      window.clearTimeout(autosaveTimer.current);
     }
-
-    if (data) {
-      setExistingResponse(data as SurveyResponse);
-
-      // สมมติว่าในตารางคุณเก็บเป็นหลาย ๆ คอลัมน์ — ให้เติมลง formData ตรง ๆ
-      // (ถ้าคุณเก็บเป็น JSON field เช่น section1/2/3 ก็ยังคงใช้งานได้เพราะเราก็ copy ลง formData เหมือนกัน)
-      const { id, user_id, created_at, updated_at, submitted_at, status, ...rest } = data as SurveyResponse;
-      setFormData((prev) => ({ ...prev, ...rest }));
-    }
+    // autosave หลังพิมพ์หยุด 800ms
+    autosaveTimer.current = window.setTimeout(() => {
+      handleSave(true);
+    }, 800) as unknown as number;
   };
 
-  // --------------------------
-  // 2) การบันทึกคำตอบ
-  // --------------------------
-
-  // บันทึก/อัปเดตคำตอบ (draft/submitted)
-  const upsertResponse = async (payload: Partial<SurveyResponse> & { user_id: number }) => {
-    // หมายเหตุ: ไม่ระบุคอลัมน์ทีละตัว เพื่อให้รองรับสคีมาที่ฟอร์มคุณใช้อยู่
-    // สิ่งสำคัญคือ "user_id" ต้องมีเสมอ
-    return await supabase
-      .from('survey_responses')
-      .upsert(payload, { onConflict: 'user_id' }) // สมมติว่ามี unique(user_id) หรือใช้ policy ให้ upsert by user_id
-      .select()
-      .maybeSingle();
+  const handleChange = (key: string, value: any) => {
+    setAnswers((prev) => ({ ...prev, [key]: value }));
+    requestSave();
   };
 
-  const handleSaveDraft = async () => {
-    if (!userData) return;
+  const handleSave = async (silent = false) => {
+    if (!resp?.id) return;
+    if (!dirtyRef.current && silent) return; // ไม่จำเป็นต้องเซฟ
+    setSaving(true);
     try {
-      setIsSaving(true);
-      const payload: Partial<SurveyResponse> & { user_id: number } = {
-        user_id: userData.id,
-        status: 'draft',
-        updated_at: new Date().toISOString(),
-        ...formData, // สำคัญ: เอาคีย์ทั้งหมดจากฟอร์มไปเขียนลงตาราง
-      };
-      const { data, error } = await upsertResponse(payload);
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from("survey_responses")
+        .update({
+          answers,
+          status: "draft",
+          updated_at: nowISO(),
+        })
+        .eq("id", resp.id)
+        .select("id,user_id,status,answers,updated_at")
+        .single();
 
-      setExistingResponse(data || null);
-      toast({
-        title: 'บันทึกชั่วคราวแล้ว',
-        description: 'ข้อมูลของคุณถูกบันทึกแบบฉบับร่าง',
-      });
+      if (error) throw error;
+      setResp((prev) => (prev ? { ...prev, ...data } : (data as any)));
+      dirtyRef.current = false;
+      if (!silent) {
+        toast({ title: "บันทึกสำเร็จ", description: "แบบร่างของคุณถูกบันทึกแล้ว" });
+      }
     } catch (err: any) {
       toast({
-        title: 'บันทึกล้มเหลว',
-        description: err?.message || 'ไม่สามารถบันทึกข้อมูลได้',
-        variant: 'destructive',
+        title: "บันทึกไม่สำเร็จ",
+        description: err?.message || "กรุณาลองใหม่",
+        variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  const handleSubmitFinal = async () => {
-    if (!userData) return;
-
+  const handleSubmit = async () => {
+    if (!resp?.id) return;
+    setSubmitting(true);
     try {
-      setIsSaving(true);
-      const payload: Partial<SurveyResponse> & { user_id: number } = {
-        user_id: userData.id,
-        status: 'submitted',
-        updated_at: new Date().toISOString(),
-        submitted_at: new Date().toISOString(),
-        ...formData,
-      };
-      const { data, error } = await upsertResponse(payload);
+      // เซฟครั้งสุดท้ายก่อนส่ง
+      if (dirtyRef.current) {
+        await handleSave(true);
+      }
+      const { data, error } = await supabase
+        .from("survey_responses")
+        .update({
+          answers,
+          status: "submitted",
+          submitted_at: nowISO(),
+          updated_at: nowISO(),
+        })
+        .eq("id", resp.id)
+        .select("id,user_id,status,submitted_at")
+        .single();
+
       if (error) throw error;
-
-      setExistingResponse(data || null);
-      toast({
-        title: 'ส่งแบบสอบถามสำเร็จ',
-        description: 'ขอขอบพระคุณสำหรับความร่วมมือ',
-      });
-
-      navigate('/survey-review');
+      setResp((prev) => (prev ? { ...prev, ...data } : (data as any)));
+      toast({ title: "ส่งแบบสอบถามสำเร็จ", description: "ขอบคุณสำหรับการตอบแบบสอบถาม" });
+      // หลังส่งสำเร็จจะล็อกฟอร์ม
     } catch (err: any) {
       toast({
-        title: 'ส่งแบบสอบถามไม่สำเร็จ',
-        description: err?.message || 'กรุณาลองใหม่อีกครั้ง',
-        variant: 'destructive',
+        title: "ส่งแบบสอบถามไม่สำเร็จ",
+        description: err?.message || "กรุณาลองใหม่",
+        variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setSubmitting(false);
     }
   };
 
-  // ออกจากระบบ (รองรับทั้งกรณีมี session และโหมดอีเมลอย่างเดียว)
   const handleLogout = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await supabase.auth.signOut();
-      }
+      await supabase.auth.signOut().catch(() => {});
     } finally {
-      localStorage.removeItem('survey_email');
-      localStorage.removeItem('survey_user_id');
-      navigate('/login');
+      localStorage.removeItem("survey_email");
+      localStorage.removeItem("survey_user_id");
+      navigate("/login");
     }
   };
 
-  // --------------------------
-  // 3) UI
-  // --------------------------
-  if (isBootstrapping) {
+  const disabled = resp?.status === "submitted";
+
+  // ---------- UI ----------
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm text-muted-foreground">กำลังเตรียมแบบสอบถาม...</div>
+        <p>กำลังโหลดแบบสอบถาม...</p>
       </div>
     );
   }
 
-  if (!userData) {
-    // กันกรณี edge ที่ bootstrap ไม่เจอ user (navigate แล้ว แต่เผื่อ UI แสดงระหว่างทาง)
-    return null;
+  if (!user || !resp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>ไม่พบข้อมูล</CardTitle>
+            <CardDescription>กรุณาลองเข้าสู่ระบบใหม่</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/login")}>กลับไปหน้าเข้าสู่ระบบ</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 py-8">
-      <div className="container max-w-4xl">
-        <SurveyHeader
-          currentSection={currentSection}
-          onChangeSection={setCurrentSection}
-          onSaveDraft={handleSaveDraft}
-          onSubmitFinal={handleSubmitFinal}
-          onLogout={handleLogout}
-          isSaving={isSaving}
-          userEmail={userData.email}
-          userName={userData.full_name || undefined}
-          status={existingResponse?.status}
-        />
+    <div className="min-h-screen p-4 md:p-6 lg:p-10 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <div className="mx-auto max-w-4xl space-y-4">
+        {/* Header */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">แบบสอบถาม SROI</h1>
+            <p className="text-sm text-muted-foreground">
+              ผู้ตอบ: <span className="font-medium">{user.full_name || "-"}</span>{" "}
+              <span className="text-muted-foreground">({user.email || uemail || "-"})</span>
+            </p>
+            {resp.status === "submitted" ? (
+              <Badge variant="secondary" className="mt-2">ส่งแล้ว</Badge>
+            ) : (
+              <Badge className="mt-2">แบบร่าง</Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={handleSave} disabled={saving || disabled}>
+              {saving ? "กำลังบันทึก..." : "บันทึกแบบร่าง"}
+            </Button>
+            <Button onClick={handleSubmit} disabled={disabled || submitting}>
+              {submitting ? "กำลังส่ง..." : "ส่งแบบสอบถาม"}
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>ออกจากระบบ</Button>
+          </div>
+        </div>
 
-        <Card className="mt-6">
+        <Separator />
+
+        {/* ข้อมูลผู้ตอบ (แก้ไขได้เล็กน้อย เฉพาะ client; ถ้าต้องการบันทึกลง DB ให้ทำผ่าน Edge Function เพิ่ม) */}
+        <Card>
           <CardHeader>
-            <CardTitle>แบบสอบถาม SROI</CardTitle>
-            <CardDescription>
-              กรุณากรอกข้อมูลให้ครบถ้วน สามารถบันทึกฉบับร่างระหว่างทำได้
-            </CardDescription>
+            <CardTitle>ข้อมูลผู้ตอบ</CardTitle>
+            <CardDescription>ข้อมูลนี้ดึงจากโปรไฟล์ที่ลงทะเบียน</CardDescription>
           </CardHeader>
-
-          <CardContent className="space-y-8">
-            {currentSection === 1 && (
-              <Section1
-                formData={formData}
-                setFormData={setFormData}
-                onNext={() => setCurrentSection(2)}
-                onSave={handleSaveDraft}
-                isSaving={isSaving}
-                existingResponse={existingResponse}
-              />
-            )}
-
-            {currentSection === 2 && (
-              <Section2
-                formData={formData}
-                setFormData={setFormData}
-                onPrev={() => setCurrentSection(1)}
-                onNext={() => setCurrentSection(3)}
-                onSave={handleSaveDraft}
-                isSaving={isSaving}
-                existingResponse={existingResponse}
-              />
-            )}
-
-            {currentSection === 3 && (
-              <Section3
-                formData={formData}
-                setFormData={setFormData}
-                onPrev={() => setCurrentSection(2)}
-                onSave={handleSaveDraft}
-                onSubmit={handleSubmitFinal}
-                isSaving={isSaving}
-                existingResponse={existingResponse}
-              />
-            )}
-
-            <div className="flex items-center justify-between pt-2">
-              <div className="space-x-2">
-                {currentSection > 1 && (
-                  <Button type="button" variant="outline" onClick={() => setCurrentSection((s) => s - 1)}>
-                    ย้อนกลับ
-                  </Button>
-                )}
-                {currentSection < 3 && (
-                  <Button type="button" onClick={() => setCurrentSection((s) => s + 1)}>
-                    ถัดไป
-                  </Button>
-                )}
-              </div>
-
-              <div className="space-x-2">
-                <Button type="button" variant="secondary" onClick={handleSaveDraft} disabled={isSaving}>
-                  {isSaving ? 'กำลังบันทึก...' : 'บันทึกชั่วคราว'}
-                </Button>
-                <Button type="button" onClick={handleSubmitFinal} disabled={isSaving}>
-                  {isSaving ? 'กำลังส่ง...' : 'ส่งแบบสอบถาม'}
-                </Button>
-              </div>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>ชื่อ-นามสกุล</Label>
+              <Input value={user.full_name || ""} readOnly />
+            </div>
+            <div>
+              <Label>อีเมล</Label>
+              <Input value={user.email || uemail || ""} readOnly />
+            </div>
+            <div>
+              <Label>ตำแหน่ง</Label>
+              <Input value={user.position || ""} readOnly />
+            </div>
+            <div>
+              <Label>หน่วยงาน/องค์กร</Label>
+              <Input value={user.organization || ""} readOnly />
+            </div>
+            <div>
+              <Label>เบอร์โทร</Label>
+              <Input value={user.phone || ""} readOnly />
+            </div>
+            <div>
+              <Label>จังหวัด</Label>
+              <Input value={user.province || ""} readOnly />
             </div>
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          ขอขอบพระคุณในการตอบแบบสอบถาม
+        {/* แบบสอบถาม: ตัวอย่างฟิลด์ (คุณสามารถเพิ่ม/เปลี่ยน key ได้ตามต้องการ) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>ส่วนที่ 1: ข้อมูลโครงการ/กิจกรรม</CardTitle>
+            <CardDescription>กรุณากรอกรายละเอียดให้ครบถ้วน</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="project_name">1. ชื่อโครงการ/กิจกรรม</Label>
+              <Input
+                id="project_name"
+                placeholder="เช่น โครงการพัฒนาชุมชน..."
+                value={answers.project_name || ""}
+                onChange={(e) => handleChange("project_name", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="project_objective">2. วัตถุประสงค์</Label>
+              <Textarea
+                id="project_objective"
+                placeholder="ระบุวัตถุประสงค์หลัก/รอง"
+                value={answers.project_objective || ""}
+                onChange={(e) => handleChange("project_objective", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="target_group">3. กลุ่มเป้าหมาย</Label>
+              <Input
+                id="target_group"
+                placeholder="เช่น เยาวชนในชุมชน, ผู้สูงอายุ"
+                value={answers.target_group || ""}
+                onChange={(e) => handleChange("target_group", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="activities">4. กิจกรรมหลัก</Label>
+              <Textarea
+                id="activities"
+                placeholder="สรุปกิจกรรมหลัก ๆ ที่ดำเนินการ"
+                value={answers.activities || ""}
+                onChange={(e) => handleChange("activities", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>ส่วนที่ 2: ผลลัพธ์/ผลกระทบ</CardTitle>
+            <CardDescription>อธิบายผลลัพธ์เชิงสังคม / ตัวชี้วัด</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="outcomes">5. ผลลัพธ์ที่เกิดขึ้น</Label>
+              <Textarea
+                id="outcomes"
+                placeholder="ผลลัพธ์ที่วัดได้/สังเกตได้"
+                value={answers.outcomes || ""}
+                onChange={(e) => handleChange("outcomes", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="indicators">6. ตัวชี้วัดความสำเร็จ</Label>
+              <Textarea
+                id="indicators"
+                placeholder="เช่น จำนวนผู้เข้าร่วม, คะแนนความพึงพอใจ"
+                value={answers.indicators || ""}
+                onChange={(e) => handleChange("indicators", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lessons">7. บทเรียนที่ได้</Label>
+              <Textarea
+                id="lessons"
+                placeholder="มีอะไรที่ได้เรียนรู้/ควรปรับปรุง"
+                value={answers.lessons || ""}
+                onChange={(e) => handleChange("lessons", e.target.value)}
+                disabled={disabled}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center gap-2 justify-end">
+          <Button variant="secondary" onClick={() => handleSave()} disabled={saving || disabled}>
+            {saving ? "กำลังบันทึก..." : "บันทึกแบบร่าง"}
+          </Button>
+          <Button onClick={handleSubmit} disabled={disabled || submitting}>
+            {submitting ? "กำลังส่ง..." : "ส่งแบบสอบถาม"}
+          </Button>
         </div>
       </div>
     </div>
