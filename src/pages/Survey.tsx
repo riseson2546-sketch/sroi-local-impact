@@ -12,10 +12,10 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
 type SurveyUser = {
-  id: string;                // UUID (สำคัญ: เป็น string)
+  id: string;                // UUID
   email: string | null;
   full_name?: string | null;
-  position?: string | null;
+  position?: string | null;  // DB เป็น "position" (ใส่เครื่องหมายคำพูดใน SQL แล้ว)
   organization?: string | null;
   phone?: string | null;
   province?: string | null;
@@ -23,7 +23,7 @@ type SurveyUser = {
 
 type SurveyResponse = {
   id: string;                // UUID
-  user_id: string;           // UUID อ้างถึง survey_users.id
+  user_id: string;           // UUID (อ้างถึง survey_users.id)
   status: "draft" | "submitted";
   answers: Record<string, any> | null;
   created_at?: string | null;
@@ -57,20 +57,17 @@ const Survey: React.FC = () => {
     }
   }, [uid, navigate]);
 
-  // ---------- Bootstrap: load profile + draft ----------
+  // ---------- Bootstrap: load profile (RPC) + draft ----------
   useEffect(() => {
     const bootstrap = async () => {
       try {
         if (!uid) return;
 
-        // 1) โหลดโปรไฟล์ผู้ตอบจาก survey_users
-        const { data: su, error: suErr } = await supabase
-          .from("survey_users")
-          .select("id,email,full_name,position,organization,phone,province")
-          .eq("id", uid)
-          .maybeSingle();
-
+        // 1) โหลดโปรไฟล์ผู้ตอบผ่าน RPC (ข้าม RLS)
+        const { data: suRows, error: suErr } = await supabase.rpc("get_survey_user", { p_id: uid });
         if (suErr) throw suErr;
+
+        const su = suRows?.[0] ?? null;
         if (!su) {
           toast({
             title: "ไม่พบโปรไฟล์ผู้ใช้",
@@ -97,10 +94,9 @@ const Survey: React.FC = () => {
           setResp(existing as SurveyResponse);
           setAnswers((existing as SurveyResponse).answers ?? {});
         } else {
-          // สร้าง draft เปล่า
           const payload = {
             user_id: uid,
-            status: "draft",
+            status: "draft" as const,
             answers: {},
             created_at: nowISO(),
             updated_at: nowISO(),
@@ -135,7 +131,7 @@ const Survey: React.FC = () => {
     if (autosaveTimer.current) {
       window.clearTimeout(autosaveTimer.current);
     }
-    // autosave หลังพิมพ์หยุด 800ms
+    // autosave เมื่อหยุดพิมพ์ 800ms
     autosaveTimer.current = window.setTimeout(() => {
       handleSave(true);
     }, 800) as unknown as number;
@@ -148,7 +144,7 @@ const Survey: React.FC = () => {
 
   const handleSave = async (silent = false) => {
     if (!resp?.id) return;
-    if (!dirtyRef.current && silent) return; // ไม่จำเป็นต้องเซฟ
+    if (!dirtyRef.current && silent) return; // ไม่มีอะไรเปลี่ยน ไม่ต้องเซฟ
     setSaving(true);
     try {
       const { data, error } = await supabase
@@ -183,9 +179,8 @@ const Survey: React.FC = () => {
     if (!resp?.id) return;
     setSubmitting(true);
     try {
-      // เซฟครั้งสุดท้ายก่อนส่ง
       if (dirtyRef.current) {
-        await handleSave(true);
+        await handleSave(true); // เซฟครั้งสุดท้าย
       }
       const { data, error } = await supabase
         .from("survey_responses")
@@ -202,7 +197,6 @@ const Survey: React.FC = () => {
       if (error) throw error;
       setResp((prev) => (prev ? { ...prev, ...data } : (data as any)));
       toast({ title: "ส่งแบบสอบถามสำเร็จ", description: "ขอบคุณสำหรับการตอบแบบสอบถาม" });
-      // หลังส่งสำเร็จจะล็อกฟอร์ม
     } catch (err: any) {
       toast({
         title: "ส่งแบบสอบถามไม่สำเร็จ",
@@ -281,7 +275,7 @@ const Survey: React.FC = () => {
 
         <Separator />
 
-        {/* ข้อมูลผู้ตอบ (แก้ไขได้เล็กน้อย เฉพาะ client; ถ้าต้องการบันทึกลง DB ให้ทำผ่าน Edge Function เพิ่ม) */}
+        {/* ข้อมูลผู้ตอบ */}
         <Card>
           <CardHeader>
             <CardTitle>ข้อมูลผู้ตอบ</CardTitle>
@@ -315,7 +309,7 @@ const Survey: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* แบบสอบถาม: ตัวอย่างฟิลด์ (คุณสามารถเพิ่ม/เปลี่ยน key ได้ตามต้องการ) */}
+        {/* แบบสอบถาม: ตัวอย่างฟิลด์ */}
         <Card>
           <CardHeader>
             <CardTitle>ส่วนที่ 1: ข้อมูลโครงการ/กิจกรรม</CardTitle>
