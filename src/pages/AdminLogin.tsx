@@ -11,7 +11,6 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
     fullName: '',
     isLogin: true
   });
@@ -42,9 +41,10 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
+      const generatedPassword = crypto.randomUUID();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password,
+        password: generatedPassword,
         options: {
           emailRedirectTo: `${window.location.origin}/admin`
         }
@@ -68,10 +68,10 @@ const AdminLogin = () => {
           description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีของท่าน",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {
@@ -84,34 +84,23 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithOtp({
         email: formData.email,
-        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/admin`
+        }
       });
 
       if (error) throw error;
 
-      if (data.user) {
-        const { data: adminUser } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('auth_user_id', data.user.id)
-          .single();
-        
-        if (adminUser) {
-          navigate('/admin');
-        } else {
-          toast({
-            title: "ไม่พบสิทธิ์ผู้ดูแลระบบ",
-            description: "บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบจัดการ",
-            variant: "destructive",
-          });
-        }
-      }
-    } catch (error: any) {
+      toast({
+        title: "กรุณาตรวจสอบอีเมล",
+        description: "เราได้ส่งลิงก์เข้าสู่ระบบไปยังอีเมลของคุณ",
+      });
+    } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {
@@ -170,18 +159,8 @@ const AdminLogin = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">รหัสผ่าน</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                required
-              />
-            </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading 
+              {isLoading
                 ? (formData.isLogin ? "กำลังเข้าสู่ระบบ..." : "กำลังลงทะเบียน...")
                 : (formData.isLogin ? "เข้าสู่ระบบ" : "ลงทะเบียน")
               }
