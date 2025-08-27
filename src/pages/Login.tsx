@@ -25,30 +25,65 @@ const StartSurvey = () => {
     try {
       const cleanEmail = formData.email.trim().toLowerCase();
 
-      // Try to find existing user by email (case-insensitive)
+      // ตรวจสอบข้อมูลให้ครบถ้วน
+      if (!formData.fullName.trim() || !cleanEmail || !formData.phone.trim() || 
+          !formData.position.trim() || !formData.organization.trim()) {
+        toast({
+          title: 'ข้อมูลไม่ครบถ้วน',
+          description: 'กรุณากรอกข้อมูลให้ครบทุกช่อง',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // ตรวจสอบว่าอีเมลถูกต้องหรือไม่
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        toast({
+          title: 'อีเมลไม่ถูกต้อง',
+          description: 'กรุณากรอกอีเมลในรูปแบบที่ถูกต้อง',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // ลองหาผู้ใช้เก่าด้วยอีเมล
       const { data: existingUser, error: findErr } = await supabase
         .from('survey_users')
         .select('*')
         .eq('email', cleanEmail)
         .maybeSingle();
-      if (findErr) throw findErr;
+      
+      if (findErr) {
+        console.error('Find user error:', findErr);
+        throw new Error('ไม่สามารถตรวจสอบข้อมูลผู้ใช้ได้');
+      }
 
       if (existingUser) {
-        // Update profile fields (keep same id)
-        const { error: upErr } = await supabase
+        // อัพเดทข้อมูลผู้ใช้เก่า
+        const { error: updateErr } = await supabase
           .from('survey_users')
           .update({
             full_name: formData.fullName.trim(),
             phone: formData.phone.trim(),
             position: formData.position.trim(),
             organization: formData.organization.trim(),
-            email: cleanEmail,
+            updated_at: new Date().toISOString(),
           })
           .eq('id', existingUser.id);
-        if (upErr) throw upErr;
+        
+        if (updateErr) {
+          console.error('Update user error:', updateErr);
+          throw new Error('ไม่สามารถอัพเดทข้อมูลได้');
+        }
+
+        toast({ 
+          title: 'พบข้อมูลเดิม', 
+          description: 'กำลังโหลดคำตอบเดิมของคุณ...' 
+        });
       } else {
-        // Insert new respondent
-        const { error: insErr } = await supabase
+        // สร้างผู้ใช้ใหม่
+        const { error: insertErr } = await supabase
           .from('survey_users')
           .insert({
             full_name: formData.fullName.trim(),
@@ -57,18 +92,26 @@ const StartSurvey = () => {
             organization: formData.organization.trim(),
             email: cleanEmail,
           });
-        if (insErr) throw insErr;
+        
+        if (insertErr) {
+          console.error('Insert user error:', insertErr);
+          throw new Error('ไม่สามารถสร้างข้อมูลผู้ใช้ได้');
+        }
+
+        toast({ 
+          title: 'ลงทะเบียนสำเร็จ', 
+          description: 'เริ่มทำแบบสอบถาม' 
+        });
       }
 
-      // Store email token for later lookup and go to survey
+      // เก็บอีเมลไว้ใน localStorage
       localStorage.setItem('survey_email', cleanEmail);
-      toast({ title: 'เริ่มทำแบบสอบถาม', description: 'กำลังพาคุณไปยังหน้าแบบสอบถาม' });
       navigate('/survey');
     } catch (err: any) {
-      console.error(err);
+      console.error('Login error:', err);
       toast({
         title: 'เกิดข้อผิดพลาด',
-        description: err.message ?? 'ไม่สามารถเริ่มทำแบบสอบถามได้',
+        description: err.message ?? 'ไม่สามารถเข้าสู่ระบบได้',
         variant: 'destructive',
       });
     } finally {

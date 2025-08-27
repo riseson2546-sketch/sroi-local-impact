@@ -117,7 +117,9 @@ const Survey: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // -------- Section1 --------
+      console.log("Starting save process...", formData);
+
+      // -------- บันทึก Section1 --------
       const { data: resp, error: respErr } = await supabase
         .from("survey_responses")
         .upsert(
@@ -132,36 +134,48 @@ const Survey: React.FC = () => {
 
       if (respErr) {
         console.error("survey_responses error:", respErr);
-        throw respErr;
+        throw new Error("ไม่สามารถบันทึกข้อมูล Section 1 ได้");
       }
+      
+      console.log("Section1 saved:", resp);
       setExistingResponse(resp);
 
-      // -------- Section2 --------
+      // -------- บันทึก Section2 --------
       if (formData.section2 && Object.keys(formData.section2).length > 0) {
         const { error: s2Err } = await supabase
           .from("survey_responses_section2")
           .upsert(
-            { user_id: userData.id, ...formData.section2 },
-            { onConflict: "user_id" }
+            { 
+              response_id: resp.id,
+              user_id: userData.id, 
+              ...formData.section2 
+            },
+            { onConflict: "response_id" }
           );
         if (s2Err) {
           console.error("survey_responses_section2 error:", s2Err);
-          throw s2Err;
+          throw new Error("ไม่สามารถบันทึกข้อมูล Section 2 ได้");
         }
+        console.log("Section2 saved");
       }
 
-      // -------- Section3 --------
+      // -------- บันทึก Section3 --------
       if (formData.section3 && Object.keys(formData.section3).length > 0) {
         const { error: s3Err } = await supabase
           .from("survey_responses_section3")
           .upsert(
-            { user_id: userData.id, ...formData.section3 },
-            { onConflict: "user_id" }
+            { 
+              response_id: resp.id,
+              user_id: userData.id, 
+              ...formData.section3 
+            },
+            { onConflict: "response_id" }
           );
         if (s3Err) {
           console.error("survey_responses_section3 error:", s3Err);
-          throw s3Err;
+          throw new Error("ไม่สามารถบันทึกข้อมูล Section 3 ได้");
         }
+        console.log("Section3 saved");
       }
 
       toast({
@@ -172,7 +186,7 @@ const Survey: React.FC = () => {
       console.error("handleSave exception:", e);
       toast({
         title: "บันทึกไม่สำเร็จ",
-        description: e?.message ?? "เกิดข้อผิดพลาด",
+        description: e?.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
         variant: "destructive",
       });
     } finally {
@@ -185,32 +199,32 @@ const Survey: React.FC = () => {
     if (currentSection === 1) {
       return (
         <Section1
-          value={formData.section1}
-          onChange={(next: AnyObj) =>
-            setFormData((prev: AnyObj) => ({ ...prev, section1: next }))
-          }
-          userData={userData}
+          data={formData.section1}
+          onSave={(data: AnyObj) => {
+            setFormData((prev: AnyObj) => ({ ...prev, section1: data }));
+            return Promise.resolve();
+          }}
         />
       );
     }
     if (currentSection === 2) {
       return (
         <Section2
-          value={formData.section2}
-          onChange={(next: AnyObj) =>
-            setFormData((prev: AnyObj) => ({ ...prev, section2: next }))
-          }
-          userData={userData}
+          data={formData.section2}
+          onSave={(data: AnyObj) => {
+            setFormData((prev: AnyObj) => ({ ...prev, section2: data }));
+            return Promise.resolve();
+          }}
         />
       );
     }
     return (
       <Section3
-        value={formData.section3}
-        onChange={(next: AnyObj) =>
-          setFormData((prev: AnyObj) => ({ ...prev, section3: next }))
-        }
-        userData={userData}
+        data={formData.section3}
+        onSave={(data: AnyObj) => {
+          setFormData((prev: AnyObj) => ({ ...prev, section3: data }));
+          return Promise.resolve();
+        }}
       />
     );
   };
@@ -219,11 +233,11 @@ const Survey: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <div className="max-w-5xl mx-auto space-y-4">
-        <SurveyHeader respondentName={userData?.full_name ?? ""} onLogout={handleLogout} />
+        <SurveyHeader />
 
         <Card>
           <CardContent className="p-4 md:p-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="text-lg font-semibold">
                 {currentSection === 1 && "ส่วนที่ 1: ข้อมูลโครงการ / บริบท"}
                 {currentSection === 2 && "ส่วนที่ 2: กระบวนการ / ผลลัพธ์ระยะสั้น"}
@@ -233,6 +247,18 @@ const Survey: React.FC = () => {
                 หน้า {currentSection} / 3
               </div>
             </div>
+
+            {/* User Info Display */}
+            {userData && (
+              <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>ผู้ตอบ:</strong> {userData.full_name} ({userData.email})
+                </p>
+                <p className="text-sm text-blue-600">
+                  <strong>ตำแหน่ง:</strong> {userData.position} | <strong>หน่วยงาน:</strong> {userData.organization}
+                </p>
+              </div>
+            )}
 
             {/* เนื้อหา Section */}
             <div>{renderSection()}</div>
