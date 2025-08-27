@@ -130,7 +130,7 @@ const Survey: React.FC = () => {
           { onConflict: "user_id" }
         )
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (respErr) {
         console.error("survey_responses error:", respErr);
@@ -138,10 +138,10 @@ const Survey: React.FC = () => {
       }
       
       console.log("Section1 saved:", resp);
-      setExistingResponse(resp);
+      if (resp) setExistingResponse(resp);
 
       // -------- บันทึก Section2 --------
-      if (formData.section2 && Object.keys(formData.section2).length > 0) {
+      if (resp && formData.section2 && Object.keys(formData.section2).length > 0) {
         const { error: s2Err } = await supabase
           .from("survey_responses_section2")
           .upsert(
@@ -160,7 +160,7 @@ const Survey: React.FC = () => {
       }
 
       // -------- บันทึก Section3 --------
-      if (formData.section3 && Object.keys(formData.section3).length > 0) {
+      if (resp && formData.section3 && Object.keys(formData.section3).length > 0) {
         const { error: s3Err } = await supabase
           .from("survey_responses_section3")
           .upsert(
@@ -266,20 +266,24 @@ const Survey: React.FC = () => {
             {/* ปุ่มควบคุม */}
             <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-between pt-2">
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={goPrev}
-                  disabled={currentSection === 1 || isLoading}
-                >
-                  ย้อนกลับ
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={goNext}
-                  disabled={currentSection === 3 || isLoading}
-                >
-                  ถัดไป
-                </Button>
+                {currentSection > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={goPrev}
+                    disabled={isLoading}
+                  >
+                    ย้อนกลับ
+                  </Button>
+                )}
+                {currentSection < 3 && (
+                  <Button
+                    variant="secondary"
+                    onClick={goNext}
+                    disabled={isLoading}
+                  >
+                    ถัดไป
+                  </Button>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleSave} disabled={isLoading}>
