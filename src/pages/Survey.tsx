@@ -112,7 +112,7 @@ const Survey: React.FC = () => {
         variant: "destructive",
       });
       navigate("/login");
-      return;
+      return false;
     }
 
     setIsLoading(true);
@@ -120,12 +120,14 @@ const Survey: React.FC = () => {
       console.log("Starting save process...", formData);
 
       // -------- บันทึก Section1 --------
+      const section1Data = formData.section1 && Object.keys(formData.section1).length > 0 ? formData.section1 : {};
+      
       const { data: resp, error: respErr } = await supabase
         .from("survey_responses")
         .upsert(
           {
             user_id: userData.id,
-            section1: formData.section1 ?? {},
+            section1: section1Data,
           },
           { onConflict: "user_id" }
         )
@@ -134,14 +136,18 @@ const Survey: React.FC = () => {
 
       if (respErr) {
         console.error("survey_responses error:", respErr);
-        throw new Error("ไม่สามารถบันทึกข้อมูล Section 1 ได้");
+        throw new Error("ไม่สามารถบันทึกข้อมูล Section 1 ได้: " + respErr.message);
       }
       
+      if (!resp) {
+        throw new Error("ไม่สามารถสร้างหรืออัปเดตข้อมูลได้");
+      }
+
       console.log("Section1 saved:", resp);
-      if (resp) setExistingResponse(resp);
+      setExistingResponse(resp);
 
       // -------- บันทึก Section2 --------
-      if (resp && formData.section2 && Object.keys(formData.section2).length > 0) {
+      if (formData.section2 && Object.keys(formData.section2).length > 0) {
         const { error: s2Err } = await supabase
           .from("survey_responses_section2")
           .upsert(
@@ -154,13 +160,13 @@ const Survey: React.FC = () => {
           );
         if (s2Err) {
           console.error("survey_responses_section2 error:", s2Err);
-          throw new Error("ไม่สามารถบันทึกข้อมูล Section 2 ได้");
+          throw new Error("ไม่สามารถบันทึกข้อมูล Section 2 ได้: " + s2Err.message);
         }
         console.log("Section2 saved");
       }
 
       // -------- บันทึก Section3 --------
-      if (resp && formData.section3 && Object.keys(formData.section3).length > 0) {
+      if (formData.section3 && Object.keys(formData.section3).length > 0) {
         const { error: s3Err } = await supabase
           .from("survey_responses_section3")
           .upsert(
@@ -173,7 +179,7 @@ const Survey: React.FC = () => {
           );
         if (s3Err) {
           console.error("survey_responses_section3 error:", s3Err);
-          throw new Error("ไม่สามารถบันทึกข้อมูล Section 3 ได้");
+          throw new Error("ไม่สามารถบันทึกข้อมูล Section 3 ได้: " + s3Err.message);
         }
         console.log("Section3 saved");
       }
@@ -182,6 +188,7 @@ const Survey: React.FC = () => {
         title: "บันทึกสำเร็จ",
         description: "คำตอบของคุณถูกบันทึกแล้ว",
       });
+      return true;
     } catch (e: any) {
       console.error("handleSave exception:", e);
       toast({
@@ -189,6 +196,7 @@ const Survey: React.FC = () => {
         description: e?.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -277,11 +285,14 @@ const Survey: React.FC = () => {
                 )}
                 {currentSection < 3 && (
                   <Button
-                    variant="secondary"
-                    onClick={goNext}
+                    onClick={() => {
+                      handleSave().then(() => {
+                        goNext();
+                      });
+                    }}
                     disabled={isLoading}
                   >
-                    ถัดไป
+                    {isLoading ? "กำลังบันทึก..." : "บันทึกและไปส่วนถัดไป"}
                   </Button>
                 )}
               </div>
