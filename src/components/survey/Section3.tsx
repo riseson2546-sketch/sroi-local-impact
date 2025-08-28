@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, BarChart3, Building2, Target, MessageSquare, ChevronLeft } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
 
 interface Section3Props {
   data: any;
@@ -13,8 +12,6 @@ interface Section3Props {
   onPrevSection?: () => void;
   isFirstSection?: boolean;
   isLastSection?: boolean;
-  /** เส้นทางหน้า “ขอบพระคุณ” */
-  thankYouPath?: string;
 }
 
 const defaultFormState = {
@@ -49,15 +46,11 @@ const Section3: React.FC<Section3Props> = ({
   isLoading = false,
   onNextSection,
   onPrevSection,
-  thankYouPath = '/thank-you',
 }) => {
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -103,18 +96,18 @@ const Section3: React.FC<Section3Props> = ({
     return errors.length === 0;
   };
 
+  // ปุ่มหลัก: ขั้นกลาง = “ถัดไป” (บันทึกแล้วไปต่อ), ขั้นสุดท้าย = “บันทึกและส่งแบบสอบถาม”
   const handlePrimaryClick = async () => {
-    setSubmitError(null);
     const isLastStep = currentStep >= formSteps.length - 1;
     if (!validateCurrentStep()) return;
 
     try {
       setSaving(true);
-      await onSave(formData); // บันทึกทุกครั้งที่กด (ไม่มี popup)
+      await onSave(formData); // บันทึกค่าปัจจุบันทุกครั้งที่กดปุ่มหลัก
 
       if (isLastStep) {
-        // ส่งเสร็จ → ไปหน้า “ขอบพระคุณ”
-        navigate(thankYouPath);
+        // ส่งแบบสอบถาม (ออกจาก Section นี้)
+        await onNextSection?.();
       } else {
         // ไปหมวดถัดไป
         setCurrentStep(prev => prev + 1);
@@ -122,8 +115,7 @@ const Section3: React.FC<Section3Props> = ({
       }
     } catch (err) {
       console.error('[Section3] save/submit failed', err);
-      // ไม่มี alert/popup — แสดงข้อความผิดพลาดแบบ inline แทน
-      setSubmitError('บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ');
+      alert('บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ');
     } finally {
       setSaving(false);
     }
@@ -135,7 +127,6 @@ const Section3: React.FC<Section3Props> = ({
     } else {
       setCurrentStep(prev => Math.max(prev - 1, 0)); // ย้อน step ภายใน
       setValidationErrors([]);
-      setSubmitError(null);
     }
   };
 
@@ -240,10 +231,10 @@ const Section3: React.FC<Section3Props> = ({
         </CardHeader>
 
         <CardContent className="p-0">
-          {(validationErrors.length > 0 || submitError) && (
+          {validationErrors.length > 0 && (
             <div className="px-4 py-3 text-sm text-red-700 bg-red-50 border-b border-red-200 flex items-start space-x-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
-              <div>{submitError ? submitError : validationErrors[0]}</div>
+              <div>{validationErrors[0]}</div>
             </div>
           )}
 
