@@ -96,25 +96,25 @@ const Section3: React.FC<Section3Props> = ({
     return errors.length === 0;
   };
 
-  // ปุ่มหลัก: ขั้นกลาง = “ถัดไป” (บันทึกแล้วไปต่อ), ขั้นสุดท้าย = “บันทึกและส่งแบบสอบถาม”
   const handlePrimaryClick = async () => {
     const isLastStep = currentStep >= formSteps.length - 1;
     if (!validateCurrentStep()) return;
 
     try {
       setSaving(true);
-      await onSave(formData); // บันทึกค่าปัจจุบันทุกครั้งที่กดปุ่มหลัก
+      await onSave(formData); // บันทึกข้อมูลเบื้องหลัง
 
       if (isLastStep) {
-        // ส่งแบบสอบถาม (ออกจาก Section นี้)
+        // เมื่อเป็นขั้นตอนสุดท้าย ให้เรียกฟังก์ชันเพื่อไปยัง Section ถัดไป
         await onNextSection?.();
       } else {
-        // ไปหมวดถัดไป
+        // ไปยังขั้นตอนย่อยถัดไปใน Section นี้
         setCurrentStep(prev => prev + 1);
         setValidationErrors([]);
       }
     } catch (err) {
       console.error('[Section3] save/submit failed', err);
+      // ในกรณีที่เกิดข้อผิดพลาด สามารถแสดง alert หรือ UI แจ้งเตือนอื่น ๆ ได้
       alert('บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ');
     } finally {
       setSaving(false);
@@ -123,9 +123,9 @@ const Section3: React.FC<Section3Props> = ({
 
   const handlePrev = () => {
     if (currentStep === 0) {
-      onPrevSection?.(); // ย้อนออกไป section ก่อนหน้า
+      onPrevSection?.(); // ย้อนกลับไปยัง Section ก่อนหน้า
     } else {
-      setCurrentStep(prev => Math.max(prev - 1, 0)); // ย้อน step ภายใน
+      setCurrentStep(prev => Math.max(prev - 1, 0)); // ย้อนกลับไปยังขั้นตอนย่อยก่อนหน้า
       setValidationErrors([]);
     }
   };
