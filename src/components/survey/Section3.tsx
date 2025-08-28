@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronRight, ChevronLeft, AlertCircle, BarChart3, Building2, Target, MessageSquare } from "lucide-react";
+import { AlertCircle, BarChart3, Building2, Target, MessageSquare, ChevronLeft } from "lucide-react";
 
 interface Section3Props {
   data: any;
@@ -46,8 +46,6 @@ const Section3: React.FC<Section3Props> = ({
   isLoading = false,
   onNextSection,
   onPrevSection,
-  isFirstSection = false,
-  isLastSection = false
 }) => {
   const [formData, setFormData] = useState({ ...defaultFormState, ...data });
   const [saving, setSaving] = useState(false);
@@ -58,7 +56,6 @@ const Section3: React.FC<Section3Props> = ({
     setFormData(prev => ({ ...prev, ...data }));
   }, [data]);
 
-  // ขั้นตอนของฟอร์ม
   const formSteps = [
     {
       id: 'internal_resources',
@@ -86,61 +83,57 @@ const Section3: React.FC<Section3Props> = ({
     }
   ];
 
-  // ตรวจสอบความครบถ้วนเฉพาะ step ปัจจุบัน (ไม่มีการคำนวณ/แสดงเปอร์เซ็นต์)
   const validateCurrentStep = () => {
     const currentStepData = formSteps[currentStep];
     const errors: string[] = [];
-
     currentStepData.required.forEach(field => {
       const value = (formData as any)[field];
       if (value === null || value === undefined) {
-        errors.push(`กรุณาให้คะแนนในทุกข้อ`);
+        errors.push('กรุณาให้คะแนนในทุกข้อ');
       }
     });
-
     setValidationErrors(errors);
     return errors.length === 0;
   };
 
-  const handleNext = async () => {
+  // ปุ่มหลัก: ขั้นกลาง = “ถัดไป” (บันทึกแล้วไปต่อ), ขั้นสุดท้าย = “บันทึกและส่งแบบสอบถาม”
+  const handlePrimaryClick = async () => {
+    const isLastStep = currentStep >= formSteps.length - 1;
     if (!validateCurrentStep()) return;
 
-    const isLastStep = currentStep >= formSteps.length - 1;
-    if (isLastStep) {
-      // เดินไป section ถัดไป ถ้าส่ง prop มา
-      if (onNextSection) await onNextSection();
-    } else {
-      setCurrentStep(prev => prev + 1);
-      setValidationErrors([]);
+    try {
+      setSaving(true);
+      await onSave(formData); // บันทึกค่าปัจจุบันทุกครั้งที่กดปุ่มหลัก
+
+      if (isLastStep) {
+        // ส่งแบบสอบถาม (ออกจาก Section นี้)
+        await onNextSection?.();
+      } else {
+        // ไปหมวดถัดไป
+        setCurrentStep(prev => prev + 1);
+        setValidationErrors([]);
+      }
+    } catch (err) {
+      console.error('[Section3] save/submit failed', err);
+      alert('บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handlePrev = () => {
     if (currentStep === 0) {
-      onPrevSection?.();
-      return;
+      onPrevSection?.(); // ย้อนออกไป section ก่อนหน้า
+    } else {
+      setCurrentStep(prev => Math.max(prev - 1, 0)); // ย้อน step ภายใน
+      setValidationErrors([]);
     }
-    setCurrentStep(prev => Math.max(prev - 1, 0));
-    setValidationErrors([]);
   };
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      await onSave(formData);
-    } catch (err) {
-      console.error("[Section3] save failed", err);
-      alert("บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // แถวให้คะแนน (ไม่มีเปอร์เซ็นต์/Progress)
   const renderRatingRow = (title: string, field: string, isRequired = true) => (
     <tr className="border-b hover:bg-gray-50 transition-colors">
       <td className="p-3 text-sm align-top">
@@ -172,7 +165,6 @@ const Section3: React.FC<Section3Props> = ({
     </tr>
   );
 
-  // ข้อมูลของแต่ละหมวด
   const categoryData = [
     {
       category: "1. ทรัพยากรภายในองค์กร",
@@ -220,10 +212,11 @@ const Section3: React.FC<Section3Props> = ({
     }
   ];
 
-  // เนื้อหาแต่ละขั้น (ไม่มี Progress/เปอร์เซ็นต์ใดๆ)
   const renderStepContent = () => {
     const currentCategory = categoryData[currentStep];
     const IconComponent = currentCategory.icon;
+    const isLastStep = currentStep >= formSteps.length - 1;
+    const primaryLabel = isLastStep ? 'บันทึกและส่งแบบสอบถาม' : 'ถัดไป';
 
     return (
       <Card className="shadow-lg">
@@ -238,7 +231,6 @@ const Section3: React.FC<Section3Props> = ({
         </CardHeader>
 
         <CardContent className="p-0">
-          {/* แสดง error เฉพาะข้อความเตือน ไม่มีเปอร์เซ็นต์ */}
           {validationErrors.length > 0 && (
             <div className="px-4 py-3 text-sm text-red-700 bg-red-50 border-b border-red-200 flex items-start space-x-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
@@ -293,39 +285,24 @@ const Section3: React.FC<Section3Props> = ({
             </table>
           </div>
 
-          {/* ปุ่มควบคุมการนำทาง ไม่มีการแสดง progress ใดๆ */}
           <div className="flex items-center justify-between px-4 py-4 border-t">
-            <div className="flex items-center space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrev}
-                disabled={isLoading || saving}
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                ย้อนกลับ
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrev}
+              disabled={isLoading || saving}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              ย้อนกลับ
+            </Button>
 
-            <div className="flex items-center space-x-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleSave}
-                disabled={isLoading || saving}
-              >
-                {saving ? 'กำลังบันทึก...' : 'บันทึก'}
-              </Button>
-
-              <Button
-                type="button"
-                onClick={handleNext}
-                disabled={isLoading || saving}
-              >
-                {currentStep >= formSteps.length - 1 ? 'ถัดไป (ไปส่วนถัดไป)' : 'ถัดไป'}
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
+            <Button
+              type="button"
+              onClick={handlePrimaryClick}
+              disabled={isLoading || saving}
+            >
+              {saving ? 'กำลังบันทึก...' : primaryLabel}
+            </Button>
           </div>
         </CardContent>
       </Card>
