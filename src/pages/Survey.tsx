@@ -105,11 +105,16 @@ const Survey = () => {
           return;
         }
 
+        // ตรวจสอบข้อมูลก่อนบันทึก
+        if (!sectionData.section2_data_types || sectionData.section2_data_types.length === 0) {
+          throw new Error('ข้อมูลไม่สมบูรณ์: กรุณาเลือกชุดข้อมูลอย่างน้อย 1 รายการ');
+        }
+
         const { data: existing } = await supabase
           .from('survey_responses_section2')
           .select('*')
           .eq('response_id', existingResponse.id)
-          .single();
+          .maybeSingle(); // ใช้ maybeSingle แทน single เพื่อหลีกเลี่ยงข้อผิดพลาดเมื่อไม่มีข้อมูล
 
         if (existing) {
           const { error } = await supabase
@@ -118,13 +123,21 @@ const Survey = () => {
             .eq('id', existing.id);
           if (error) throw error;
         } else {
-          const { error } = await supabase
+          const { data: newRecord, error } = await supabase
             .from('survey_responses_section2')
             .insert({
               response_id: existingResponse.id,
               ...sectionData
-            });
+            })
+            .select()
+            .single();
           if (error) throw error;
+          
+          // อัปเดต existing response เพื่อให้สามารถอ้างอิงข้อมูล Section 2 ได้
+          setFormData(prev => ({
+            ...prev,
+            section2: { ...prev.section2, id: newRecord.id }
+          }));
         }
       } else if (section === 3) {
         if (!existingResponse) {

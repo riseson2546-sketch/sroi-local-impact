@@ -85,7 +85,28 @@ const Section2: React.FC<Section2Props> = ({ data, onSave, isLoading = false, on
   const handleCheckboxChange = (field: string, value: string, checked: boolean) => { setFormData(p => ({ ...p, [field]: checked ? [...(p[field] || []), value] : (p[field] || []).filter(item => item !== value) })); };
   const handleInputChange = (field: string, value: any) => { setFormData(p => ({ ...p, [field]: value })); };
   const handleNestedInputChange = (outer: string, inner: string, value: any) => { setFormData(p => ({ ...p, [outer]: { ...p[outer], [inner]: value } })); };
-  const handleSave = async () => { try { setSaving(true); await onSave(formData); } catch (err) { console.error("Save failed", err); } finally { setSaving(false); } };
+  const handleSave = async () => { 
+    // ตรวจสอบข้อมูลพื้นฐานก่อนบันทึก
+    if (!formData.section2_data_types || formData.section2_data_types.length === 0) {
+      setValidationErrors(['กรุณาเลือกชุดข้อมูลอย่างน้อย 1 รายการ']);
+      return;
+    }
+    if (!formData.section2_data_sources || !formData.section2_data_sources.trim()) {
+      setValidationErrors(['กรุณากรอกแหล่งที่มาของชุดข้อมูล']);
+      return;
+    }
+    
+    try { 
+      setSaving(true); 
+      await onSave(formData); 
+      setValidationErrors([]);
+    } catch (err) { 
+      console.error("Save failed", err); 
+      setValidationErrors(['เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง']);
+    } finally { 
+      setSaving(false); 
+    } 
+  };
 
   const dataTypes = ['ชุดข้อมูลด้านประชากร', 'ชุดข้อมูลด้านโครงสร้างพื้นฐาน', 'ชุดข้อมูลด้านสิ่งแวดล้อม เช่น ขยะ น้ำเสีย PM 2.5 เป็นต้น', 'ชุดข้อมูลด้านการจัดการภัยพิบัติ', 'ชุดข้อมูลด้านสุขภาพ', 'ชุดข้อมูลด้านการจราจร', 'ชุดข้อมูลด้านการจัดการสินทรัพย์ท้องถิ่น'];
   const partnerOrgs = ['มูลนิธิส่งเสริมการปกครองท้องถิ่น', 'นักวิชาการจากสถาบันการศึกษา', 'ผู้เชี่ยวชาญจากภายนอก', 'ภาคีเครือข่ายในพื้นที่', 'ภาคเอกชน'];
