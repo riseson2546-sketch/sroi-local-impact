@@ -9,7 +9,6 @@ import Survey from "./pages/Survey";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import SurveyReview from "./pages/SurveyReview"; // เพิ่มบรรทัดนี้
-import ThankYou from "./pages/ThankYou"; // ✅ เพิ่มบรรทัดนี้
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +26,6 @@ const App = () => (
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/survey-review" element={<SurveyReview />} /> {/* เพิ่มบรรทัดนี้ */}
-          <Route path="/thank-you" element={<ThankYou />} /> {/* ✅ เพิ่มบรรทัดนี้ */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
