@@ -145,7 +145,7 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
     "ใช้เป็นกลไกที่เน้นนวัตกรรม การวิจัย และการพัฒนาทักษะ",
     "ช่วยรองรับการเปลี่ยนแปลงระยะยาว เช่น การตั้งศูนย์นวัตกรรมท้องถิ่น",
     "ช่วยสร้างความร่วมมือกับมหาวิทยาลัย หรือการสนับสนุนผู้ประกอบการใหม่",
-    "ช่วยสร้างสินค้า-บริการใหม่ เสริมเศรษฐกิจท้องถิ่น และยกระดับคุณภาพชีวิต ตัวอย่างเช่น \"บริษัทพัฒนาเมืองหรือ \"วิสาหกิจเพื่อสังคม\"",
+    "ช่วยสร้างสินค้า-บริการใหม่ เสริมเศรษฐกิจท้องถิ่น และยกระดับคุณภาพชีวิต ตัวอย่างเช่น บริษัทพัฒนาเมือง หรือ วิสาหกิจเพื่อสังคม",
     "ช่วยรวมพลังภาคเอกชนและชุมชนพัฒนาเมืองอย่างยั่งยืน",
   ];
 
@@ -163,6 +163,8 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
     "การประสานความร่วมมือของหน่วยงานต่างๆทั้งระดับท้องถิ่นและระดับประเทศ",
     "เพิ่มความโปร่งใสในการพัฒนาเมือง",
     "ทำให้กล้าคิด กล้าทำ หรือคิดนอกกรอบมากขึ้น",
+    "ทำให้มีข้อมูลในการพัฒนาเมือง ซึ่งนำไปสู่การแก้ไขปัญหาได้อย่างตรงจุด ตรงเป้า",
+    "การมีระบบในการติดตามและรายงานผลการใช้ประโยชน์จากนวัตกรรม",
   ];
 
   return (
@@ -195,7 +197,10 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
               <div>
                 <h4 className="font-medium mb-2">อื่น ๆ</h4>
                 <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_application_other}
+                  {typeof data.section1_application_other === 'string' 
+                    ? data.section1_application_other 
+                    : JSON.stringify(data.section1_application_other)
+                  }
                 </div>
               </div>
             )}
@@ -238,187 +243,147 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
       {/* 1.4 การใช้องค์ความรู้ */}
       <Card>
         <CardHeader>
-          <CardTitle>1.4 การใช้องค์ความรู้ในการแก้ปัญหาการพัฒนาเมือง</CardTitle>
+          <CardTitle>1.4 การนำความรู้ที่ได้ไปแก้ไขปัญหาพัฒนาเมือง</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {renderCheckboxes(data.section1_knowledge_solutions, knowledgeSolutions)}
+          {data.section1_knowledge_solutions_other && (
+            <div className="mt-4">
+              <h4 className="font-medium mb-2">อื่น ๆ</h4>
+              <div className="p-3 bg-secondary/20 rounded">
+                {data.section1_knowledge_solutions_other}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 1.5 ความรู้ก่อนและหลัง */}
+      <Card>
+        <CardHeader>
+          <CardTitle>1.5 ระดับความรู้เกี่ยวกับการพัฒนาเมืองก่อนและหลังการอบรม</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {renderCheckboxes(data.section1_knowledge_solutions, knowledgeSolutions)}
-            
-            {data.section1_knowledge_solutions_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_knowledge_solutions_other}
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium mb-3">ระดับความรู้ก่อนอบรม (1-10)</h4>
-                {renderRatingScale(data.section1_knowledge_before)}
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-3">ระดับความรู้หลังอบรม (1-10)</h4>
-                {renderRatingScale(data.section1_knowledge_after)}
-              </div>
+            <div>
+              <label className="text-sm font-medium">ก่อนการอบรม (1-10):</label>
+              {renderRatingScale(data.section1_knowledge_before)}
+            </div>
+            <div>
+              <label className="text-sm font-medium">หลังการอบรม (1-10):</label>
+              {renderRatingScale(data.section1_knowledge_after)}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 1.5 กลไกข้อมูลสารสนเทศ */}
+      {/* 1.6-1.11 การใช้ประโยชน์ในแต่ละด้าน */}
       <Card>
         <CardHeader>
-          <CardTitle>1.5 กลไกข้อมูลสารสนเทศและเทคโนโลยีดิจิทัล</CardTitle>
+          <CardTitle>1.6-1.11 การใช้ประโยชน์จากความรู้ที่ได้รับในแต่ละด้าน</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {renderCheckboxes(data.section1_it_usage, itUsage)}
-            
-            {data.section1_it_usage_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_it_usage_other}
-                </div>
-              </div>
-            )}
-
+          <div className="space-y-6">
             <div>
-              <h4 className="font-medium mb-3">ระดับการช่วยเหลือของเทคโนโลยี (1-10)</h4>
-              {renderRatingScale(data.section1_it_level)}
+              <h4 className="font-medium mb-2">IT</h4>
+              {renderCheckboxes(data.section1_it_usage, itUsage)}
+              {data.section1_it_usage_other && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                  <div className="p-3 bg-secondary/20 rounded">
+                    {data.section1_it_usage_other}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">
+                <label className="text-sm font-medium">ระดับการใช้งาน (1-10):</label>
+                {renderRatingScale(data.section1_it_level)}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1.6 กลไกประสานความร่วมมือ */}
-      <Card>
-        <CardHeader>
-          <CardTitle>1.6 กลไกประสานความร่วมมือ</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {renderCheckboxes(data.section1_cooperation_usage, cooperationUsage)}
-            
-            {data.section1_cooperation_usage_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_cooperation_usage_other}
-                </div>
-              </div>
-            )}
 
             <div>
-              <h4 className="font-medium mb-3">ระดับการช่วยเหลือของความร่วมมือ (1-10)</h4>
-              {renderRatingScale(data.section1_cooperation_level)}
+              <h4 className="font-medium mb-2">การประสานความร่วมมือ</h4>
+              {renderCheckboxes(data.section1_cooperation_usage, cooperationUsage)}
+              {data.section1_cooperation_usage_other && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                  <div className="p-3 bg-secondary/20 rounded">
+                    {data.section1_cooperation_usage_other}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">
+                <label className="text-sm font-medium">ระดับการใช้งาน (1-10):</label>
+                {renderRatingScale(data.section1_cooperation_level)}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1.7 กลไกการระดมทุน */}
-      <Card>
-        <CardHeader>
-          <CardTitle>1.7 กลไกการระดมทุน</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {renderCheckboxes(data.section1_funding_usage, fundingUsage)}
-            
-            {data.section1_funding_usage_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_funding_usage_other}
-                </div>
-              </div>
-            )}
 
             <div>
-              <h4 className="font-medium mb-3">ระดับการช่วยเหลือของการระดมทุน (1-10)</h4>
-              {renderRatingScale(data.section1_funding_level)}
+              <h4 className="font-medium mb-2">การระดมทุน</h4>
+              {renderCheckboxes(data.section1_funding_usage, fundingUsage)}
+              {data.section1_funding_usage_other && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                  <div className="p-3 bg-secondary/20 rounded">
+                    {data.section1_funding_usage_other}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">
+                <label className="text-sm font-medium">ระดับการใช้งาน (1-10):</label>
+                {renderRatingScale(data.section1_funding_level)}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1.8 กลไกวัฒนธรรม */}
-      <Card>
-        <CardHeader>
-          <CardTitle>1.8 กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {renderCheckboxes(data.section1_culture_usage, cultureUsage)}
-            
-            {data.section1_culture_usage_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_culture_usage_other}
-                </div>
-              </div>
-            )}
 
             <div>
-              <h4 className="font-medium mb-3">ระดับการช่วยเหลือของวัฒนธรรม (1-10)</h4>
-              {renderRatingScale(data.section1_culture_level)}
+              <h4 className="font-medium mb-2">วัฒนธรรม อัตลักษณ์ท้องถิ่น</h4>
+              {renderCheckboxes(data.section1_culture_usage, cultureUsage)}
+              {data.section1_culture_usage_other && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                  <div className="p-3 bg-secondary/20 rounded">
+                    {data.section1_culture_usage_other}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">
+                <label className="text-sm font-medium">ระดับการใช้งาน (1-10):</label>
+                {renderRatingScale(data.section1_culture_level)}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1.9 กลไกเศรษฐกิจสีเขียว */}
-      <Card>
-        <CardHeader>
-          <CardTitle>1.9 กลไกเศรษฐกิจสีเขียวและเศรษฐกิจหมุนเวียน</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {renderCheckboxes(data.section1_green_usage, greenUsage)}
-            
-            {data.section1_green_usage_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_green_usage_other}
-                </div>
-              </div>
-            )}
 
             <div>
-              <h4 className="font-medium mb-3">ระดับการช่วยเหลือของเศรษฐกิจสีเขียว (1-10)</h4>
-              {renderRatingScale(data.section1_green_level)}
+              <h4 className="font-medium mb-2">เศรษฐกิจสีเขียว</h4>
+              {renderCheckboxes(data.section1_green_usage, greenUsage)}
+              {data.section1_green_usage_other && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                  <div className="p-3 bg-secondary/20 rounded">
+                    {data.section1_green_usage_other}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">
+                <label className="text-sm font-medium">ระดับการใช้งาน (1-10):</label>
+                {renderRatingScale(data.section1_green_level)}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1.10 กลไกการพัฒนาใหม่ */}
-      <Card>
-        <CardHeader>
-          <CardTitle>1.10 กลไกการพัฒนาใหม่</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {renderCheckboxes(data.section1_new_dev_usage, newDevUsage)}
-            
-            {data.section1_new_dev_usage_other && (
-              <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
-                <div className="p-3 bg-secondary/20 rounded">
-                  {data.section1_new_dev_usage_other}
-                </div>
-              </div>
-            )}
 
             <div>
-              <h4 className="font-medium mb-3">ระดับการช่วยเหลือของการพัฒนาใหม่ (1-10)</h4>
-              {renderRatingScale(data.section1_new_dev_level)}
+              <h4 className="font-medium mb-2">เศรษฐกิจการพัฒนาใหม่</h4>
+              {renderCheckboxes(data.section1_new_dev_usage, newDevUsage)}
+              {data.section1_new_dev_usage_other && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                  <div className="p-3 bg-secondary/20 rounded">
+                    {data.section1_new_dev_usage_other}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">
+                <label className="text-sm font-medium">ระดับการใช้งาน (1-10):</label>
+                {renderRatingScale(data.section1_new_dev_level)}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -435,7 +400,7 @@ const Section1Viewer: React.FC<Section1ViewerProps> = ({ data }) => {
             
             {data.section1_success_factors_other && (
               <div>
-                <h4 className="font-medium mb-2">อื่น ๆ</h4>
+                <h4 className="font-medium mb-2">ปัจจัยอื่น ๆ</h4>
                 <div className="p-3 bg-secondary/20 rounded">
                   {data.section1_success_factors_other}
                 </div>
