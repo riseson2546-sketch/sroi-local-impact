@@ -28,12 +28,39 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
   let parsedValues: string[] = [];
   if (typeof selectedValues === 'string') {
     try {
-      parsedValues = JSON.parse(selectedValues);
+      // Handle multiple JSON string formats
+      let cleanValue = selectedValues.trim();
+      if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
+        cleanValue = cleanValue.slice(1, -1);
+      }
+      parsedValues = JSON.parse(cleanValue);
+      if (!Array.isArray(parsedValues)) {
+        parsedValues = [];
+      }
     } catch {
-      parsedValues = [];
+      // If JSON parsing fails, try splitting by comma for simple string format
+      if (selectedValues.includes(',')) {
+        parsedValues = selectedValues.split(',').map(s => s.trim()).filter(s => s);
+      } else if (selectedValues.trim()) {
+        parsedValues = [selectedValues.trim()];
+      } else {
+        parsedValues = [];
+      }
     }
   } else if (Array.isArray(selectedValues)) {
     parsedValues = selectedValues;
+  }
+
+  // Clean and normalize otherValue
+  let cleanOtherValue = otherValue;
+  if (typeof otherValue === 'string') {
+    cleanOtherValue = otherValue.trim();
+    if (cleanOtherValue.startsWith('"') && cleanOtherValue.endsWith('"')) {
+      cleanOtherValue = cleanOtherValue.slice(1, -1);
+    }
+    if (cleanOtherValue.toLowerCase() === 'null' || cleanOtherValue === '') {
+      cleanOtherValue = undefined;
+    }
   }
 
   return (
@@ -50,15 +77,15 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
         ))}
         {showOther && (
           <div className="flex items-start space-x-3">
-            <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${otherValue ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
-              {otherValue && <span className="text-white font-bold text-xs">✓</span>}
+            <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${cleanOtherValue ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
+              {cleanOtherValue && <span className="text-white font-bold text-xs">✓</span>}
             </div>
-            <span className={`text-sm ${otherValue ? '' : 'text-gray-500'}`}>อื่น ๆ</span>
+            <span className={`text-sm ${cleanOtherValue ? '' : 'text-gray-500'}`}>อื่น ๆ</span>
           </div>
         )}
-        {otherValue && (
+        {cleanOtherValue && (
           <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
-            <p className="text-sm text-blue-800">{otherValue}</p>
+            <p className="text-sm text-blue-800">{cleanOtherValue}</p>
           </div>
         )}
       </div>
