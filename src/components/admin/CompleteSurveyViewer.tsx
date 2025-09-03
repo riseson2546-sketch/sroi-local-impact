@@ -23,7 +23,48 @@ const section3Factors = [{ category: "1. ทรัพยากรภายใน
 
 // Helper Components & Functions
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
-const renderCheckboxes = (title: string, options: string[], selectedValues: string[] | undefined, otherValue?: string, showOther = true) => (<div className="mb-4 p-4 border rounded-lg bg-white print-item-block"><h4 className="font-semibold mb-3">{title}</h4><div className="space-y-2">{options.map((opt, i) => (<div key={i} className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${Array.isArray(selectedValues) && selectedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{Array.isArray(selectedValues) && selectedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${Array.isArray(selectedValues) && selectedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span></div>))}{showOther && (<div className="flex items-start space-x-3"><div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${otherValue ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>{otherValue && <span className="text-white font-bold text-xs">✓</span>}</div><span className={`text-sm ${otherValue ? '' : 'text-gray-500'}`}>อื่น ๆ</span></div>)}{otherValue && (<div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200"><p className="text-sm text-blue-800">{otherValue}</p></div>)}</div></div>);
+const renderCheckboxes = (title: string, options: string[], selectedValues: string[] | string | undefined, otherValue?: string, showOther = true) => {
+  // Parse selectedValues if it's a JSON string
+  let parsedValues: string[] = [];
+  if (typeof selectedValues === 'string') {
+    try {
+      parsedValues = JSON.parse(selectedValues);
+    } catch {
+      parsedValues = [];
+    }
+  } else if (Array.isArray(selectedValues)) {
+    parsedValues = selectedValues;
+  }
+
+  return (
+    <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
+      <h4 className="font-semibold mb-3">{title}</h4>
+      <div className="space-y-2">
+        {options.map((opt, i) => (
+          <div key={i} className="flex items-start space-x-3">
+            <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${parsedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
+              {parsedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}
+            </div>
+            <span className={`text-sm ${parsedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span>
+          </div>
+        ))}
+        {showOther && (
+          <div className="flex items-start space-x-3">
+            <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${otherValue ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
+              {otherValue && <span className="text-white font-bold text-xs">✓</span>}
+            </div>
+            <span className={`text-sm ${otherValue ? '' : 'text-gray-500'}`}>อื่น ๆ</span>
+          </div>
+        )}
+        {otherValue && (
+          <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md border border-blue-200">
+            <p className="text-sm text-blue-800">{otherValue}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
     const selectedValues = allData.section1_problems_before || [];
