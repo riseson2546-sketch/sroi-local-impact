@@ -24,6 +24,14 @@ const section3Factors = [{ category: "1. ทรัพยากรภายใน
 // Helper Components & Functions
 const RatingDescription = ({ items }: { items: string[] }) => (<div className="bg-blue-50 p-3 rounded-lg mt-4 text-xs text-blue-800 space-y-1 border border-blue-200"><h4 className="font-bold">หมายเหตุ : คำอธิบายระดับ 1-10</h4>{items.map(item => <p key={item}>{item}</p>)}</div>);
 const renderCheckboxes = (title: string, options: string[], selectedValues: string[] | string | undefined, otherValue?: string, showOther = true) => {
+  // Debug logging
+  console.log('renderCheckboxes Debug:', {
+    title: title.substring(0, 50) + '...',
+    selectedValues,
+    selectedValuesType: typeof selectedValues,
+    otherValue
+  });
+
   // Parse selectedValues if it's a JSON string
   let parsedValues: string[] = [];
   if (typeof selectedValues === 'string') {
@@ -51,8 +59,7 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
     parsedValues = selectedValues;
   }
 
-  // Normalize parsed values for comparison
-  const normalizedParsedValues = parsedValues.map(val => val.trim().replace(/\s+/g, ' '));
+  console.log('Parsed values:', parsedValues);
 
   // Clean and normalize otherValue
   let cleanOtherValue = otherValue;
@@ -66,14 +73,33 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
     }
   }
 
-  // Function to check if option is selected
+  // Function to check if option is selected with exact and partial matching
   const isOptionSelected = (option: string) => {
-    const normalizedOption = option.trim().replace(/\s+/g, ' ');
-    return normalizedParsedValues.some(val => 
-      val === normalizedOption || 
-      val.includes(normalizedOption) || 
-      normalizedOption.includes(val)
-    );
+    if (!parsedValues || parsedValues.length === 0) return false;
+    
+    const normalizedOption = option.trim();
+    
+    // First try exact match
+    if (parsedValues.includes(normalizedOption)) {
+      console.log('Exact match found for:', normalizedOption);
+      return true;
+    }
+    
+    // Then try partial matching (both ways)
+    const found = parsedValues.some(val => {
+      const normalizedVal = val.trim();
+      const exactMatch = normalizedVal === normalizedOption;
+      const optionInValue = normalizedVal.includes(normalizedOption);
+      const valueInOption = normalizedOption.includes(normalizedVal);
+      
+      if (exactMatch || optionInValue || valueInOption) {
+        console.log('Partial match found:', { val: normalizedVal, option: normalizedOption, exactMatch, optionInValue, valueInOption });
+        return true;
+      }
+      return false;
+    });
+    
+    return found;
   };
 
   return (
@@ -82,6 +108,7 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
       <div className="space-y-2">
         {options.map((opt, i) => {
           const isSelected = isOptionSelected(opt);
+          console.log(`Option "${opt.substring(0, 50)}..." selected:`, isSelected);
           return (
             <div key={i} className="flex items-start space-x-3">
               <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isSelected ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
