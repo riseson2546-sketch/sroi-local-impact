@@ -51,6 +51,9 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
     parsedValues = selectedValues;
   }
 
+  // Normalize parsed values for comparison
+  const normalizedParsedValues = parsedValues.map(val => val.trim().replace(/\s+/g, ' '));
+
   // Clean and normalize otherValue
   let cleanOtherValue = otherValue;
   if (typeof otherValue === 'string') {
@@ -63,18 +66,31 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
     }
   }
 
+  // Function to check if option is selected
+  const isOptionSelected = (option: string) => {
+    const normalizedOption = option.trim().replace(/\s+/g, ' ');
+    return normalizedParsedValues.some(val => 
+      val === normalizedOption || 
+      val.includes(normalizedOption) || 
+      normalizedOption.includes(val)
+    );
+  };
+
   return (
     <div className="mb-4 p-4 border rounded-lg bg-white print-item-block">
       <h4 className="font-semibold mb-3">{title}</h4>
       <div className="space-y-2">
-        {options.map((opt, i) => (
-          <div key={i} className="flex items-start space-x-3">
-            <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${parsedValues.includes(opt) ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
-              {parsedValues.includes(opt) && <span className="text-white font-bold text-xs">✓</span>}
+        {options.map((opt, i) => {
+          const isSelected = isOptionSelected(opt);
+          return (
+            <div key={i} className="flex items-start space-x-3">
+              <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${isSelected ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
+                {isSelected && <span className="text-white font-bold text-xs">✓</span>}
+              </div>
+              <span className={`text-sm ${isSelected ? '' : 'text-gray-500'}`}>{opt}</span>
             </div>
-            <span className={`text-sm ${parsedValues.includes(opt) ? '' : 'text-gray-500'}`}>{opt}</span>
-          </div>
-        ))}
+          );
+        })}
         {showOther && (
           <div className="flex items-start space-x-3">
             <div className={`mt-1 w-5 h-5 r-m border-2 flex items-center justify-center shrink-0 ${cleanOtherValue ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}>
