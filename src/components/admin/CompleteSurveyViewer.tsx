@@ -67,7 +67,17 @@ const renderCheckboxes = (title: string, options: string[], selectedValues: stri
 };
 
 const renderProblemsCheckboxes = (title: string, options: { text: string, hasDetail: boolean }[], allData: any) => {
-    const selectedValues = allData.section1_problems_before || [];
+    let selectedValues = allData.section1_problems_before || [];
+    
+    // Parse selectedValues if it's a JSON string
+    if (typeof selectedValues === 'string') {
+        try {
+            selectedValues = JSON.parse(selectedValues);
+        } catch {
+            selectedValues = [];
+        }
+    }
+    
     const findDetailValue = (index: number) => {
         const key = `section1_problems_detail_${index}`;
         let value = allData?.[key];
