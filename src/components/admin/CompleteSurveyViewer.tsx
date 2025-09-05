@@ -204,6 +204,15 @@ const CompleteSurveyViewer: React.FC<{ data: any }> = ({ data }) => {
   const section3 = data.survey_responses_section3?.[0] || {};
   const respondentData = data.survey_users || {};
 
+  // Debug section 2 data
+  console.log('Section 2 Debug Data:', {
+    respondent: respondentData.full_name,
+    section2_raw: data.survey_responses_section2,
+    section2_processed: section2,
+    section2_data_types: section2.section2_data_types,
+    section2_partner_organizations: section2.section2_partner_organizations
+  });
+
   const respondent = {
     name: respondentData.full_name || 'ไม่ระบุ',
     position: respondentData.position || 'ไม่ระบุ',
