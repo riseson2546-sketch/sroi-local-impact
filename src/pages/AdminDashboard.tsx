@@ -311,58 +311,15 @@ const AdminDashboard = () => {
     return descriptions.join(' | ');
   };
 
-  // Export to Excel function
+  // Export to Excel function - แบบง่าย คำถาม-คำตอบ
   const exportToExcel = () => {
-    // ข้อมูลตัวเลือกจากแบบสอบถาม
-    const surveyOptions = {
-      knowledgeOutcomes: ["มีความรู้ความเข้าใจในระบบเศรษฐกิจใหม่และการเปลี่ยนแปลงของโลก", "มีความเข้าใจและสามารถวิเคราะห์ศักยภาพและแสวงหาโอกาสในการพัฒนาเมือง", "มีความเข้าใจและกำหนดข้อมูลที่จำเป็นต้องใช้ในการพัฒนาเมือง/ท้องถิ่น", "วิเคราะห์และประสานภาคีเครือข่ายการพัฒนาเมือง", "รู้จักเครือข่ายมากขึ้น"],
-      applicationOutcomes: ["นำแนวทางการพัฒนาเมืองตามตัวบทปฏิบัติการด้านต่าง ๆ มาใช้ในการพัฒนาเมือง", "สามารถพัฒนาฐานข้อมูลเมืองของตนได้", "สามารถพัฒนาข้อเสนอโครงงานพัฒนาเมืองและนำไปสู่การนำเสนอไอเดีย (Pitching) ขอทุนได้", "ประสานความร่วมมือกับภาคส่วนต่าง ๆ ในการพัฒนาเมือง"],
-      problemsBefore: ["มีปัญหาและความจำเป็นเร่งด่วนในพื้นที่", "วิสัยทัศน์และความต่อเนื่องของผู้นำในการพัฒนานวัตกรรมท้องถิ่น", "การบริหารจัดการองค์กร", "ความชัดเจนของแผนและนโยบายมายังผู้ปฏิบัติงาน", "ขาดที่ปรึกษาในการสร้างสรรค์นวัตกรรมท้องถิ่น", "ไม่ใช้ข้อมูลเป็นฐานในการวางแผน", "บุคลากรไม่กล้าที่จะลงมือทำ เพราะกลัวความผิดพลาด", "ขาดเครือข่ายในการพัฒนาเมือง", "ขาดความรู้ทักษะในการพัฒนาเมือง", "ขาดข้อมูลที่ใช้ในการวางแผน/พัฒนาเมือง"],
-      knowledgeSolutions: ["การจัดทำข้อมูลเพื่อใช้ในการพัฒนาเมือง/ท้องถิ่น", "การประสานความร่วมมือกับภาคีเครือข่ายวิชาการและ อปท.", "การระบุปัญหาและความจำเป็นเร่งด่วนในพื้นที่ได้อย่างชัดเจน", "กำหนดหรือสร้างแนวคิดนวัตกรรมท้องถิ่นที่สอดคล้องกับปัญหา/ตรงกับความต้องการ", "ใช้ข้อมูลเป็นฐานในการพัฒนาท้องถิ่น", "การนำเทคโนโลยีดิจิทัลมาใช้ในการพัฒนาบริการสาธารณะ (E-Service)", "การกล้าลงมือทำโดยไม่กลัวความผิดพลาด", "การนำนวัตกรรมท้องถิ่นไปปฏิบัติจริง (การขับเคลื่อนนวัตกรรมท้องถิ่นไปยังกลุ่มเป้าหมาย การสร้างความรู้ความเข้าใจในพื้นที่ การติดตามและประเมินผล)"],
-      successFactors: ["ปัจจัย 1", "ปัจจัย 2", "ปัจจัย 3", "ปัจจัยอื่นๆ"],
-      itUsage: ["ใช้การวิเคราะห์ปัญหาได้ตรงเป้า ตรงจุด", "ใช้ในการวางแผนพัฒนาท้องถิ่นได้อย่างมีทิศทาง", "ใช้ในการตัดสินใจในการพัฒนาท้องถิ่น", "ใช้ในการกำกับ ติดตาม และวางแผนการดำเนินโครงการต่างๆ", "ช่วยในการเพิ่มความเสมอภาคในการบริการ", "ช่วยในการให้บริการประชาชนได้อย่างไม่มีข้อจำกัดด้านเวลา และสถานที่", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน", "ช่วยพัฒนาบริการสาธารณะในลักษณะ E-Service"],
-      cooperationUsage: ["ใช้ในการสร้างความร่วมมือระหว่างท้องถิ่นกับรัฐ เอกชน และองค์กรพัฒนาเอกชน", "ใช้ในการเพิ่มทรัพยากรและความสามารถในการบริหารจัดการ แลกเปลี่ยนประสบการณ์ แก้ปัญหา", "ใช้ในการกำกับ ติดตาม และวางแผนการดำเนินโครงการต่างๆ", "ช่วยในการให้บริการประชาชนได้อย่างไม่มีข้อจำกัดด้านเวลา และสถานที่", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน", "ช่วยพัฒนาโครงการได้ดีขึ้น ขึ้น เช่น การทำโครงการร่วมรัฐ-เอกชน (PPP) หรือคลัสเตอร์อุตสาหกรรมท้องถิ่น", "ช่วยลดความซ้ำซ้อนและเพิ่มประสิทธิภาพในการพัฒนาอย่างยั่งยืน"],
-      fundingUsage: ["ใช้ในการหาแหล่งทุนมาจากทั้งรัฐ เอกชน หุ้นชุมชน พันธบัตร หรือช่องทางออนไลน์อย่าง Crowdfunding", "ช่วยเพิ่มทรัพยากรและความสามารถในการบริหารจัดการ แลกเปลี่ยนประสบการณ์ แก้ปัญหา", "ช่วยให้โครงการไม่สะดุดจากปัญหาเงินทุน และดึงดูดการลงทุนจากภาคเอกชน", "ช่วยผลักดันการพัฒนาได้ต่อเนื่องและยั่งยืน", "ช่วยในการสร้างความเชื่อมั่นให้กับประชาชน"],
-      cultureUsage: ["ใช้ในการอนุรักษ์วัฒนธรรมและการใช้สินทรัพย์ท้องถิ่น เช่น สินค้าพื้นเมือง งานหัตถกรรม ประเพณี และทรัพยากรธรรมชาติอย่างยั่งยืน", "ใช้ในการสร้างเอกลักษณ์ ดึงดูดนักท่องเที่ยวและการลงทุน เพิ่มมูลค่าเศรษฐกิจ", "ใช้ในการจัดทำหลักสูตรท้องถิ่น", "ใช้ในการส่งเสริมความมั่นคงทางสังคมและเศรษฐกิจของชุมชนได้ในระยะยาว"],
-      greenUsage: ["ใช้เป็นกลไกที่เน้นใช้ทรัพยากรอย่างคุ้มค่า ลดของเสีย และรักษาสิ่งแวดล้อม", "ช่วยสนับสนุนเกษตรอินทรีย์ จัดการขยะและน้ำเสียอย่างมีระบบ", "ใช้พลังงานทดแทน ลดการพึ่งพาทรัพยากรธรรมชาติที่ใช้แล้วหมด", "ช่วยสร้างงานและเศรษฐกิจที่ไม่ทำลายสิ่งแวดล้อม"],
-      newDevUsage: ["ใช้เป็นกลไกที่เน้นนวัตกรรม การวิจัย และการพัฒนาทักษะ", "ช่วยรองรับการเปลี่ยนแปลงระยะยาว เช่น การตั้งศูนย์นวัตกรรมท้องถิ่น", "ช่วยสร้างความร่วมมือกับมหาวิทยาลัย หรือการสนับสนุนผู้ประกอบการใหม่", "ช่วยสร้างสินค้า-บริการใหม่ เสริมเศรษฐกิจท้องถิ่น และยกระดับคุณภาพชีวิต ตัวอย่างเช่น บริษัทพัฒนาเมืองหรือ วิสาหกิจเพื่อสังคม", "ช่วยรวมพลังภาคเอกชนและชุมชนพัฒนาเมืองอย่างยั่งยืน"],
-      dataTypes: ['ชุดข้อมูลด้านประชากร', 'ชุดข้อมูลด้านโครงสร้างพื้นฐาน', 'ชุดข้อมูลด้านสิ่งแวดล้อม เช่น ขยะ น้ำเสีย PM 2.5 เป็นต้น', 'ชุดข้อมูลด้านการจัดการภัยพิบัติ', 'ชุดข้อมูลด้านสุขภาพ', 'ชุดข้อมูลด้านการจราจร', 'ชุดข้อมูลด้านการจัดการสินทรัพย์ท้องถิ่น'],
-      partnerOrgs: ['มูลนิธิส่งเสริมการปกครองท้องถิ่น', 'นักวิชาการจากสถาบันการศึกษา', 'ผู้เชี่ยวชาญจากภายนอก', 'ภาคีเครือข่ายในพื้นที่', 'ภาคเอกชน'],
-      dataBenefits: ['ลดต้นทุนการบริหารจัดการ/ต้นทุนเวลา', 'ลดระยะเวลาในการดำเนินงาน', 'การบริหารจัดการเมืองมีประสิทธิภาพเพิ่มขึ้น', 'ทำให้สามารถเชื่อมโยงข้อมูลของหน่วยงานภายในได้', 'ลดเอกสาร', 'ทำให้การวางแผนเมืองตรงเป้า ตรงจุดมากขึ้น']
-    };
-
-    // ฟังก์ชันแปลงข้อมูลเป็นข้อความที่อ่านได้
-    const formatArrayToReadableText = (value: any, optionsArray: string[]) => {
-      if (!Array.isArray(value)) return value || '';
-      return value.map(item => {
-        if (item === 'อื่น ๆ') return item;
-        const foundOption = optionsArray.find(opt => opt === item);
-        return foundOption || item;
-      }).join(' | ');
-    };
-
-    const formatJsonValue = (value: any) => {
+    // ฟังก์ชันแปลงค่าให้เป็นข้อความที่อ่านได้
+    const formatValue = (value: any) => {
+      if (Array.isArray(value)) {
+        return value.join(', ');
+      }
       if (typeof value === 'object' && value !== null) {
-        const formatted = [];
-        for (const [key, val] of Object.entries(value)) {
-          if (val) {
-            // แปลงชื่อฟิลด์เป็นภาษาไทยที่เข้าใจได้
-            let fieldName = key;
-            if (key.includes('app1')) fieldName = 'แอปฯ ซื้อขายสินค้าเกษตรกรรม';
-            if (key.includes('app2')) fieldName = 'แอปฯ ชำระค่าบริการสาธารณะ';
-            if (key.includes('app3')) fieldName = 'แอปฯ รายงานปัญหาเมือง';
-            if (key.includes('app4')) fieldName = 'แอปฯ จองใช้สถานที่/สิ่งอำนวยความสะดวก';
-            if (key.includes('app5')) fieldName = 'แอปฯ จัดส่งสินค้า/บริการ';
-            if (key.includes('org1')) fieldName = 'เทศบาลในจังหวัด';
-            if (key.includes('org2')) fieldName = 'องค์กรปกครองส่วนท้องถิ่นในจังหวัด';
-            if (key.includes('org3')) fieldName = 'หน่วยงานของรัฐในจังหวัด';
-            if (key.includes('org4')) fieldName = 'หน่วยงานในภูมิภาค';
-            if (key.includes('org5')) fieldName = 'หน่วยงานอื่นๆ';
-            
-            formatted.push(`${fieldName}: ${val}`);
-          }
-        }
-        return formatted.join(' | ');
+        return JSON.stringify(value);
       }
       return value || '';
     };
@@ -373,180 +330,81 @@ const AdminDashboard = () => {
       const section3 = response.survey_responses_section3?.[0] || {};
 
       return {
-        // ข้อมูลผู้ตอบแบบสอบถาม
-        'รหัสผู้ตอบ': response.id,
+        // ข้อมูลผู้ตอบ
         'ชื่อ-สกุล': user?.full_name || '',
         'ตำแหน่ง': user?.position || '',
         'หน่วยงาน': user?.organization || '',
-        'เบอร์โทรศัพท์': user?.phone || '',
         'จังหวัด': user?.province || '',
         'อีเมล': user?.email || '',
-        'วันที่ตอบแบบสอบถาม': new Date(response.created_at).toLocaleDateString('th-TH'),
-        'เวลาที่ตอบ': new Date(response.created_at).toLocaleTimeString('th-TH'),
-        'สถานะความสมบูรณ์': getCompletionStatus(response),
+        'เบอร์โทร': user?.phone || '',
+        'วันที่ตอบ': new Date(response.created_at).toLocaleDateString('th-TH'),
         
-        // ส่วนที่ 1 - ผลลัพธ์ภายหลังจากการเข้าร่วมอบรมฯ
-        '1.1 คำถาม': 'ผลลัพธ์ที่ท่านได้รับภายหลังจากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) - ด้านการเพิ่มความรู้',
-        '1.1 คำตอบ': formatArrayToReadableText(response.section1_knowledge_outcomes, surveyOptions.knowledgeOutcomes),
+        // ส่วนที่ 1
+        'ผลลัพธ์ด้านความรู้': formatValue(response.section1_knowledge_outcomes),
+        'ผลลัพธ์ด้านการประยุกต์ใช้': formatValue(response.section1_application_outcomes),
+        'รายละเอียดการประยุกต์ใช้อื่นๆ': response.section1_application_other || '',
+        'ระดับความรู้ก่อนอบรม (1-10)': response.section1_knowledge_before || '',
+        'ระดับความรู้หลังอบรม (1-10)': response.section1_knowledge_after || '',
+        'ระดับการเปลี่ยนแปลงโดยรวม (1-10)': response.section1_overall_change_level || '',
+        'รายละเอียดการเปลี่ยนแปลง': response.section1_changes_description || '',
+        'ปัญหาก่อนเข้าอบรม': formatValue(response.section1_problems_before),
+        'ปัญหาอื่นๆ': response.section1_problems_other || '',
+        'การใช้ความรู้แก้ปัญหา': formatValue(response.section1_knowledge_solutions),
+        'การแก้ปัญหาอื่นๆ': response.section1_knowledge_solutions_other || '',
+        'ปัจจัยความสำเร็จ': formatValue(response.section1_success_factors),
+        'ปัจจัยความสำเร็จอื่นๆ': response.section1_success_factors_other || '',
+        'รายละเอียดปัจจัยความสำเร็จ': response.section1_success_description || '',
         
-        '1.2 คำถาม': 'ผลลัพธ์ที่ท่านได้รับภายหลังจากการเข้าร่วมอบรมหลักสูตรนักพัฒนาเมืองระดับสูง (พมส.) - ด้านการประยุกต์ใช้องค์ความรู้',
-        '1.2 คำตอบ': formatArrayToReadableText(response.section1_application_outcomes, surveyOptions.applicationOutcomes),
-        '1.2 อื่นๆ': response.section1_application_other || '',
+        // กลไกต่างๆ
+        'ระดับความสำคัญกลไกIT (1-10)': response.section1_it_level || '',
+        'การใช้กลไกIT': formatValue(response.section1_it_usage),
+        'การใช้กลไกITอื่นๆ': response.section1_it_usage_other || '',
+        'ระดับความสำคัญความร่วมมือ (1-10)': response.section1_cooperation_level || '',
+        'การใช้กลไกความร่วมมือ': formatValue(response.section1_cooperation_usage),
+        'การใช้กลไกความร่วมมืออื่นๆ': response.section1_cooperation_usage_other || '',
+        'ระดับความสำคัญการระดมทุน (1-10)': response.section1_funding_level || '',
+        'การใช้กลไกการระดมทุน': formatValue(response.section1_funding_usage),
+        'การใช้กลไกการระดมทุนอื่นๆ': response.section1_funding_usage_other || '',
+        'ระดับความสำคัญวัฒนธรรม (1-10)': response.section1_culture_level || '',
+        'การใช้กลไกวัฒนธรรม': formatValue(response.section1_culture_usage),
+        'การใช้กลไกวัฒนธรรมอื่นๆ': response.section1_culture_usage_other || '',
+        'ระดับความสำคัญเศรษฐกิจสีเขียว (1-10)': response.section1_green_level || '',
+        'การใช้กลไกเศรษฐกิจสีเขียว': formatValue(response.section1_green_usage),
+        'การใช้กลไกเศรษฐกิจสีเขียวอื่นๆ': response.section1_green_usage_other || '',
+        'ระดับความสำคัญการพัฒนาใหม่ (1-10)': response.section1_new_dev_level || '',
+        'การใช้กลไกการพัฒนาใหม่': formatValue(response.section1_new_dev_usage),
+        'การใช้กลไกการพัฒนาใหม่อื่นๆ': response.section1_new_dev_usage_other || '',
         
-        '1.3 คำถาม': 'ระดับความรู้ก่อนเข้าร่วมหลักสูตร (1-10)',
-        '1.3 คำตอบ': response.section1_knowledge_before || '',
+        // ส่วนที่ 2
+        'ชุดข้อมูลที่ใช้': formatValue(section2.section2_data_types),
+        'ชุดข้อมูลอื่นๆ': section2.section2_data_types_other || '',
+        'แหล่งที่มาของข้อมูล': section2.section2_data_sources || '',
+        'หน่วยงานที่ร่วมจัดทำข้อมูล': formatValue(section2.section2_partner_organizations),
+        'หน่วยงานอื่นๆ': section2.section2_partner_organizations_other || '',
+        'รูปแบบการเข้าร่วม': section2.section2_partner_participation || '',
+        'ประโยชน์ของข้อมูลเมือง': formatValue(section2.section2_data_benefits),
+        'ระดับการตอบโจทย์ของข้อมูล (1-10)': section2.section2_data_level || '',
+        'การพัฒนาข้อมูลต่อเนื่อง': section2.section2_continued_development || '',
+        'แอปพลิเคชันที่ใช้': formatValue(section2.section2_applications),
+        'การขยายเครือข่าย': formatValue(section2.section2_network_expansion),
         
-        '1.4 คำถาม': 'ระดับความรู้หลังเข้าร่วมหลักสูตร (1-10)',
-        '1.4 คำตอบ': response.section1_knowledge_after || '',
-        
-        '1.5 คำถาม': 'ระดับการเปลี่ยนแปลงโดยรวมในหน่วยงานของท่าน (1-10)',
-        '1.5 คำตอบ': response.section1_overall_change_level || '',
-        
-        '1.6 คำถาม': 'อธิบายรายละเอียดการเปลี่ยนแปลงที่เกิดขึ้นในหน่วยงานของท่าน',
-        '1.6 คำตอบ': response.section1_changes_description || '',
-        
-        '1.7 คำถาม': 'ปัญหาของหน่วยงานก่อนเข้าร่วมการอบรม',
-        '1.7 คำตอบ': formatArrayToReadableText(response.section1_problems_before, surveyOptions.problemsBefore),
-        '1.7 อื่นๆ': response.section1_problems_other || '',
-        
-        '1.8 คำถาม': 'การใช้องค์ความรู้จากการอบรมมาแก้ไขปัญหาดังกล่าว',
-        '1.8 คำตอบ': formatArrayToReadableText(response.section1_knowledge_solutions, surveyOptions.knowledgeSolutions),
-        '1.8 อื่นๆ': response.section1_knowledge_solutions_other || '',
-        
-        '1.9 คำถาม': 'ปัจจัยความสำเร็จที่ทำให้เกิดการเปลี่ยนแปลงในหน่วยงาน',
-        '1.9 คำตอบ': formatArrayToReadableText(response.section1_success_factors, surveyOptions.successFactors),
-        '1.9 อื่นๆ': response.section1_success_factors_other || '',
-        
-        '1.10 คำถาม': 'อธิบายรายละเอียดปัจจัยความสำเร็จ',
-        '1.10 คำตอบ': response.section1_success_description || '',
-        
-        // กลไกด้านต่างๆ - ระดับความสำคัญและการใช้งาน
-        '1.11 คำถาม': 'กลไกข้อมูลสารสนเทศ - ระดับความสำคัญ (1-10)',
-        '1.11 คำตอบ': response.section1_it_level || '',
-        '1.12 คำถาม': 'การใช้กลไกข้อมูลสารสนเทศ',
-        '1.12 คำตอบ': formatArrayToReadableText(response.section1_it_usage, surveyOptions.itUsage),
-        '1.12 อื่นๆ': response.section1_it_usage_other || '',
-        
-        '1.13 คำถาม': 'กลไกประสานความร่วมมือ - ระดับความสำคัญ (1-10)',
-        '1.13 คำตอบ': response.section1_cooperation_level || '',
-        '1.14 คำถาม': 'การใช้กลไกประสานความร่วมมือ',
-        '1.14 คำตอบ': formatArrayToReadableText(response.section1_cooperation_usage, surveyOptions.cooperationUsage),
-        '1.14 อื่นๆ': response.section1_cooperation_usage_other || '',
-        
-        '1.15 คำถาม': 'กลไกการระดมทุน - ระดับความสำคัญ (1-10)',
-        '1.15 คำตอบ': response.section1_funding_level || '',
-        '1.16 คำถาม': 'การใช้กลไกการระดมทุน',
-        '1.16 คำตอบ': formatArrayToReadableText(response.section1_funding_usage, surveyOptions.fundingUsage),
-        '1.16 อื่นๆ': response.section1_funding_usage_other || '',
-        
-        '1.17 คำถาม': 'กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น - ระดับความสำคัญ (1-10)',
-        '1.17 คำตอบ': response.section1_culture_level || '',
-        '1.18 คำถาม': 'การใช้กลไกวัฒนธรรมและสินทรัพย์ท้องถิ่น',
-        '1.18 คำตอบ': formatArrayToReadableText(response.section1_culture_usage, surveyOptions.cultureUsage),
-        '1.18 อื่นๆ': response.section1_culture_usage_other || '',
-        
-        '1.19 คำถาม': 'กลไกเศรษฐกิจสีเขียว - ระดับความสำคัญ (1-10)',
-        '1.19 คำตอบ': response.section1_green_level || '',
-        '1.20 คำถาม': 'การใช้กลไกเศรษฐกิจสีเขียว',
-        '1.20 คำตอบ': formatArrayToReadableText(response.section1_green_usage, surveyOptions.greenUsage),
-        '1.20 อื่นๆ': response.section1_green_usage_other || '',
-        
-        '1.21 คำถาม': 'กลไกการพัฒนาใหม่ - ระดับความสำคัญ (1-10)',
-        '1.21 คำตอบ': response.section1_new_dev_level || '',
-        '1.22 คำถาม': 'การใช้กลไกการพัฒนาใหม่',
-        '1.22 คำตอบ': formatArrayToReadableText(response.section1_new_dev_usage, surveyOptions.newDevUsage),
-        '1.22 อื่นๆ': response.section1_new_dev_usage_other || '',
-        
-        // ส่วนที่ 2 - การพัฒนาข้อมูลเมือง
-        '2.1 คำถาม': 'ชุดข้อมูลที่ใช้ในการพัฒนาเมือง',
-        '2.1 คำตอบ': formatArrayToReadableText(section2.section2_data_types, surveyOptions.dataTypes),
-        '2.1 อื่นๆ': section2.section2_data_types_other || '',
-        
-        '2.2 คำถาม': 'แหล่งที่มาของชุดข้อมูล',
-        '2.2 คำตอบ': section2.section2_data_sources || '',
-        
-        '2.3 คำถาม': 'หน่วยงานที่เข้าร่วมจัดทำข้อมูล',
-        '2.3 คำตอบ': formatArrayToReadableText(section2.section2_partner_organizations, surveyOptions.partnerOrgs),
-        '2.3 อื่นๆ': section2.section2_partner_organizations_other || '',
-        
-        '2.4 คำถาม': 'รูปแบบการเข้าร่วมของหน่วยงาน',
-        '2.4 คำตอบ': section2.section2_partner_participation || '',
-        
-        '2.5 คำถาม': 'ประโยชน์ของชุดข้อมูลเมือง',
-        '2.5 คำตอบ': formatArrayToReadableText(section2.section2_data_benefits, surveyOptions.dataBenefits),
-        
-        '2.6 คำถาม': 'ระดับการตอบโจทย์ของข้อมูล (1-10)',
-        '2.6 คำตอบ': section2.section2_data_level || '',
-        
-        '2.7 คำถาม': 'การพัฒนาข้อมูลอย่างต่อเนื่อง',
-        '2.7 คำตอบ': section2.section2_continued_development || '',
-        
-        // แอปพลิเคชันที่ใช้ - แยกรายการละเอียด
-        '2.8 คำถาม': 'แอปพลิเคชันที่ใช้',
-        '2.8 คำตอบ': formatJsonValue(section2.section2_applications),
-        '2.8.1 แอปฯ ซื้อขายสินค้าเกษตรกรรม - วิธีได้มา': section2.section2_applications?.app1_method_buy ? 'ซื้อ' : (section2.section2_applications?.app1_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app1_method_outsource ? 'จ้างพัฒนา' : '')),
-        '2.8.2 แอปฯ ชำระค่าบริการสาธารณะ - วิธีได้มา': section2.section2_applications?.app2_method_buy ? 'ซื้อ' : (section2.section2_applications?.app2_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app2_method_outsource ? 'จ้างพัฒนา' : '')),
-        '2.8.3 แอปฯ รายงานปัญหาเมือง - วิธีได้มา': section2.section2_applications?.app3_method_buy ? 'ซื้อ' : (section2.section2_applications?.app3_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app3_method_outsource ? 'จ้างพัฒนา' : '')),
-        '2.8.4 แอปฯ จองใช้สถานที่/สิ่งอำนวยความสะดวก - วิธีได้มา': section2.section2_applications?.app4_method_buy ? 'ซื้อ' : (section2.section2_applications?.app4_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app4_method_outsource ? 'จ้างพัฒนา' : '')),
-        '2.8.5 แอปฯ จัดส่งสินค้า/บริการ - วิธีได้มา': section2.section2_applications?.app5_method_buy ? 'ซื้อ' : (section2.section2_applications?.app5_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app5_method_outsource ? 'จ้างพัฒนา' : '')),
-        
-        // การขยายเครือข่าย - แยกรายการละเอียด  
-        '2.9 คำถาม': 'การขยายเครือข่าย',
-        '2.9 คำตอบ': formatJsonValue(section2.section2_network_expansion),
-        '2.9.1 เทศบาลในจังหวัด': section2.section2_network_expansion?.org1 || '',
-        '2.9.2 องค์กรปกครองส่วนท้องถิ่นในจังหวัด': section2.section2_network_expansion?.org2 || '',
-        '2.9.3 หน่วยงานของรัฐในจังหวัด': section2.section2_network_expansion?.org3 || '',
-        '2.9.4 หน่วยงานในภูมิภาค': section2.section2_network_expansion?.org4 || '',
-        '2.9.5 หน่วยงานอื่นๆ': section2.section2_network_expansion?.org5 || '',
-        
-        // ส่วนที่ 3 - ปัจจัยการขับเคลื่อน
-        '3.1 คำถาม': 'งบประมาณจัดสรรในการพัฒนาระบบ (1-5)',
-        '3.1 คำตอบ': section3.budget_system_development || '',
-        
-        '3.2 คำถาม': 'งบประมาณจัดสรรในการพัฒนาองค์ความรู้ (1-5)',
-        '3.2 คำตอบ': section3.budget_knowledge_development || '',
-        
-        '3.3 คำถาม': 'การสร้างความร่วมมือระหว่างหน่วยงาน/ภาคีเครือข่าย (1-5)',
-        '3.3 คำตอบ': section3.cooperation_between_agencies || '',
-        
-        '3.4 คำถาม': 'การสร้างระบบนิเวศที่เชื่อมต่อการพัฒนานวัตกรรม (1-5)',
-        '3.4 คำตอบ': section3.innovation_ecosystem || '',
-        
-        '3.5 คำถาม': 'การสนับสนุนระบบดิจิทัลพื้นฐานจากภาครัฐ (1-5)',
-        '3.5 คำตอบ': section3.government_digital_support || '',
-        
-        '3.6 คำถาม': 'ความพร้อมด้านโครงสร้างทางกายภาพทางเทคโนโลยี (1-5)',
-        '3.6 คำตอบ': section3.digital_infrastructure || '',
-        
-        '3.7 คำถาม': 'บุคลากรภายในหน่วยงานมีชุดความคิดแบบดิจิทัล (1-5)',
-        '3.7 คำตอบ': section3.digital_mindset || '',
-        
-        '3.8 คำถาม': 'เป็นองค์กรแห่งการเรียนรู้ที่มีความพร้อมในการพัฒนานวัตกรรม (1-5)',
-        '3.8 คำตอบ': section3.learning_organization || '',
-        
-        '3.9 คำถาม': 'เจ้าหน้าที่มีความรู้ทักษะด้าน IT ที่เพียงพอ (1-5)',
-        '3.9 คำตอบ': section3.it_skills || '',
-        
-        '3.10 คำถาม': 'ประสิทธิภาพในการสื่อสารภายในองค์กร (1-5)',
-        '3.10 คำตอบ': section3.internal_communication || '',
-        
-        '3.11 คำถาม': 'ความต่อเนื่องของนโยบายในการพัฒนาโครงการนวัตกรรมท้องถิ่น (1-5)',
-        '3.11 คำตอบ': section3.policy_continuity || '',
-        
-        '3.12 คำถาม': 'ความมีเสถียรภาพของนโยบายในการขับเคลื่อนองค์กรด้วยเทคโนโลยี (1-5)',
-        '3.12 คำตอบ': section3.policy_stability || '',
-        
-        '3.13 คำถาม': 'ผู้นำให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น (1-5)',
-        '3.13 คำตอบ': section3.leadership_importance || '',
-        
-        '3.14 คำถาม': 'เจ้าหน้าที่ปฏิบัติงานให้ความสำคัญกับการพัฒนานวัตกรรมท้องถิ่น (1-5)',
-        '3.14 คำตอบ': section3.staff_importance || '',
-        
-        '3.15 คำถาม': 'มีการสื่อสารข้อมูลนวัตกรรมท้องถิ่นไปยังผู้ใช้บริการได้อย่างเพียงพอ (1-5)',
-        '3.15 คำตอบ': section3.communication_to_users || '',
-        
-        '3.16 คำถาม': 'การสื่อสารข้อมูลนวัตกรรมท้องถิ่นสามารถเข้าถึงกลุ่มเป้าหมาย (1-5)',
-        '3.16 คำตอบ': section3.reaching_target_groups || ''
+        // ส่วนที่ 3
+        'งบประมาณพัฒนาระบบ (1-5)': section3.budget_system_development || '',
+        'งบประมาณพัฒนาความรู้ (1-5)': section3.budget_knowledge_development || '',
+        'ความร่วมมือระหว่างหน่วยงาน (1-5)': section3.cooperation_between_agencies || '',
+        'ระบบนิเวศนวัตกรรม (1-5)': section3.innovation_ecosystem || '',
+        'การสนับสนุนดิจิทัลจากรัฐ (1-5)': section3.government_digital_support || '',
+        'โครงสร้างเทคโนโลยี (1-5)': section3.digital_infrastructure || '',
+        'ความคิดแบบดิจิทัล (1-5)': section3.digital_mindset || '',
+        'องค์กรแห่งการเรียนรู้ (1-5)': section3.learning_organization || '',
+        'ทักษะด้าน IT (1-5)': section3.it_skills || '',
+        'การสื่อสารภายใน (1-5)': section3.internal_communication || '',
+        'ความต่อเนื่องของนโยบาย (1-5)': section3.policy_continuity || '',
+        'เสถียรภาพของนโยบาย (1-5)': section3.policy_stability || '',
+        'ความสำคัญของผู้นำ (1-5)': section3.leadership_importance || '',
+        'ความสำคัญของเจ้าหน้าที่ (1-5)': section3.staff_importance || '',
+        'การสื่อสารไปยังผู้ใช้ (1-5)': section3.communication_to_users || '',
+        'การเข้าถึงกลุ่มเป้าหมาย (1-5)': section3.reaching_target_groups || ''
       };
     });
 
