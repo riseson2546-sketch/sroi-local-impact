@@ -345,7 +345,22 @@ const AdminDashboard = () => {
       if (typeof value === 'object' && value !== null) {
         const formatted = [];
         for (const [key, val] of Object.entries(value)) {
-          if (val) formatted.push(`${key}: ${val}`);
+          if (val) {
+            // แปลงชื่อฟิลด์เป็นภาษาไทยที่เข้าใจได้
+            let fieldName = key;
+            if (key.includes('app1')) fieldName = 'แอปฯ ซื้อขายสินค้าเกษตรกรรม';
+            if (key.includes('app2')) fieldName = 'แอปฯ ชำระค่าบริการสาธารณะ';
+            if (key.includes('app3')) fieldName = 'แอปฯ รายงานปัญหาเมือง';
+            if (key.includes('app4')) fieldName = 'แอปฯ จองใช้สถานที่/สิ่งอำนวยความสะดวก';
+            if (key.includes('app5')) fieldName = 'แอปฯ จัดส่งสินค้า/บริการ';
+            if (key.includes('org1')) fieldName = 'เทศบาลในจังหวัด';
+            if (key.includes('org2')) fieldName = 'องค์กรปกครองส่วนท้องถิ่นในจังหวัด';
+            if (key.includes('org3')) fieldName = 'หน่วยงานของรัฐในจังหวัด';
+            if (key.includes('org4')) fieldName = 'หน่วยงานในภูมิภาค';
+            if (key.includes('org5')) fieldName = 'หน่วยงานอื่นๆ';
+            
+            formatted.push(`${fieldName}: ${val}`);
+          }
         }
         return formatted.join(' | ');
       }
@@ -466,11 +481,23 @@ const AdminDashboard = () => {
         '2.7 คำถาม': 'การพัฒนาข้อมูลอย่างต่อเนื่อง',
         '2.7 คำตอบ': section2.section2_continued_development || '',
         
+        // แอปพลิเคชันที่ใช้ - แยกรายการละเอียด
         '2.8 คำถาม': 'แอปพลิเคชันที่ใช้',
         '2.8 คำตอบ': formatJsonValue(section2.section2_applications),
+        '2.8.1 แอปฯ ซื้อขายสินค้าเกษตรกรรม - วิธีได้มา': section2.section2_applications?.app1_method_buy ? 'ซื้อ' : (section2.section2_applications?.app1_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app1_method_outsource ? 'จ้างพัฒนา' : '')),
+        '2.8.2 แอปฯ ชำระค่าบริการสาธารณะ - วิธีได้มา': section2.section2_applications?.app2_method_buy ? 'ซื้อ' : (section2.section2_applications?.app2_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app2_method_outsource ? 'จ้างพัฒนา' : '')),
+        '2.8.3 แอปฯ รายงานปัญหาเมือง - วิธีได้มา': section2.section2_applications?.app3_method_buy ? 'ซื้อ' : (section2.section2_applications?.app3_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app3_method_outsource ? 'จ้างพัฒนา' : '')),
+        '2.8.4 แอปฯ จองใช้สถานที่/สิ่งอำนวยความสะดวก - วิธีได้มา': section2.section2_applications?.app4_method_buy ? 'ซื้อ' : (section2.section2_applications?.app4_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app4_method_outsource ? 'จ้างพัฒนา' : '')),
+        '2.8.5 แอปฯ จัดส่งสินค้า/บริการ - วิธีได้มา': section2.section2_applications?.app5_method_buy ? 'ซื้อ' : (section2.section2_applications?.app5_method_develop ? 'พัฒนาเอง' : (section2.section2_applications?.app5_method_outsource ? 'จ้างพัฒนา' : '')),
         
+        // การขยายเครือข่าย - แยกรายการละเอียด  
         '2.9 คำถาม': 'การขยายเครือข่าย',
         '2.9 คำตอบ': formatJsonValue(section2.section2_network_expansion),
+        '2.9.1 เทศบาลในจังหวัด': section2.section2_network_expansion?.org1 || '',
+        '2.9.2 องค์กรปกครองส่วนท้องถิ่นในจังหวัด': section2.section2_network_expansion?.org2 || '',
+        '2.9.3 หน่วยงานของรัฐในจังหวัด': section2.section2_network_expansion?.org3 || '',
+        '2.9.4 หน่วยงานในภูมิภาค': section2.section2_network_expansion?.org4 || '',
+        '2.9.5 หน่วยงานอื่นๆ': section2.section2_network_expansion?.org5 || '',
         
         // ส่วนที่ 3 - ปัจจัยการขับเคลื่อน
         '3.1 คำถาม': 'งบประมาณจัดสรรในการพัฒนาระบบ (1-5)',
