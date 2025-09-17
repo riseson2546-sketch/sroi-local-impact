@@ -548,7 +548,6 @@ const AdminDashboard = () => {
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button size="sm" variant="outline" onClick={() => handleViewResponse(response)} className="text-blue-600 hover:text-blue-900"><Eye className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteResponse(response.id)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
