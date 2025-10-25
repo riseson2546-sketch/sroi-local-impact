@@ -12,7 +12,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
     fullName: '',
     position: '',
     organization: '',
@@ -57,10 +56,11 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Sign up user
+      // Sign up user without requiring password
+      const generatedPassword = crypto.randomUUID();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password,
+        password: generatedPassword,
         options: {
           emailRedirectTo: `${window.location.origin}/survey`
         }
@@ -87,10 +87,10 @@ const Login = () => {
           description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีของท่าน",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {
@@ -103,46 +103,23 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithOtp({
         email: formData.email,
-        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/survey`
+        }
       });
 
       if (error) throw error;
 
-      if (data.user) {
-        // Check if user exists in survey_users table
-        const { data: surveyUser } = await supabase
-          .from('survey_users')
-          .select('*')
-          .eq('auth_user_id', data.user.id)
-          .single();
-        
-        if (surveyUser) {
-          navigate('/survey');
-        } else {
-          // Check if admin
-          const { data: adminUser } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('auth_user_id', data.user.id)
-            .single();
-          
-          if (adminUser) {
-            navigate('/admin');
-          } else {
-            toast({
-              title: "ไม่พบข้อมูลผู้ใช้",
-              description: "กรุณาลงทะเบียนก่อนเข้าใช้งาน",
-              variant: "destructive",
-            });
-          }
-        }
-      }
-    } catch (error: any) {
+      toast({
+        title: "กรุณาตรวจสอบอีเมล",
+        description: "เราได้ส่งลิงก์เข้าสู่ระบบไปยังอีเมลของคุณ",
+      });
+    } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: error.message,
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {
@@ -175,16 +152,6 @@ const Login = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">รหัสผ่าน</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     required
                   />
                 </div>
@@ -239,16 +206,6 @@ const Login = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password-signup">รหัสผ่าน</Label>
-                  <Input
-                    id="password-signup"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     required
                   />
                 </div>
